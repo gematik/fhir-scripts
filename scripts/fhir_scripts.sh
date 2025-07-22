@@ -6,13 +6,13 @@ fhir_scripts_url="https://raw.githubusercontent.com/cybernop/fhir-scripts/refs/h
 function delete_build_cache() {
     rm -rf input-cache/schemas
     rm -rf input-cache/txcache
-    echo "✅ Build cache cleared"
+    echo "✅ Build cache cleared."
 }
 
 function update_script() {
     curl -L $1 -o "$2.new.sh" 2> /dev/null && mv "$2.new.sh" "$2.sh"
     chmod +x $2.sh
-    echo "✅ Updated $2.sh"
+    echo "✅ Updated $2.sh."
 }
 
 function update_fhir_script() {
@@ -22,11 +22,15 @@ function update_fhir_script() {
 function update_pytools() {
     sudo pipx install --global -f git+https://github.com/onyg/epa-tools.git
     sudo pipx install --global -f git+https://github.com/onyg/req-tooling.git
+    echo
+    echo "✅ Installed Python tooling."
 }
 
 function rebuild_fhir_cache() {
     rm -rf $HOME/.fhir/packages/*
     fhir restore
+    echo
+    echo "✅ FHIR cache rebuilt."
 }
 
 # Handle command-line argument or menu
