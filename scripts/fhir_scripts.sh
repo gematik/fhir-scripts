@@ -57,7 +57,10 @@ function rebuild_fhir_cache() {
 
             # install local package if exists
             if [[ ! -z ${file+x} ]]; then
-                fhir install $file --file > /dev/null
+                target="$HOME/.fhir/packages/${pkg}#${version}"
+                mkdir -p $target
+                tar x -f $file -C $target
+                # fhir install $file --file > /dev/null
 
                 if [[ $retVal -eq 0 ]]; then
                     echo "✅ Installed ${pkg}@${version}"
