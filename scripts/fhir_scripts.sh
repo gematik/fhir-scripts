@@ -30,8 +30,12 @@ function rebuild_fhir_cache() {
     echo
 
     if [[ ! -z ${1+x} ]]; then
+
         deps=$(jq -c '.dependencies | to_entries' ./package.json)
         echo $deps | jq -cr '.[]' | while read dep ; do
+            # save previous version of 'package.json'
+            mv package.json package.tmp.json && echo "{}" > package.json
+
             # extract the package and version
             pkg=$(echo $dep | jq -r '.key')
             version=$(echo $dep | jq -r '.value')
@@ -41,23 +45,42 @@ function rebuild_fhir_cache() {
             if [[ ! -f "$file" ]]; then
                 file=${1}/${pkg}-${version}.tgz
                 if [[ ! -f "$file" ]]; then
-                    unset file
+                    npm --registry https://packages.simplifier.net pack --pack-destination $1 ${pkg}@${version} 2> /dev/null
+                    if [[ -f "$file" ]]; then
+                        echo "✅ Downloaded package ${pkg}@${version} to local package directory"
+                    else
+                        echo "⚠️ Could not download package ${pkg}@${version}"
+                        unset file
+                    fi
                 fi
             fi
 
             # install local package if exists
             if [[ ! -z ${file+x} ]]; then
                 fhir install $file --file > /dev/null
-                echo "✅ Installed ${pkg}@${version} from local file $file"
+
+                if [[ $retVal -eq 0 ]]; then
+                    echo "✅ Installed ${pkg}@${version}"
+                else
+                    echo "❌ Failed to install ${pkg}@${version}"
+                fi
             fi
+
+            # restore previous version of 'package.json'
+            mv -f package.tmp.json package.json
         done
         echo
     fi
 
     fhir restore
+    retVal=$?
 
     echo
-    echo "✅ Rebuilt complete"
+    if [[ $retVal -eq 0 ]]; then
+        echo "✅ Rebuilt complete"
+    else
+        echo "❌ Rebuilt failed"
+    fi
 }
 
 # Handle command-line argument or menu
