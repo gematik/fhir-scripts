@@ -6,13 +6,13 @@ fhir_scripts_url="https://raw.githubusercontent.com/cybernop/fhir-scripts/refs/h
 function delete_build_cache() {
     rm -rf input-cache/schemas
     rm -rf input-cache/txcache
-    echo "✅ Build cache cleared."
+    echo "✅ Build cache cleared"
 }
 
 function update_script() {
     curl -L $1 -o "$2.new.sh" 2> /dev/null && mv "$2.new.sh" "$2.sh"
     chmod +x $2.sh
-    echo "✅ Updated $2.sh."
+    echo "✅ Updated $2.sh"
 }
 
 function update_fhir_script() {
@@ -22,22 +22,49 @@ function update_fhir_script() {
 function update_pytools() {
     sudo pipx install --global -f git+https://github.com/onyg/epa-tools.git
     sudo pipx install --global -f git+https://github.com/onyg/req-tooling.git
-    echo
-    echo "✅ Installed Python tooling."
 }
 
 function rebuild_fhir_cache() {
     rm -rf $HOME/.fhir/packages/*
-    fhir restore
+    echo "✅ Cache cleared"
     echo
-    echo "✅ FHIR cache rebuilt."
+
+    if [[ ! -z ${1+x} ]]; then
+        deps=$(jq -c '.dependencies | to_entries' ./package.json)
+        echo $deps | jq -cr '.[]' | while read dep ; do
+            # extract the package and version
+            pkg=$(echo $dep | jq -r '.key')
+            version=$(echo $dep | jq -r '.value')
+
+            # check if file exists
+            file=${1}/${pkg}_${version}.tgz
+            if [[ ! -f "$file" ]]; then
+                file=${1}/${pkg}-${version}.tgz
+                if [[ ! -f "$file" ]]; then
+                    unset file
+                fi
+            fi
+
+            # install local package if exists
+            if [[ ! -z ${file+x} ]]; then
+                fhir install $file --file > /dev/null
+                echo "✅ Installed ${pkg}@${version} from local file $file"
+            fi
+        done
+        echo
+    fi
+
+    fhir restore
+
+    echo
+    echo "✅ Rebuilt complete"
 }
 
 # Handle command-line argument or menu
 case "$1" in
   update) update_fhir_script ;;
   pytools) update_pytools ;;
-  fhircache) rebuild_fhir_cache ;;
+  fhircache) rebuild_fhir_cache $2 ;;
   bdcache) delete_build_cache ;;
   exit) exit 0 ;;
   *)
