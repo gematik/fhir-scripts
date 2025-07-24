@@ -2,6 +2,9 @@
 
 # URLs
 fhir_scripts_url="https://raw.githubusercontent.com/cybernop/fhir-scripts/refs/heads/main/scripts/fhir_scripts.sh"
+publisher_url="https://github.com/HL7/fhir-ig-publisher/releases/latest/download/publisher.jar"
+publisher_jar="publisher.jar"
+input_cache_path="$(pwd)/input-cache/"
 
 function delete_build_cache() {
     rm -rf input-cache/schemas
@@ -17,6 +20,24 @@ function update_script() {
 
 function update_fhir_script() {
     update_script $fhir_scripts_url fhir_scripts
+}
+
+function update_tools() {
+    sudo npm install -g fsh-sushi > /dev/null 2>&1
+    retVal=$?
+    if [[ $retVal -ne 0 ]]; then
+        echo "❌ Failed to update FSH Sushi"
+        exit 1
+    fi
+    echo "✅ Updated FSH Sushi to $(sushi --version | sed -nE 's/SUSHI v([\.0-9]+).*/\1/p')"
+    mkdir -p "$input_cache_path"
+    curl -L "$publisher_url" -o "${input_cache_path}${publisher_jar}" > /dev/null 2>&1
+    retVal=$?
+    if [[ $retVal -ne 0 ]]; then
+        echo "❌ Failed to update IG Publisher"
+        exit 1
+    fi
+    echo "✅ Updated IG Publisher to $(java -jar ${input_cache_path}${publisher_jar} -v)"
 }
 
 function update_pytools() {
@@ -59,6 +80,7 @@ function rebuild_fhir_cache() {
             if [[ ! -z ${file+x} ]]; then
                 fhir install $file --file > /dev/null
 
+                retVal=$?
                 if [[ $retVal -eq 0 ]]; then
                     echo "✅ Installed ${pkg}@${version}"
                 else
@@ -87,6 +109,7 @@ function rebuild_fhir_cache() {
 case "$1" in
   update) update_fhir_script ;;
   pytools) update_pytools ;;
+  tools) update_tools ;;
   fhircache) rebuild_fhir_cache $2 ;;
   bdcache) delete_build_cache ;;
   exit) exit 0 ;;
@@ -97,8 +120,9 @@ case "$1" in
     echo "Please select an option:"
     echo "1) Update script"
     echo "2) Update pytools"
-    echo "3) Rebuild FHIR cache"
-    echo "4) Delete build cache"
+    echo "3) Update FHIR tools"
+    echo "4) Rebuild FHIR cache"
+    echo "5) Delete build cache"
     echo "0) Exit"
     echo
 
@@ -111,8 +135,9 @@ case "$1" in
     case "$choice" in
       1) update_fhir_script ;;
       2) update_pytools ;;
-      3) rebuild_fhir_cache ;;
-      4) delete_build_cache ;;
+      3) update_tools ;;
+      4) rebuild_fhir_cache ;;
+      5) delete_build_cache ;;
       0) exit 0 ;;
       *) echo "Invalid option." ;;
     esac
