@@ -106,11 +106,12 @@ function rebuild_fhir_cache() {
 }
 
 function gcloud_deploy() {
-    config_file="$(dirname "$0")/config.sh"
+    config_file="./config.sh"
     if [[ -f $config_file ]]; then
         . $config_file
     else
         echo "❌ Error: config file not found"
+        exit 1
     fi
 
     gcloud_login
