@@ -105,6 +105,58 @@ function rebuild_fhir_cache() {
     fi
 }
 
+function gcloud_deploy() {
+    config_file="$(dirname "$0")/deploy.config.sh"
+    if [[ -f $config_file ]]; then
+        . "$(dirname "$0")/deploy.config.sh"
+    else
+        echo "❌ Error: config file not found"
+    fi
+
+    gcloud_login
+
+    case "$1" in
+        dev) BUCKET_NAME=${BUCKET_NAME_DEV} ;;
+        prod) BUCKET_NAME=${BUCKET_NAME_PROD} ;;
+        *)
+            echo "❌ Error: Set environment 'dev' or 'prod'."
+            exit 1
+        ;;
+
+    esac
+
+    target_path="${BUCKET_NAME}${BUCKET_PATH}/${TARGET}"
+
+    echo "✅ TARGET PATH: $target_path"
+
+    if gsutil ls gs://$target_path > /dev/null 2>&1; then
+        echo "TARGET directory already exists: ${target_path}"
+        gcloud_rm $target_path
+    else
+        echo "TARGET directory does not exist"
+    fi
+
+    gcloud_cp $target_path
+}
+
+function gcloud_login() {
+    if echo "" | gcloud projects list &> /dev/null; then
+        :
+    else
+        gcloud auth login
+    fi
+}
+
+function gcloud_rm() {
+    echo "Deleting existing TARGET: $1"
+    gcloud storage rm --recursive gs://$1
+}
+
+function gcloud_cp() {
+    echo "Uploading new version to TARGET: $1"
+    gsutil -m -h "Cache-Control:no-cache" cp -r ./output/* gs://$1
+}
+
 # Handle command-line argument or menu
 case "$1" in
   update) update_fhir_script ;;
@@ -112,6 +164,7 @@ case "$1" in
   tools) update_tools ;;
   fhircache) rebuild_fhir_cache $2 ;;
   bdcache) delete_build_cache ;;
+  deploy) gcloud_deploy $2 ;;
   exit) exit 0 ;;
   *)
     # Compute default choice
