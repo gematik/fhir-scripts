@@ -14,7 +14,15 @@ function delete_build_cache() {
 
 function update_script() {
     curl -L $1 -o "$2.new.sh" 2> /dev/null && mv "$2.new.sh" "$2.sh"
+    if [[$? -ne ]]; then
+        echo "❌ Failed to download latest version of $2"
+        exit 1
+    fi
     chmod +x $2.sh
+    if [[$? -ne ]]; then
+        echo "❌ Failed to set permission of $2"
+        exit 1
+    fi
     echo "✅ Updated $2.sh"
 }
 
