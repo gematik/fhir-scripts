@@ -98,6 +98,19 @@ function update_pytools() {
 }
 
 ###
+# Build
+###
+function build() {
+    case "$1" in
+        noig) build_definitions ;;
+        *)
+            build_definitions
+        ;;
+
+    esac
+}
+
+###
 # Build definitions
 ###
 function build_definitions() {
@@ -262,7 +275,7 @@ case "$1" in
   tools) update_tools ;;
   fhircache) rebuild_fhir_cache $2 ;;
   bdcache) delete_build_cache ;;
-  builddefs) build_definitions ;;
+  build) build $2 ;;
   deploy) gcloud_deploy $2 ;;
   exit) exit 0 ;;
   *)
@@ -275,12 +288,13 @@ case "$1" in
     echo "3) Update FHIR tools"
     echo "4) Rebuild FHIR cache"
     echo "5) Delete build cache"
+    echo "6) Build"
     echo "0) Exit"
     echo
 
     # Read with timeout, but default if nothing entered
     echo -n "Choose an option [default: $default_choice]: "
-    read -t 5 choice || choice="$default_choice"
+    read -t 30 choice || choice="$default_choice"
     choice="${choice:-$default_choice}"
     echo "You selected: $choice"
 
@@ -290,6 +304,30 @@ case "$1" in
       3) update_tools ;;
       4) rebuild_fhir_cache ;;
       5) delete_build_cache ;;
+      6)
+        default_choice=0 # Exit on default
+
+        echo "Please select an option:"
+        echo "1) Build everything"
+        echo "2) Build only definition"
+        echo "0) Exit"
+        echo
+
+        # Read with timeout, but default if nothing entered
+        echo -n "Choose an option [default: $default_choice]: "
+        read -t 30 choice || choice="$default_choice"
+        choice="${choice:-$default_choice}"
+        echo "You selected: $choice"
+
+        case "$choice" in
+        1)
+            build_definitions
+        ;;
+        2) build_definitions ;;
+        0) exit 0 ;;
+        *) echo "Invalid option." ;;
+        esac
+    ;;
       0) exit 0 ;;
       *) echo "Invalid option." ;;
     esac
