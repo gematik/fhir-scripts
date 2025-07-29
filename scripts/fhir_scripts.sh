@@ -6,24 +6,67 @@ publisher_url="https://github.com/HL7/fhir-ig-publisher/releases/latest/download
 publisher_jar="publisher.jar"
 input_cache_path="$(pwd)/input-cache/"
 
+###
+# Log helpers
+###
+function log_succ() {
+    echo "✅ $1"
+}
+
+function log_fail() {
+    echo "❌ $1"
+}
+
+###
+# Workflow helpers
+###
+function check_fail() {
+    if [[ $1 -ne 0 ]]; then
+        log_fail "$2"
+    fi
+}
+
+function check_exit_fail() {
+    if [[ $1 -ne 0 ]]; then
+        log_fail "$2"
+        exit 1
+    fi
+}
+
+function check_succ_fail() {
+    if [[ $1 -eq 0 ]]; then
+        log_succ "$2"
+    else
+        log_fail "$3"
+    fi
+}
+
+function check_succ_exit_fail() {
+    if [[ $1 -eq 0 ]]; then
+        log_succ "$2"
+    else
+        log_fail "$3"
+        exit 1
+    fi
+}
+
+###
+# Command functions
+###
 function delete_build_cache() {
     rm -rf input-cache/schemas
     rm -rf input-cache/txcache
-    echo "✅ Build cache cleared"
+    log_succ "Build cache cleared"
 }
 
 function update_script() {
     curl -L $1 -o "$2.new.sh" 2> /dev/null && mv "$2.new.sh" "$2.sh"
-    if [[ $? -ne 0 ]]; then
-        echo "❌ Failed to download latest version of $2"
-        exit 1
-    fi
+    check_exit_fail $? "Failed to download latest version of $2"
+
     chmod +x $2.sh
-    if [[ $? -ne 0 ]]; then
-        echo "❌ Failed to set permission of $2"
-        exit 1
-    fi
-    echo "✅ Updated $2.sh"
+    check_exit_fail $? "Failed to set permission of $2"
+
+    log_succ "Updated $2.sh"
 }
 
 function update_fhir_script() {
@@ -32,30 +75,27 @@ function update_fhir_script() {
 
 function update_tools() {
     sudo npm install -g fsh-sushi > /dev/null 2>&1
-    retVal=$?
-    if [[ $retVal -ne 0 ]]; then
-        echo "❌ Failed to update FSH Sushi"
-        exit 1
-    fi
-    echo "✅ Updated FSH Sushi to $(sushi --version | sed -nE 's/SUSHI v([\.0-9]+).*/\1/p')"
+    check_exit_fail $? "Failed to update FSH Sushi"
+
+    log_succ "Updated FSH Sushi to $(sushi --version | sed -nE 's/SUSHI v([\.0-9]+).*/\1/p')"
     mkdir -p "$input_cache_path"
     curl -L "$publisher_url" -o "${input_cache_path}${publisher_jar}" > /dev/null 2>&1
-    retVal=$?
-    if [[ $retVal -ne 0 ]]; then
-        echo "❌ Failed to update IG Publisher"
-        exit 1
-    fi
-    echo "✅ Updated IG Publisher to $(java -jar ${input_cache_path}${publisher_jar} -v)"
+    check_exit_fail $? "Failed to update IG Publisher"
+
+    log_succ "Updated IG Publisher to $(java -jar ${input_cache_path}${publisher_jar} -v)"
 }
 
 function update_pytools() {
     sudo pipx install --global -f git+https://github.com/onyg/epa-tools.git
+    check_succ_fail $? "Updated epa-tools" "Failed to update epa-tools"
+
     sudo pipx install --global -f git+https://github.com/onyg/req-tooling.git
+    check_succ_exit_fail $? "Upated reqtooling" "Failed to update req-tooling"
 }
 
 function rebuild_fhir_cache() {
     rm -rf $HOME/.fhir/packages/*
-    echo "✅ Cache cleared"
+    log_succ "Cache cleared"
     echo
 
     if [[ ! -z ${1+x} ]]; then
@@ -76,7 +116,7 @@ function rebuild_fhir_cache() {
                 if [[ ! -f "$file" ]]; then
                     npm --registry https://packages.simplifier.net pack --pack-destination $1 ${pkg}@${version} 2> /dev/null
                     if [[ -f "$file" ]]; then
-                        echo "✅ Downloaded package ${pkg}@${version} to local package directory"
+                        log_succ "Downloaded package ${pkg}@${version} to local package directory"
                     else
                         echo "⚠️ Could not download package ${pkg}@${version}"
                         unset file
@@ -87,13 +127,7 @@ function rebuild_fhir_cache() {
             # install local package if exists
             if [[ ! -z ${file+x} ]]; then
                 fhir install $file --file > /dev/null
-
-                retVal=$?
-                if [[ $retVal -eq 0 ]]; then
-                    echo "✅ Installed ${pkg}@${version}"
-                else
-                    echo "❌ Failed to install ${pkg}@${version}"
-                fi
+                check_succ_fail $? "Installed ${pkg}@${version}" "Failed to install ${pkg}@${version}"
             fi
 
             # restore previous version of 'package.json'
@@ -106,11 +140,7 @@ function rebuild_fhir_cache() {
     retVal=$?
 
     echo
-    if [[ $retVal -eq 0 ]]; then
-        echo "✅ Rebuilt complete"
-    else
-        echo "❌ Rebuilt failed"
-    fi
+    check_succ_fail $retVal "Rebuilt complete" "Rebuilt failed"
 }
 
 function gcloud_deploy() {
@@ -118,7 +148,7 @@ function gcloud_deploy() {
     if [[ -f $config_file ]]; then
         . $config_file
     else
-        echo "❌ Error: config file not found"
+        log_fail "Error: config file not found"
         exit 1
     fi
 
@@ -128,7 +158,7 @@ function gcloud_deploy() {
         dev) BUCKET_NAME=${BUCKET_NAME_DEV} ;;
         prod) BUCKET_NAME=${BUCKET_NAME_PROD} ;;
         *)
-            echo "❌ Error: Set environment 'dev' or 'prod'."
+            log_fail "Error: Set environment 'dev' or 'prod'."
             exit 1
         ;;
 
@@ -136,7 +166,7 @@ function gcloud_deploy() {
 
     target_path="${BUCKET_NAME}${BUCKET_PATH}/${TARGET}"
 
-    echo "✅ TARGET PATH: $target_path"
+    log_succ "TARGET PATH: $target_path"
 
     if gsutil ls gs://$target_path > /dev/null 2>&1; then
         echo "TARGET directory already exists: ${target_path}"
