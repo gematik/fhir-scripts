@@ -103,8 +103,10 @@ function update_pytools() {
 function build() {
     case "$1" in
         noig) build_definitions ;;
+        nodefs) build_ig ;;
         *)
             build_definitions
+            build_ig
         ;;
 
     esac
@@ -156,6 +158,95 @@ function merge_capabilities() {
         check_succ_exit_fail $? "CapabilityStatements merged" "Failed to merge CapabilityStatements"
     fi
 }
+
+###
+# Build IG
+###
+function build_ig() {
+    run_ig_pub
+    generate_openapi
+    zip_content
+    qa_results
+}
+
+function run_ig_pub() {
+    config_file="./config.sh"
+    if [[ -f $config_file ]]; then
+        . $config_file
+    else
+        log_fail "Error: config file not found"
+        exit 1
+    fi
+
+    if [[ -f "${input_cache_path}${publisher_jar}" ]]; then
+        java -jar ${input_cache_path}${publisher_jar} -no-sushi -ig . -publish $PUBLISH_URL
+        check_succ_exit_fail $? "Built IG" "Failed to build IG"
+    else
+        log_fail "IG Publisher not found"
+        exit 1
+    fi
+}
+
+function generate_openapi() {
+    echo
+    which epatools > /dev/null
+    if [[ $? -ne 0 ]]; then
+        log_warn "epatools not installed, skipping"
+    else
+        epatools openapi
+        retVal=$?
+        echo
+        check_succ_exit_fail $retVal "OpenAPI(s) generated" "Failed to generate OpenAPI(s)"
+    fi
+}
+
+function zip_content() {
+    config_file="./config.sh"
+    if [[ -f $config_file ]]; then
+        . $config_file
+    else
+        log_fail "Error: config file not found"
+        exit 1
+    fi
+
+    echo
+    if [[ -z ${CONTENT_FILES+x} ]]; then
+        log_warn "'CONTENT_FILES' not defined, skipping"
+    else
+        # Define path to zip and working files
+        ZIP="./output/full-ig.zip"
+        TMPDIR="./output/tmp_zip_edit"
+
+        # Clean and create temporary directory
+        rm -rf "$TMPDIR"
+        mkdir -p "$TMPDIR"
+
+        # Unzip current ig.zip to temp directory
+        unzip -q "$ZIP" -d "$TMPDIR"
+
+        # Copy each file into the unzipped content
+        for FILE in "${CONTENT_FILES[@]}"; do
+        echo "➡️  Adding or replacing: $FILE in $ZIP"
+        cp "./output/$FILE" "$TMPDIR/site"
+        done
+
+        # Repack zip with updated content
+        cd "$TMPDIR"
+        zip -qr ../full-ig.zip ./*
+        cd - > /dev/null
+
+        # Clean up
+        rm -rf "$TMPDIR"
+
+        echo "✅ ZIP files updated successfully: $ZIP"
+    fi
+}
+
+function qa_results() {
+    echo
+    echo "IG QA Result: errors = $(jq '.errs' output/qa.json), warnings = $(jq '.warnings' output/qa.json), hints = $(jq '.hints' output/qa.json)"
+}
+
 
 ###
 # Rebuild FHIR cache
@@ -310,6 +401,7 @@ case "$1" in
         echo "Please select an option:"
         echo "1) Build everything"
         echo "2) Build only definition"
+        echo "3) Build only IG"
         echo "0) Exit"
         echo
 
@@ -320,14 +412,16 @@ case "$1" in
         echo "You selected: $choice"
 
         case "$choice" in
-        1)
-            build_definitions
-        ;;
-        2) build_definitions ;;
-        0) exit 0 ;;
-        *) echo "Invalid option." ;;
+            1)
+                build_definitions
+                build_ig
+            ;;
+            2) build_definitions ;;
+            3) build_ig ;;
+            0) exit 0 ;;
+            *) echo "Invalid option." ;;
         esac
-    ;;
+        ;;
       0) exit 0 ;;
       *) echo "Invalid option." ;;
     esac
