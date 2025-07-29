@@ -17,6 +17,10 @@ function log_fail() {
     echo "❌ $1"
 }
 
+function log_warn() {
+    echo "⚠️ $1"
+}
+
 ###
 # Workflow helpers
 ###
@@ -93,6 +97,56 @@ function update_pytools() {
     check_succ_exit_fail $? "Upated reqtooling" "Failed to update req-tooling"
 }
 
+###
+# Build definitions
+###
+function build_definitions() {
+    run_igtools
+    run_sushi
+    merge_capabilities
+}
+
+function run_igtools() {
+    # Run if igtools are installed
+    which igtools > /dev/null
+    if [[ $? -ne 0 ]]; then
+        log_warn "igtools not installed, skipping"
+    else
+        igtools process > /dev/null
+        check_succ_exit_fail $? "Processed requirement" "Failed to process requirement"
+
+        igtools ig-release-notes input/data > /dev/null
+        check_succ_exit_fail $? "Created release-notes" "Failed to create release-notes"
+
+        igtools export input/data > /dev/null
+        check_succ_exit_fail $? "Exported requirement" "Failed to export requirements"
+
+        echo
+        log_succ "All igtools commands executed successfully"
+    fi
+}
+
+function run_sushi() {
+    echo
+    sushi
+    check_succ_exit_fail $? "Sushi run successful" "Sushi run failed"
+}
+
+function merge_capabilities() {
+    # Run if epatools are installed
+    echo
+    which epatools > /dev/null
+    if [[ $? -ne 0 ]]; then
+        log_warn "epatools not installed, skipping"
+    else
+        epatools merge > /dev/null
+        check_succ_exit_fail $? "CapabilityStatements merged" "Failed to merge CapabilityStatements"
+    fi
+}
+
+###
+# Rebuild FHIR cache
+###
 function rebuild_fhir_cache() {
     rm -rf $HOME/.fhir/packages/*
     log_succ "Cache cleared"
@@ -118,7 +172,7 @@ function rebuild_fhir_cache() {
                     if [[ -f "$file" ]]; then
                         log_succ "Downloaded package ${pkg}@${version} to local package directory"
                     else
-                        echo "⚠️ Could not download package ${pkg}@${version}"
+                        log_warn "Could not download package ${pkg}@${version}"
                         unset file
                     fi
                 fi
@@ -143,6 +197,9 @@ function rebuild_fhir_cache() {
     check_succ_fail $retVal "Rebuilt complete" "Rebuilt failed"
 }
 
+###
+# Deploy
+###
 function gcloud_deploy() {
     config_file="./config.sh"
     if [[ -f $config_file ]]; then
@@ -196,13 +253,16 @@ function gcloud_cp() {
     gsutil -m -h "Cache-Control:no-cache" cp -r ./output/* gs://$1
 }
 
+###
 # Handle command-line argument or menu
+###
 case "$1" in
   update) update_fhir_script ;;
   pytools) update_pytools ;;
   tools) update_tools ;;
   fhircache) rebuild_fhir_cache $2 ;;
   bdcache) delete_build_cache ;;
+  builddefs) build_definitions ;;
   deploy) gcloud_deploy $2 ;;
   exit) exit 0 ;;
   *)
