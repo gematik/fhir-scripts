@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # URLs
-fhir_scripts_url="https://raw.githubusercontent.com/cybernop/fhir-scripts/refs/heads/main/scripts/fhir_scripts.sh"
+fhir_scripts_url="https://raw.githubusercontent.com/gematik/fhir-scripts/refs/heads/main/scripts/fhir_scripts.sh"
 publisher_url="https://github.com/HL7/fhir-ig-publisher/releases/latest/download/publisher.jar"
 publisher_jar="publisher.jar"
 input_cache_path="$(pwd)/input-cache/"
