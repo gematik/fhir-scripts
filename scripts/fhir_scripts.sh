@@ -192,6 +192,7 @@ function generate_openapi() {
     which epatools > /dev/null
     if [[ $? -ne 0 ]]; then
         log_warn "epatools not installed, skipping"
+        return 0
     else
         epatools openapi
         retVal=$?
@@ -205,8 +206,8 @@ function zip_content() {
     if [[ -f $config_file ]]; then
         . $config_file
     else
-        log_fail "Error: config file not found"
-        exit 1
+        log_warn "config file not found, skipping update of ZIP files"
+        return 0
     fi
 
     echo
@@ -238,7 +239,7 @@ function zip_content() {
         # Clean up
         rm -rf "$TMPDIR"
 
-        echo "✅ ZIP files updated successfully: $ZIP"
+        log_succ "ZIP files updated successfully: $ZIP"
     fi
 }
 
