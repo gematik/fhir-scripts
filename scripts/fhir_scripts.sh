@@ -59,13 +59,24 @@ function check_succ_exit_fail() {
 }
 
 function exec_succ_exit_log_fail() {
-    res=$($1)
+    res=$($1 2>&1)
     if [[ $? -eq 0 ]]; then
         log_succ "$2"
     else
         printf "$res\n"
         log_fail "$3"
         exit 1
+    fi
+}
+
+function exec_succ_log_fail() {
+    res=$($1 2>&1)
+    if [[ $? -eq 0 ]]; then
+        log_succ "$2"
+    else
+        printf "$res\n"
+        log_fail "$3"
+        return 1
     fi
 }
 
@@ -76,6 +87,25 @@ function delete_build_cache() {
     rm -rf input-cache/schemas
     rm -rf input-cache/txcache
     log_succ "Build cache cleared"
+}
+
+###
+# Update
+###
+function update() {
+    case "$1" in
+        script) update_script ;;
+        tools) update_tools ;;
+        sushi) update_sushi ;;
+        igpub) update_igpub ;;
+        pytools) update_pytools ;;
+        *)
+            # update_script
+            update_tools
+            update_pytools
+        ;;
+
+    esac
 }
 
 function update_script() {
@@ -92,24 +122,53 @@ function update_fhir_script() {
     update_script $fhir_scripts_url fhir_scripts
 }
 
-function update_tools() {
-    sudo npm install -g fsh-sushi > /dev/null 2>&1
-    check_exit_fail $? "Failed to update FSH Sushi"
+function sushi_version() {
+    sushi --version | sed -nE 's/SUSHI v([\.0-9]+).*/\1/p'
+}
 
-    log_succ "Updated FSH Sushi to $(sushi --version | sed -nE 's/SUSHI v([\.0-9]+).*/\1/p')"
+function update_sushi() {
+    exec_succ_exit_log_fail "sudo npm install -g fsh-sushi" "Updated FSH Sushi to $(sushi_version)" "Failed to update FSH Sushi"
+}
+
+function igpub_version() {
+    java -jar ${input_cache_path}${publisher_jar} -v
+}
+
+function _update_igpub() {
+    curl -L "$publisher_url" -o "${input_cache_path}${publisher_jar}"
+}
+
+function update_igpub() {
     mkdir -p "$input_cache_path"
-    curl -L "$publisher_url" -o "${input_cache_path}${publisher_jar}" > /dev/null 2>&1
-    check_exit_fail $? "Failed to update IG Publisher"
+    exec_succ_exit_log_fail "_update_igpub" "Updated IG Publisher to $(igpub_version)" "Failed to update IG Publisher"
+}
 
-    log_succ "Updated IG Publisher to $(java -jar ${input_cache_path}${publisher_jar} -v)"
+function update_tools() {
+    update_sushi
+    update_igpub
+}
+
+function update_pytool() {
+    exec_succ_log_fail "sudo pipx install --global -f $1" "$2" "$3"
+}
+
+function epatools_version() {
+    which epatools > /dev/null
+    if [[ $? -eq 0 ]]; then
+        epatools --version
+    fi
+}
+
+function igtools_version() {
+    which igtools > /dev/null
+    if [[ $? -eq 0 ]]; then
+        igtools --version
+    fi
 }
 
 function update_pytools() {
-    sudo pipx install --global -f git+https://github.com/onyg/epa-tools.git
-    check_succ_fail $? "Updated epa-tools" "Failed to update epa-tools"
-
-    sudo pipx install --global -f git+https://github.com/onyg/req-tooling.git
-    check_succ_exit_fail $? "Upated reqtooling" "Failed to update req-tooling"
+    update_pytool "git+https://github.com/onyg/epa-tools.git" "Updated epa-tools to $(epatools_version)" "Failed to update epa-tools"
+    update_pytool "git+https://github.com/onyg/req-tooling.git" "Upated reqtooling to $(igtools_version)" "Failed to update req-tooling"
 }
 
 ###
@@ -381,9 +440,7 @@ function gcloud_cp() {
 # Handle command-line argument or menu
 ###
 case "$1" in
-  update) update_fhir_script ;;
-  pytools) update_pytools ;;
-  tools) update_tools ;;
+  update) update $2 ;;
   fhircache) rebuild_fhir_cache $2 ;;
   bdcache) delete_build_cache ;;
   build) build $2 ;;
