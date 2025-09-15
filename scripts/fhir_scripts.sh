@@ -9,6 +9,10 @@ input_cache_path="$(pwd)/input-cache/"
 ###
 # Log helpers
 ###
+function log_info() {
+    echo "➡️  $1"
+}
+
 function log_succ() {
     echo "✅ $1"
 }
@@ -49,6 +53,17 @@ function check_succ_exit_fail() {
     if [[ $1 -eq 0 ]]; then
         log_succ "$2"
     else
+        log_fail "$3"
+        exit 1
+    fi
+}
+
+function exec_succ_exit_log_fail() {
+    res=$($1)
+    if [[ $? -eq 0 ]]; then
+        log_succ "$2"
+    else
+        printf "$res\n"
         log_fail "$3"
         exit 1
     fi
@@ -102,8 +117,13 @@ function update_pytools() {
 ###
 function build() {
     case "$1" in
-        noig) build_definitions ;;
-        nodefs) build_ig ;;
+        pytools)
+            run_igtools
+            merge_capabilities
+        ;;
+        sushi) run_sushi ;;
+        defs) build_definitions ;;
+        ig) build_ig ;;
         *)
             build_definitions
             build_ig
@@ -132,14 +152,9 @@ function run_igtools() {
     if [[ $? -ne 0 ]]; then
         log_warn "igtools not installed, skipping"
     else
-        igtools process > /dev/null
-        check_succ_exit_fail $? "Processed requirement" "Failed to process requirement"
-
-        igtools ig-release-notes input/data > /dev/null
-        check_succ_exit_fail $? "Created release-notes" "Failed to create release-notes"
-
-        igtools export input/data > /dev/null
-        check_succ_exit_fail $? "Exported requirement" "Failed to export requirements"
+        exec_succ_exit_log_fail "igtools process" "Processed requirement" "Failed to process requirement"
+        exec_succ_exit_log_fail "igtools ig-release-notes input/data" "Created release-notes" "Failed to create release-notes"
+        exec_succ_exit_log_fail "igtools export input/data" "Exported requirement" "Failed to export requirements"
 
         echo
         log_succ "All igtools commands executed successfully"
@@ -159,8 +174,7 @@ function merge_capabilities() {
     if [[ $? -ne 0 ]]; then
         log_warn "epatools not installed, skipping"
     else
-        epatools merge > /dev/null
-        check_succ_exit_fail $? "CapabilityStatements merged" "Failed to merge CapabilityStatements"
+        exec_succ_exit_log_fail "epatools merge" "CapabilityStatements merged" "Failed to merge CapabilityStatements"
     fi
 }
 
@@ -232,7 +246,7 @@ function zip_content() {
 
         # Copy each file into the unzipped content
         for FILE in "${CONTENT_FILES[@]}"; do
-        echo "➡️  Adding or replacing: $FILE in $ZIP"
+        log_info "Adding or replacing: $FILE in $ZIP"
         cp "./output/$FILE" "$TMPDIR/site"
         done
 
