@@ -122,6 +122,11 @@ function build_definitions() {
 }
 
 function run_igtools() {
+    # Skip if igtools are not configured for the project
+    if [[ ! -f "./.igtools/config.yaml" ]]; then
+        return 0
+    fi
+
     # Run if igtools are installed
     which igtools > /dev/null
     if [[ $? -ne 0 ]]; then
