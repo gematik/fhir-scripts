@@ -128,15 +128,15 @@ function update() {
 }
 
 function update_script() {
-    exec_exit_log_fail "curl -L $1 -o script.new.sh" "Failed to download latest version of $2"
-
     owner=$(ls -ld $2 | awk '{print $3}')
     if [[ $owner -ne $USER ]]; then
         # Needs root to set original owner
+        exec_exit_log_fail "sudo curl -L $1 -o script.new.sh" "Failed to download latest version of $2"
         sudo mv script.new.sh $2
         sudo chown $owner $2
         sudo chmod +x $2
     else
+        exec_exit_log_fail "curl -L $1 -o script.new.sh" "Failed to download latest version of $2"
         mv script.new.sh $2
         chmod +x $2
     fi
