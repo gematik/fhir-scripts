@@ -1,0 +1,18 @@
+[project]
+name = "fhir-scripts"
+version = "0.1.0"
+description = ""
+authors = [
+    { name = "Alexander Essenwanger", email = "alexander.essenwanger@gematik.de" },
+]
+license = { text = "Apache-2.0" }
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project.scripts]
+fhirscripts = "fhir_scripts.main:main"
