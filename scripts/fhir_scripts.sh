@@ -41,6 +41,15 @@ function check_exit_fail() {
     fi
 }
 
+function exec_exit_log_fail() {
+    res=$($1 2>&1)
+    if [[ $? -ne 0 ]]; then
+        printf "$res\n"
+        log_fail "$2"
+        exit 1
+    fi
+}
+
 function check_succ_fail() {
     if [[ $1 -eq 0 ]]; then
         log_succ "$2"
@@ -104,13 +113,13 @@ function print_versions() {
 ###
 function update() {
     case "$1" in
-        script) update_script ;;
+        script) update_fhir_script ;;
         tools) update_tools ;;
         sushi) update_sushi ;;
         igpub) update_igpub ;;
         pytools) update_pytools ;;
         *)
-            # update_script
+            update_fhir_script
             update_tools
             update_pytools
         ;;
@@ -119,17 +128,24 @@ function update() {
 }
 
 function update_script() {
-    curl -L $1 -o "$2.new.sh" 2> /dev/null && mv "$2.new.sh" "$2.sh"
-    check_exit_fail $? "Failed to download latest version of $2"
+    exec_exit_log_fail "curl -L $1 -o script.new.sh" "Failed to download latest version of $2"
 
-    chmod +x $2.sh
-    check_exit_fail $? "Failed to set permission of $2"
+    owner=$(ls -ld $2 | awk '{print $3}')
+    if [[ $owner -ne $USER ]]; then
+        # Needs root to set original owner
+        sudo mv script.new.sh $2
+        sudo chown $owner $2
+        sudo chmod +x $2
+    else
+        mv script.new.sh $2
+        chmod +x $2
+    fi
 
-    log_succ "Updated $2.sh"
+    log_succ "Updated $2"
 }
 
 function update_fhir_script() {
-    update_script $fhir_scripts_url fhir_scripts
+    update_script $fhir_scripts_url $0
 }
 
 function sushi_version() {
