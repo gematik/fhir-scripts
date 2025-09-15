@@ -90,6 +90,16 @@ function delete_build_cache() {
 }
 
 ###
+# Print Versions
+###
+function print_versions() {
+    # TODO script version
+    echo "FSH Sushi: $(sushi_version)"
+    echo "IG Publisher: $(igpub_version)"
+    print_pytools_version
+}
+
+###
 # Update
 ###
 function update() {
@@ -150,6 +160,18 @@ function update_tools() {
 
 function update_pytool() {
     exec_succ_log_fail "sudo pipx install --global -f $1" "$2" "$3"
+}
+
+function print_pytools_version() {
+    which epatools > /dev/null
+    if [[ $? -eq 0 ]]; then
+        echo "epatools: $(epatools_version)"
+    fi
+
+    which igtools > /dev/null
+    if [[ $? -eq 0 ]]; then
+        echo "igtools: $(igtools_version)"
+    fi
 }
 
 function epatools_version() {
@@ -445,6 +467,7 @@ case "$1" in
   bdcache) delete_build_cache ;;
   build) build $2 ;;
   deploy) gcloud_deploy $2 ;;
+  version) print_versions ;;
   exit) exit 0 ;;
   *)
     # Compute default choice
