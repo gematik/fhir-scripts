@@ -28,6 +28,21 @@ def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
     if env is None:
         raise Exception(f"Environment '{cli_args.environment}' not defined in config")
 
+    # Build URLs
+    target = f"gs://{env.rstrip("/")}/{deploy_cfg.path.strip("/")}"
+
+    # Login if necessary
+    gcloud.login()
+
+    # TODO: add arguments to deploy --all, --only-ig or --only-history, default should be --only-ig
+
+    _deploy_ig(target, gcloud)
+
+    # TODO: handle history file
+
+    return True
+
+def _deploy_ig(target: str, gcloud: GCloudHelper):
     output_dir = Path("./output")
 
     # Get built version
@@ -38,22 +53,9 @@ def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
     ig = json.loads(igs[0].read_text(encoding="utf-8"))
     version = ig["version"]
 
-    # Build URLs
-    target = f"gs://{env.rstrip("/")}/{deploy_cfg.path.strip("/")}"
-    target_versioned = f"{target}/{version}"
-
-    # Login if necessary
-    gcloud.login()
-
-    # TODO: add arguments to deploy --all, --only-ig or --only-history, default should be --only-ig
-
     # Copy IG
+    target_versioned = f"{target}/{version}"
     log.info(f"Deploy built IG to {target_versioned}")
-
     gcloud.copy(source=output_dir, target=target_versioned)
 
     log.succ("Deployed IG")
-
-    # TODO: handle history file
-
-    return True
