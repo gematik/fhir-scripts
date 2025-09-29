@@ -69,13 +69,11 @@ class GCloudHelper:
 
         else:
             _execute_progress(
-                CMD_CP_R.format(source.absolute(), target),
+                CMD_CP.format(source.absolute(), target),
                 total=1,
                 prefixes=["Copying "],
                 desc="Copying",
             )
-
-        pass
 
     def ls(self, path: str) -> list[str]:
         res = subprocess.run(CMD_LS.format(path), shell=True, capture_output=True)
