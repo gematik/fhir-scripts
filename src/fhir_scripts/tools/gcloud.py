@@ -4,7 +4,7 @@ from subprocess import CalledProcessError
 
 from tqdm import tqdm
 
-from .. import log
+from .. import helper, log
 
 CMD_LIST = "gcloud projects list"
 CMD_LOGIN = "gcloud auth login"
@@ -42,7 +42,7 @@ class GCloudHelper:
         # Check for overwrite
         existing = self.ls(target)
         if existing and not force:
-            if not _confirm(f"Target {target} exists. Overwrite?"):
+            if not helper.confirm(f"Target {target} exists. Overwrite?"):
                 log.warn("Copy aborted by user")
                 return
 
@@ -85,25 +85,6 @@ class GCloudHelper:
 
         else:
             return []
-
-
-def _confirm(prompt: str, default: bool = False) -> bool:
-    """
-    Prompt for yes/no confirmation.
-    default=False -> [y/N]
-    default=True  -> [Y/n]
-    Non-TTY (e.g. piped / CI) returns default automatically.
-    """
-
-    suffix = " [Y/n]: " if default else " [y/N]: "
-    while True:
-        ans = input(prompt + suffix).strip().lower()
-        if not ans:
-            return default
-        if ans in ("y", "yes"):
-            return True
-        if ans in ("n", "no"):
-            return False
 
 
 def _execute_progress(cmd, total, prefixes, desc):
