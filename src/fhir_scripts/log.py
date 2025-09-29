@@ -3,7 +3,7 @@ def fail(string: str):
 
 
 def warn(string: str):
-    print("⚠️ " + string)
+    print("⚠️  " + string)
 
 
 def info(string: str):

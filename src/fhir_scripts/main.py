@@ -7,6 +7,7 @@ import yaml
 
 from . import deploy, log, update
 from .config import Config
+from .exception import CancelException
 
 
 def main():
@@ -30,6 +31,10 @@ def main():
 
         if not handlers[args.cmd](args, config):
             parser.print_help()
+
+    except CancelException as e:
+        log.warn(str(e))
+        sys.exit(-1)
 
     except BaseException as e:
         log.fail(f"Error: {e}")

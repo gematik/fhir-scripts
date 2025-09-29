@@ -1,23 +1,34 @@
+import json
 from argparse import Namespace, _SubParsersAction
 from pathlib import Path
 from typing import Callable
-import json
-from . import log
 
+from . import log
 from .config import Config
+from .helper import confirm
 from .tools.gcloud import GCloudHelper
 
 CMD = "deploy"
+
+TARGET_BASE_DIR = "ig/fhir"
 
 
 def setup_parser(subparsers: _SubParsersAction):
     parser = subparsers.add_parser(CMD, help="Deploy IG")
     parser.add_argument("environment", help="Name of the environment")
+    parser.add_argument(
+        "-y", "--yes", action="store_true", help="Confirm all prompts with 'yes'"
+    )
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--all", action="store_true", help="Deploy everything (IG and history)")
+    group.add_argument(
+        "--all", action="store_true", help="Deploy everything (IG and history)"
+    )
     group.add_argument("--only-ig", action="store_true", help="Deploy the IG")
     group.add_argument("--only-history", action="store_true", help="Deploy IG history")
+    group.add_argument(
+        "--ig-registry", action="store_true", help="Deploy IG registry entries"
+    )
 
 
 def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
@@ -27,36 +38,79 @@ def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
 def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
     gcloud = GCloudHelper()
 
-    deploy_cfg = config.deploy
-    env = deploy_cfg.env.get(cli_args.environment)
-
-    if env is None:
-        raise Exception(f"Environment '{cli_args.environment}' not defined in config")
-
-    # Build URLs
-    target = f"gs://{env.rstrip("/")}/{deploy_cfg.path.strip("/")}"
-
     # Login if necessary
     gcloud.login()
 
-    # TODO: add arguments to deploy --all, --only-ig or --only-history, default should be --only-ig
-
-    if cli_args.all:
-        _deploy_ig(target, gcloud)
-        _deploy_history(target, gcloud)
-
-    elif cli_args.only_ig:
-        _deploy_ig(target, gcloud)
-
-    elif cli_args.only_history:
-        _deploy_history(target, gcloud)
+    if cli_args.ig_registry:
+        # Build target URL
+        target = _target_path(config, cli_args.environment)
+        _deploy_ig_registry(target, gcloud, confirm_yes=cli_args.yes)
 
     else:
-        _deploy_ig(target, gcloud)
+        # Build target URL
+        target = _target_path(config, cli_args.environment, needs_project=True)
+
+        if cli_args.all:
+            _deploy_ig(target, gcloud, confirm_yes=cli_args.yes)
+            _deploy_history(target, gcloud, confirm_yes=cli_args.yes)
+
+        elif cli_args.only_ig:
+            _deploy_ig(target, gcloud, confirm_yes=cli_args.yes)
+
+        elif cli_args.only_history:
+            _deploy_history(target, gcloud, confirm_yes=cli_args.yes)
+
+        else:
+            _deploy_ig(target, gcloud, confirm_yes=cli_args.yes)
 
     return True
 
-def _deploy_ig(target: str, gcloud: GCloudHelper):
+
+def _deploy_ig_registry(target, gcloud: GCloudHelper, confirm_yes: bool = False):
+    reg_dir = Path("./")
+
+    log.info(f"Deploy IG registry files to {target}")
+    confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
+
+    deploy_files = ["index.html", "package-feed.xml"]
+    for file in deploy_files:
+
+        file = reg_dir / file
+        if not file.exists():
+            raise Exception(f"Source '{file.absolute()}' does not exist")
+
+        target_file = target + "/" + file.name
+        gcloud.copy(source=file, target=target_file, force=True)
+
+    log.succ("Deployed IG registry files")
+
+
+def _target_path(config: Config, env_name: str, needs_project: bool = False) -> str:
+    deploy_cfg = config.deploy
+    env = deploy_cfg.env.get(env_name)
+
+    if env is None:
+        raise Exception(f"Environment '{env_name}' not defined in config")
+
+    path_parts: list[str]
+    if deploy_cfg.path is not None:
+        path_parts = [env, deploy_cfg.path]
+
+    elif project := _project_name(needs_project):
+        path_parts = [env, TARGET_BASE_DIR, project]
+
+    else:
+        if needs_project:
+            raise Exception(
+                "Path needs to include a project name, none found in built IG or config"
+            )
+
+        path_parts = [env, TARGET_BASE_DIR]
+
+    return "gs://" + "/".join([p.strip("/") for p in path_parts])
+
+
+def _deploy_ig(target: str, gcloud: GCloudHelper, confirm_yes: bool = False):
     output_dir = Path("./output")
 
     # Get built version
@@ -70,37 +124,43 @@ def _deploy_ig(target: str, gcloud: GCloudHelper):
     # Copy IG
     target_versioned = f"{target}/{version}"
     log.info(f"Deploy built IG to {target_versioned}")
-    gcloud.copy(source=output_dir, target=target_versioned)
+    confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
+    gcloud.copy(source=output_dir, target=target_versioned, force=confirm_yes)
 
     log.succ("Deployed IG")
 
-def _deploy_history(target, gcloud:GCloudHelper):
+
+def _deploy_history(target, gcloud: GCloudHelper, confirm_yes: bool = False):
+    publish_dir = Path("./publish") / _project_name()
+
+    history_file_name = "index.html"
+    history_file = publish_dir / history_file_name
+    if not history_file.exists():
+        raise Exception(f"History does not exist: {history_file} not found")
+
+    # Copy history
+    target_history = target + "/" + history_file_name
+    log.info(f"Deploy history file to {target_history}")
+    confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
+    gcloud.copy(source=history_file, target=target_history, force=True)
+
+    log.succ("Deployed history file")
+
+
+def _project_name(needs_project: bool = True) -> str | None:
+    """
+    Extract the project name from a IG Canonical URL
+    """
     output_dir = Path("./output")
 
     # Get project name
     igs = list(output_dir.glob("ImplementationGuide*.json"))
     if len(igs) != 1:
-        raise Exception("Built IG not found")
+        if needs_project:
+            raise Exception("Built IG not found")
+
+        else:
+            return None
 
     ig = json.loads(igs[0].read_text(encoding="utf-8"))
-    project = _project_name(ig["url"])
-
-    publish_dir = Path("./publish/" + project)
-
-    history_file_name = "index.html"
-    history_file = publish_dir / history_file_name
-    if not history_file.exists():
-        raise Exception(f"history does not exist: {history_file} not found")
-
-    # Copy history
-    target_history = target + "/" + history_file_name
-    log.info(f"Deploy history file to {target_history}")
-    gcloud.copy(source=history_file, target=target_history, force=True)
-
-    log.succ("Deployed history file")
-
-def _project_name(url:str)-> str:
-    """
-    Extract the project name from a IG Canonical URL
-    """
-    return url.rsplit("/",3)[1]
+    return ig["url"].rsplit("/", 3)[1]
