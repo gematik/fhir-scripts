@@ -17,6 +17,7 @@ def setup_parser(subparsers: _SubParsersAction):
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--all", action="store_true", help="Deploy everything (IG and history)")
     group.add_argument("--only-ig", action="store_true", help="Deploy the IG")
+    group.add_argument("--only-history", action="store_true", help="Deploy IG history")
 
 
 def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
@@ -42,10 +43,13 @@ def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
 
     if cli_args.all:
         _deploy_ig(target, gcloud)
+        _deploy_history(target, gcloud)
 
     elif cli_args.only_ig:
         _deploy_ig(target, gcloud)
 
+    elif cli_args.only_history:
+        _deploy_history(target, gcloud)
 
     else:
         _deploy_ig(target, gcloud)
@@ -69,3 +73,34 @@ def _deploy_ig(target: str, gcloud: GCloudHelper):
     gcloud.copy(source=output_dir, target=target_versioned)
 
     log.succ("Deployed IG")
+
+def _deploy_history(target, gcloud:GCloudHelper):
+    output_dir = Path("./output")
+
+    # Get project name
+    igs = list(output_dir.glob("ImplementationGuide*.json"))
+    if len(igs) != 1:
+        raise Exception("Built IG not found")
+
+    ig = json.loads(igs[0].read_text(encoding="utf-8"))
+    project = _project_name(ig["url"])
+
+    publish_dir = Path("./publish/" + project)
+
+    history_file_name = "index.html"
+    history_file = publish_dir / history_file_name
+    if not history_file.exists():
+        raise Exception(f"history does not exist: {history_file} not found")
+
+    # Copy history
+    target_history = target + "/" + history_file_name
+    log.info(f"Deploy history file to {target_history}")
+    gcloud.copy(source=history_file, target=target_history, force=True)
+
+    log.succ("Deployed history file")
+
+def _project_name(url:str)-> str:
+    """
+    Extract the project name from a IG Canonical URL
+    """
+    return url.rsplit("/",3)[1]
