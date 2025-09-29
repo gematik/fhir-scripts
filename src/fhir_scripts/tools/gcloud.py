@@ -1,7 +1,9 @@
-from pathlib import Path
 import subprocess
+from pathlib import Path
 from subprocess import CalledProcessError
+
 from tqdm import tqdm
+
 from .. import log
 
 CMD_LIST = "gcloud projects list"
@@ -131,5 +133,3 @@ def _execute_progress(cmd, total, prefixes, desc):
 
             if proc.returncode != 0:
                 raise CalledProcessError(proc.returncode, proc.args)
-
-
