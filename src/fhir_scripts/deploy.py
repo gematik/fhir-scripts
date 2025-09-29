@@ -14,6 +14,10 @@ def setup_parser(subparsers: _SubParsersAction):
     parser = subparsers.add_parser(CMD, help="Deploy IG")
     parser.add_argument("environment", help="Name of the environment")
 
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--all", action="store_true", help="Deploy everything (IG and history)")
+    group.add_argument("--only-ig", action="store_true", help="Deploy the IG")
+
 
 def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
     handlers[CMD] = handle
@@ -36,9 +40,15 @@ def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
 
     # TODO: add arguments to deploy --all, --only-ig or --only-history, default should be --only-ig
 
-    _deploy_ig(target, gcloud)
+    if cli_args.all:
+        _deploy_ig(target, gcloud)
 
-    # TODO: handle history file
+    elif cli_args.only_ig:
+        _deploy_ig(target, gcloud)
+
+
+    else:
+        _deploy_ig(target, gcloud)
 
     return True
 
