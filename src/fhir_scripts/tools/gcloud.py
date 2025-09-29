@@ -42,9 +42,9 @@ class GCloudHelper:
         # Check for overwrite
         existing = self.ls(target)
         if existing and not force:
-            if not helper.confirm(f"Target {target} exists. Overwrite?"):
-                log.warn("Copy aborted by user")
-                return
+            helper.confirm(
+                f"Target {target} exists. Overwrite?", "Copy aborted by user"
+            )
 
             # Clear existing directory
             log.info("Remove existing target")
