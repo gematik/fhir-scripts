@@ -38,10 +38,11 @@ class GCloudHelper:
 
         # Check for overwrite
         existing = self.ls(target)
-        if existing and not force:
-            helper.confirm(
-                f"Target {target} exists. Overwrite?", "Copy aborted by user"
-            )
+        if existing:
+            if not force:
+                helper.confirm(
+                    f"Target {target} exists. Overwrite?", "Copy aborted by user"
+                )
 
             # Clear existing directory
             log.info("Remove existing target")
@@ -74,7 +75,7 @@ class GCloudHelper:
         res = shell.run(CMD_LS.format(path), capture_output=True)
 
         if res.returncode == 0:
-            return res.stdout.decode("utf-8").split()
+            return res.stdout
 
         else:
             return []
