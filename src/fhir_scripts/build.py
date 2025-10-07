@@ -23,10 +23,10 @@ def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
     handlers[CMD] = handle
 
 
-def handle(args: Namespace, *arsg, **kwargs) -> bool:
+def handle(cli_args: Namespace, *arsg, **kwargs) -> bool:
     upd_funcs = {DEFS: build_defs, ALL: build_all}
 
-    func = upd_funcs.get(getattr(args, CMD), None)
+    func = upd_funcs.get(getattr(cli_args, CMD), None)
 
     if func is None:
         return False
