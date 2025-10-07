@@ -1,10 +1,7 @@
-import subprocess
 from pathlib import Path
-from subprocess import CalledProcessError
-
-from tqdm import tqdm
 
 from .. import helper, log
+from . import shell
 
 CMD_LIST = "gcloud projects list"
 CMD_LOGIN = "gcloud auth login"
@@ -22,17 +19,17 @@ class GCloudHelper:
         if not self.logged_in:
             log.info("Check gcloud login")
             try:
-                subprocess.run(CMD_LIST, shell=True, check=True, capture_output=True)
+                shell.run(CMD_LIST, check=True, capture_output=True)
                 log.succ("Already logged in")
 
-            except CalledProcessError:
+            except shell.CalledProcessError:
                 # Not logged in
                 try:
-                    subprocess.run(CMD_LOGIN, shell=True, check=True)
+                    shell.run(CMD_LOGIN)
                     log.succ("Login successful")
 
                 except Exception as e:
-                    raise Exception("Login failed", e)
+                    raise Exception(f"Login failed {str(e)}")
 
             self.logged_in = True
 
@@ -49,7 +46,7 @@ class GCloudHelper:
             # Clear existing directory
             log.info("Remove existing target")
 
-            _execute_progress(
+            shell.run_progress(
                 CMD_RM.format(target),
                 total=len(existing),
                 prefixes=["Removing "],
@@ -60,57 +57,24 @@ class GCloudHelper:
         log.info(f"Copy to {target}")
         if source.is_dir():
             total = len(list(source.glob("**/*")))
-
-            # Copy recursive
-            _execute_progress(
-                CMD_CP_R.format(source.absolute(), target),
-                total=total,
-                prefixes=["Copying "],
-                desc="Copying",
-            )
+            cmd = CMD_CP_R
 
         else:
-            _execute_progress(
-                CMD_CP.format(source.absolute(), target),
-                total=1,
-                prefixes=["Copying "],
-                desc="Copying",
-            )
+            total = 1
+            cmd = CMD_CP
+
+        shell.run_progress(
+            cmd.format(source.absolute(), target),
+            total=total,
+            prefixes=["Copying "],
+            desc="Copying",
+        )
 
     def ls(self, path: str) -> list[str]:
-        res = subprocess.run(CMD_LS.format(path), shell=True, capture_output=True)
+        res = shell.run(CMD_LS.format(path), capture_output=True)
 
         if res.returncode == 0:
             return res.stdout.decode("utf-8").split()
 
         else:
             return []
-
-
-def _execute_progress(cmd, total, prefixes, desc):
-    with subprocess.Popen(
-        cmd,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,
-    ) as proc:
-        with tqdm(
-            total=total, unit="obj", desc=desc, disable=False, dynamic_ncols=True
-        ) as bar:
-            for line in proc.stdout:
-                line = line.rstrip()
-                for pref in prefixes:
-                    if line.startswith(pref):
-                        bar.update(1)
-                        break  # avoid double count if multiple prefixes match
-            proc.wait()
-
-            # If we had an estimated total that was too large/small, normalize so bar shows 100%.
-            if bar.total is None or bar.n != bar.total:
-                bar.total = bar.n
-                bar.refresh()
-
-            if proc.returncode != 0:
-                raise CalledProcessError(proc.returncode, proc.args)

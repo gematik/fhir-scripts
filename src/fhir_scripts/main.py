@@ -36,8 +36,14 @@ def main():
         log.warn(str(e))
         sys.exit(-1)
 
-    except BaseException as e:
-        log.fail(f"Error: {e}")
+    except Exception as e:
+        if stdout := getattr(e, "stdout", None):
+            log.info(stdout)
+
+        if stderr := getattr(e, "stderr", None):
+            log.fail(stderr)
+
+        log.fail(f"Error: {str(e)}")
         sys.exit(os.EX_DATAERR)
 
     sys.exit(os.EX_OK)
