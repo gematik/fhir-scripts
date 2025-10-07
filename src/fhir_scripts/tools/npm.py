@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from . import shell
 
 
@@ -27,3 +29,27 @@ def is_installed() -> None:
 
     except shell.CalledProcessError:
         raise Exception("NPM is needed but not installed")
+
+
+def download(
+    pkg_name: str, version: str, target_dir: Path, registry: str | None = None
+):
+    """
+    Download a package from a NPM registry
+
+    If `registry` is provided it used instead of the default NPM one.
+    """
+    is_installed()
+
+    if registry:
+        cmd = f"npm --registry {registry} pack --pack-destination {target_dir} {pkg_name}@{version}"
+
+    else:
+        cmd = f"npm pack --pack-destination {target_dir} {pkg_name}@{version}"
+
+    res = shell.run(cmd, capture_output=True)
+
+    if res.returncode != 0:
+        raise shell.CalledProcessError(
+            res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
+        )
