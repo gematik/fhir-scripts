@@ -7,6 +7,11 @@ CalledProcessError = CalledProcessError
 
 
 def run(cmd, check: bool | None = None, capture_output: bool = False):
+    """
+    Execute a command on the shell
+
+    By default the output is not captured (`capture_output = False`), but if the status code is not equal to 0 an `CalledProcessError` is raised (`check = True`).
+    """
     return subprocess.run(
         cmd,
         shell=True,
@@ -16,6 +21,11 @@ def run(cmd, check: bool | None = None, capture_output: bool = False):
 
 
 def run_progress(cmd, total, prefixes, desc):
+    """
+    Execute a command on shell with a progress bar
+
+    The output is hidden but instead a progress bar shown. It also shows a progress as X out of `total`. `prefixes` defines a list of prefixes of lines to be counted as progress and `desc` is a string that is added as a title in front of the progress bar.
+    """
     with subprocess.Popen(
         cmd,
         shell=True,
