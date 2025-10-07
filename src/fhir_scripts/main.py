@@ -1,11 +1,11 @@
 import argparse
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import yaml
 
-from . import deploy, log, update
+from . import build, deploy, log, update
 from .config import Config
 from .exception import CancelException
 
@@ -14,12 +14,14 @@ def main():
     parser = argparse.ArgumentParser(description="Scripts to support FHIR development")
     subparsers = parser.add_subparsers(dest="cmd")
 
+    build.setup_parser(subparsers)
     deploy.setup_parser(subparsers)
     update.setup_parser(subparsers)
 
     args = parser.parse_args()
 
     handlers = {}
+    build.add_handler(handlers)
     deploy.add_handler(handlers)
     update.add_handler(handlers)
 
