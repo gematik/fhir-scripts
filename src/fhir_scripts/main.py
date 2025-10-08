@@ -28,10 +28,15 @@ def main():
     update.add_handler(handlers)
 
     try:
+        # Read config; initialize with default values if not found
         config_file = Path("./config.yaml")
-        config = Config.model_validate(
-            yaml.safe_load(config_file.read_text(encoding="utf-8"))
-        )
+        if config_file.exists():
+            config_file_contents = yaml.safe_load(
+                config_file.read_text(encoding="utf-8")
+            )
+        else:
+            config_file_contents = {}
+        config = Config.model_validate(config_file_contents)
 
         if not handlers[args.cmd](args, config):
             parser.print_help()

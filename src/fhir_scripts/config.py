@@ -7,4 +7,4 @@ class DeployConfig(BaseModel):
 
 
 class Config(BaseModel):
-    deploy: DeployConfig
+    deploy: DeployConfig | None = None

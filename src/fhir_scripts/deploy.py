@@ -36,6 +36,10 @@ def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
 
 
 def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
+
+    if config.deploy is None:
+        raise Exception("deploy configuration missing")
+
     gcloud = GCloudHelper()
 
     # Login if necessary
