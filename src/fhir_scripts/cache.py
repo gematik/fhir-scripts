@@ -75,7 +75,7 @@ def cache_rebuild_fhir_cache(cli_args: Namespace, *args, **kwargs):
 
     if not cli_args.no_clear:
         # Remove all previous packages
-        fhir_cache = Path("~/.fhir/packages")
+        fhir_cache = Path.home() / ".fhir/packages"
         log.info("Remove all previous packages")
         for item in fhir_cache.iterdir():
             if item.is_file():
