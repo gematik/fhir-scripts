@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from . import build, deploy, log, update
+from . import build, cache, deploy, log, update
 from .config import Config
 from .exception import CancelException
 
@@ -15,6 +15,7 @@ def main():
     subparsers = parser.add_subparsers(dest="cmd")
 
     build.setup_parser(subparsers)
+    cache.setup_parser(subparsers)
     deploy.setup_parser(subparsers)
     update.setup_parser(subparsers)
 
@@ -22,6 +23,7 @@ def main():
 
     handlers = {}
     build.add_handler(handlers)
+    cache.add_handler(handlers)
     deploy.add_handler(handlers)
     update.add_handler(handlers)
 

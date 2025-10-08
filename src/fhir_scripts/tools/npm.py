@@ -41,6 +41,9 @@ def download(
     """
     is_installed()
 
+    if not target_dir.exists():
+        target_dir.mkdir(parents=True)
+
     if registry:
         cmd = f"npm --registry {registry} pack --pack-destination {target_dir} {pkg_name}@{version}"
 

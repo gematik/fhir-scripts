@@ -23,6 +23,9 @@ class ShellResult:
 
 
 def _convert_std(input) -> list[str]:
+    if input is None:
+        return []
+
     if isinstance(input, bytes):
         input = input.decode("utf-8")
 
