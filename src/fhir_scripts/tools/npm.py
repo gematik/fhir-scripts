@@ -22,7 +22,7 @@ def install(pkg_name: str, as_global: bool = False):
 
 def is_installed() -> None:
     """
-    Checks wheater NPM is installed
+    Checks if NPM is installed
     """
     try:
         shell.run("which npm", check=True, capture_output=True)

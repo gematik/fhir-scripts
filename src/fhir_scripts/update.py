@@ -2,7 +2,7 @@ from argparse import Namespace, _SubParsersAction
 from typing import Callable
 
 from . import log
-from .tools import sushi
+from .tools import igpub, sushi
 
 CMD = "update"
 
@@ -34,7 +34,7 @@ def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
 
 
 def handle(cli_args: Namespace, *arsg, **kwargs) -> bool:
-    upd_funcs = {SCRIPT: update_script, SUSHI: update_sushi}
+    upd_funcs = {SCRIPT: update_script, SUSHI: update_sushi, IGPUB: update_igpub}
 
     func = upd_funcs.get(getattr(cli_args, CMD), None)
 
@@ -50,6 +50,13 @@ def update_sushi():
     prev_version = sushi.version()
     sushi.update()
     log.succ(f"Updated Sushi: {str(prev_version)} → {sushi.version()}")
+
+
+def update_igpub():
+    log.info("Update IG Publisher")
+    prev_version = igpub.version()
+    igpub.update()
+    log.succ(f"Updated IG Publisher: {str(prev_version)} → {igpub.version()}")
 
 
 def update_script():
