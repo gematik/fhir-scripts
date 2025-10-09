@@ -2,12 +2,9 @@ import json
 import shutil
 from argparse import Namespace, _SubParsersAction
 from pathlib import Path
-from typing import Callable
 
 from . import log
 from .tools import firely_terminal, npm
-
-CMD = "cache"
 
 PKG = "package"
 PKG_DIR = "--package-dir"
@@ -16,12 +13,8 @@ NO_CLEAR = "--no-clear"
 FHIR_REGISTRY = "https://packages.simplifier.net"
 
 
-def setup_parser(subparsers: _SubParsersAction):
-    parser = subparsers.add_parser(CMD, help="Deploy IG")
-
-    sub_parser = parser.add_subparsers(dest=CMD)
-
-    pkg_parser = sub_parser.add_parser(
+def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
+    pkg_parser = subparser.add_parser(
         PKG, help="Clear and rebuild the FHIR package cache"
     )
     pkg_parser.add_argument(
@@ -32,22 +25,6 @@ def setup_parser(subparsers: _SubParsersAction):
         action="store_true",
         help="Do no clear the FHIR cache before restoring",
     )
-
-
-def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
-    handlers[CMD] = handle
-
-
-def handle(cli_args: Namespace, *args, **kwargs) -> bool:
-    upd_funcs = {PKG: cache_rebuild_fhir_cache}
-
-    func = upd_funcs.get(getattr(cli_args, CMD), None)
-
-    if func is None:
-        return False
-
-    func(cli_args, args, kwargs)
-    return True
 
 
 def cache_rebuild_fhir_cache(cli_args: Namespace, *args, **kwargs):
@@ -152,3 +129,8 @@ def cache_rebuild_fhir_cache(cli_args: Namespace, *args, **kwargs):
     log.info("Restore cache")
     firely_terminal.restore()
     log.succ("Restore successful")
+
+
+__doc__ = "Handle caches"
+__handlers__ = {PKG: cache_rebuild_fhir_cache}
+__setup_subparser__ = setup_subparser

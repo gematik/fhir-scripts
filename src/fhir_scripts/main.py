@@ -14,18 +14,39 @@ def main():
     parser = argparse.ArgumentParser(description="Scripts to support FHIR development")
     subparsers = parser.add_subparsers(dest="cmd")
 
-    build.setup_parser(subparsers)
-    cache.setup_parser(subparsers)
-    deploy.setup_parser(subparsers)
-    update.setup_parser(subparsers)
+    modules = [build, cache, deploy, update]
+    module_dict = {}
+
+    for module in modules:
+        if not getattr(module, "__doc__", None) or (
+            not getattr(module, "__handlers__", None)
+            and not getattr(module, "__handler__", None)
+        ):
+            raise Exception(
+                f"Module '{module.__name__}' does not provide all needed attributes"
+            )
+
+        cmd = module.__name__.split(".")[-1]
+        desc = module.__doc__
+
+        module_dict[cmd] = module
+
+        # Setup parser
+        _parser = subparsers.add_parser(cmd, help=desc)
+
+        if setup_parser := getattr(module, "__setup_parser__", None):
+            setup_parser(parser=_parser)
+
+        elif setup_subparser := getattr(module, "__setup_subparser__", None):
+            sub_parser = _parser.add_subparsers(dest=module.__name__.split(".")[-1])
+            setup_subparser(subparser=sub_parser)
+
+        else:
+            raise Exception(
+                f"No setup function for parser or subparser defined for '{module.__name__}'"
+            )
 
     args = parser.parse_args()
-
-    handlers = {}
-    build.add_handler(handlers)
-    cache.add_handler(handlers)
-    deploy.add_handler(handlers)
-    update.add_handler(handlers)
 
     try:
         # Read config; initialize with default values if not found
@@ -38,8 +59,27 @@ def main():
             config_file_contents = {}
         config = Config.model_validate(config_file_contents)
 
-        if not handlers[args.cmd](args, config):
+        # Get handle function for command
+        module = module_dict[args.cmd]
+
+        # Only single handler
+        if func := getattr(module, "__handler__", None):
+            handle = func
+
+        # Has multiple handlers
+        elif func_dict := getattr(module, "__handlers__", None):
+            handle = func_dict[getattr(args, args.cmd)]
+
+        else:
+            raise Exception("No handler defined")
+
+        # Print help if command not handled
+        if handle is None:
             parser.print_help()
+            return
+
+        # Otherwise handle the command
+        handle(cli_args=args, config=config)
 
     except CancelException as e:
         log.warn(str(e))

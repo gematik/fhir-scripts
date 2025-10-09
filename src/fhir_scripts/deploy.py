@@ -1,20 +1,16 @@
 import json
-from argparse import Namespace, _SubParsersAction
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
-from typing import Callable
 
 from . import log
-from .config import Config
+from .config import Config, DeployConfig
 from .helper import confirm
 from .tools.gcloud import GCloudHelper
-
-CMD = "deploy"
 
 TARGET_BASE_DIR = "ig/fhir"
 
 
-def setup_parser(subparsers: _SubParsersAction):
-    parser = subparsers.add_parser(CMD, help="Deploy IG")
+def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument("environment", help="Name of the environment")
     parser.add_argument(
         "-y", "--yes", action="store_true", help="Confirm all prompts with 'yes'"
@@ -31,13 +27,9 @@ def setup_parser(subparsers: _SubParsersAction):
     )
 
 
-def add_handler(handlers: dict[str, Callable[[Namespace], bool]]):
-    handlers[CMD] = handle
-
-
 def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
-
-    if config.deploy is None:
+    deploy_config = config.deploy
+    if deploy_config is None:
         raise Exception("deploy configuration missing")
 
     gcloud = GCloudHelper()
@@ -47,12 +39,12 @@ def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
 
     if cli_args.ig_registry:
         # Build target URL
-        target = _target_path(config, cli_args.environment)
+        target = _target_path(deploy_config, cli_args.environment)
         _deploy_ig_registry(target, gcloud, confirm_yes=cli_args.yes)
 
     else:
         # Build target URL
-        target = _target_path(config, cli_args.environment, needs_project=True)
+        target = _target_path(deploy_config, cli_args.environment, needs_project=True)
 
         if cli_args.all:
             _deploy_ig(target, gcloud, confirm_yes=cli_args.yes)
@@ -89,8 +81,9 @@ def _deploy_ig_registry(target, gcloud: GCloudHelper, confirm_yes: bool = False)
     log.succ("Deployed IG registry files")
 
 
-def _target_path(config: Config, env_name: str, needs_project: bool = False) -> str:
-    deploy_cfg = config.deploy
+def _target_path(
+    deploy_cfg: DeployConfig, env_name: str, needs_project: bool = False
+) -> str:
     env = deploy_cfg.env.get(env_name)
 
     if env is None:
@@ -168,3 +161,8 @@ def _project_name(needs_project: bool = True) -> str | None:
 
     ig = json.loads(igs[0].read_text(encoding="utf-8"))
     return ig["url"].rsplit("/", 3)[1]
+
+
+__doc__ = "Deploy IG"
+__handler__ = handle
+__setup_parser__ = setup_parser
