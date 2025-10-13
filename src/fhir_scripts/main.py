@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from . import build, cache, deploy, log, update
+from . import build, cache, deploy, log, update, versions
 from .config import Config
 from .exception import CancelException
 
@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description="Scripts to support FHIR development")
     subparsers = parser.add_subparsers(dest="cmd")
 
-    modules = [build, cache, deploy, update]
+    modules = [build, cache, deploy, update, versions]
     module_dict = {}
 
     for module in modules:
