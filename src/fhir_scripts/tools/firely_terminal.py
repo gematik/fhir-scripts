@@ -25,3 +25,6 @@ def install(
 
 def restore():
     shell.run("fhir restore")
+
+
+__tool_name__ = "Firely Terminal"

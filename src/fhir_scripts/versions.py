@@ -17,7 +17,8 @@ def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
             and (version_func := getattr(module, "version", None))
             and (version := version_func())
         ):
-            log.info(f"{name}: {version}")
+            tool_name = getattr(module, "__tool_name__", None) or name
+            log.info(f"{tool_name}: {version}")
 
     return True
 
