@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .basic import dotnet, shell
 
-VERSION_REGEX = re.compile(r"Firely Terminal\s+([\d\.]+)\W", re.IGNORECASE)
+VERSION_REGEX = re.compile(r"Firely Terminal\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
 
 def install(

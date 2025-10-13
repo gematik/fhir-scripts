@@ -3,7 +3,7 @@ from pathlib import Path
 
 from . import shell
 
-VERSION_REGEX = re.compile(r"\w*jdk\w*\s+([\d\.]+)\W", re.IGNORECASE)
+VERSION_REGEX = re.compile(r"\w*jdk\w*\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
 
 def run_jar(jar: Path, *args, capture_output: bool = False):

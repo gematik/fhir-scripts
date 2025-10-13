@@ -11,7 +11,7 @@ CMD_LS = "gcloud storage ls --recursive {}"
 CMD_CP = "gcloud storage cp --additional-headers=Cache-Control=no-cache {} {}"
 CMD_CP_R = "gcloud storage cp --additional-headers=Cache-Control=no-cache -R {} {}"
 
-VERSION_REGEX = re.compile(r"Google\s+Cloud\s+SDK\s+([\d\.]+)\W")
+VERSION_REGEX = re.compile(r"Google\s+Cloud\s+SDK\s+(\d+(?:\.\d+){,2})\b")
 
 
 def version() -> str | None:

@@ -3,7 +3,7 @@ import re
 from .. import log
 from .basic import npm, shell
 
-VERSION_REGEX = re.compile(r"SUSHI\sv([\d\.]+)\s", re.IGNORECASE)
+VERSION_REGEX = re.compile(r"SUSHI\sv(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
 
 def run():
