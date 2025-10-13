@@ -1,9 +1,12 @@
+import re
 import subprocess
 from subprocess import CalledProcessError
 
 from tqdm import tqdm
 
 CalledProcessError = CalledProcessError
+
+COLOR_FORMATTING = re.compile(r"(?:\x1b|\\e)\[\d+(?:;\d+)?m")
 
 
 class ShellResult:
@@ -29,7 +32,11 @@ def _convert_std(input) -> list[str]:
     if isinstance(input, bytes):
         input = input.decode("utf-8")
 
-    return [line.strip() for line in input.strip().split("\n") if line]
+    return [
+        COLOR_FORMATTING.sub("", line.strip())
+        for line in input.strip().split("\n")
+        if line
+    ]
 
 
 def _oneline(list_: list[str]) -> str:
