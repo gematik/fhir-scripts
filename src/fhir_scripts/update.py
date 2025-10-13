@@ -1,7 +1,7 @@
 from argparse import _SubParsersAction
 
 from . import log
-from .tools import igpub, sushi
+from .tools import epatools, igpub, igtools, sushi
 
 SCRIPT = "script"
 TOOLS = "tools"
@@ -39,6 +39,25 @@ def update_tools(*args, **kwargs):
     update_igpub(args, kwargs)
 
 
+def update_igtools(*args, **kwargs):
+    log.info("Update igtools")
+    prev_version = igtools.version()
+    igtools.update()
+    log.succ(f"Updated igtools: {str(prev_version)} → {igtools.version()}")
+
+
+def update_epatools(*args, **kwargs):
+    log.info("Update epatools")
+    prev_version = epatools.version()
+    epatools.update()
+    log.succ(f"Updated epatools: {str(prev_version)} → {epatools.version()}")
+
+
+def update_pytools(*args, **kwargs):
+    update_igtools(args, kwargs)
+    update_epatools(args, kwargs)
+
+
 def update_script(*args, **kwargs):
     pass
 
@@ -49,5 +68,6 @@ __handlers__ = {
     SUSHI: update_sushi,
     IGPUB: update_igpub,
     TOOLS: update_tools,
+    PYTOOLS: update_pytools,
 }
 __setup_subparser__ = setup_subparser
