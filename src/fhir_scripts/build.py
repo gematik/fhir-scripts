@@ -6,18 +6,27 @@ from .exception import NoConfigException
 from .tools import igpub, igtools, sushi
 
 DEFS = "defs"
+REQ = "req"
 IG = "ig"
 ALL = "all"
 
 
 def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     subparser.add_parser(DEFS, help="Build definitions")
+    subparser.add_parser(REQ, help="Process requirements")
     subparser.add_parser(IG, help="Build IG")
     subparser.add_parser(ALL, help="Build everything")
 
 
 def build_defs(*args, **kwargs):
     log.info("Building definitions")
+    build_req(args, kwargs)
+    sushi.run()
+    log.succ("Definitions built successfully")
+
+
+def build_req(*args, **kwargs):
+    log.info("Process requirements")
     # Try to run igtools
     try:
         output_dir = Path("input/data")
@@ -28,8 +37,7 @@ def build_defs(*args, **kwargs):
     except NoConfigException:
         log.warn("igtools not configured, skipping")
 
-    sushi.run()
-    log.succ("Definitions built successfully")
+    log.succ("Requirements processed successfully")
 
 
 def build_ig(*args, **kwargs):
@@ -45,5 +53,5 @@ def build_all(*args, **kwargs):
 
 
 __doc__ = "Build FHIR definitions and IGs"
-__handlers__ = {DEFS: build_defs, IG: build_ig, ALL: build_all}
+__handlers__ = {DEFS: build_defs, REQ: build_req, IG: build_ig, ALL: build_all}
 __setup_subparser__ = setup_subparser
