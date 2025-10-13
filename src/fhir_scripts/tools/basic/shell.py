@@ -58,7 +58,15 @@ def run(cmd, check: bool | None = None, capture_output: bool = False):
         capture_output=capture_output,
     )
 
-    return ShellResult(res)
+    res = ShellResult(res)
+
+    if not check and capture_output:
+        if res.returncode != 0:
+            raise CalledProcessError(
+                res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
+            )
+
+    return res
 
 
 def run_progress(cmd, total, prefixes, desc):

@@ -1,7 +1,9 @@
 from argparse import _SubParsersAction
+from pathlib import Path
 
 from . import log
-from .tools import igpub, sushi
+from .exception import NoConfigException
+from .tools import igpub, igtools, sushi
 
 DEFS = "defs"
 IG = "ig"
@@ -16,6 +18,16 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
 
 def build_defs(*args, **kwargs):
     log.info("Building definitions")
+    # Try to run igtools
+    try:
+        output_dir = Path("input/data")
+        igtools.process()
+        igtools.release_notes(output_dir)
+        igtools.export(output_dir)
+
+    except NoConfigException:
+        log.warn("igtools not configured, skipping")
+
     sushi.run()
     log.succ("Definitions built successfully")
 
