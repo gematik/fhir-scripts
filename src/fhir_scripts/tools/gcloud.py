@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from .. import helper, log
@@ -9,6 +10,24 @@ CMD_RM = "gcloud storage rm --recursive {}"
 CMD_LS = "gcloud storage ls --recursive {}"
 CMD_CP = "gcloud storage cp --additional-headers=Cache-Control=no-cache {} {}"
 CMD_CP_R = "gcloud storage cp --additional-headers=Cache-Control=no-cache -R {} {}"
+
+VERSION_REGEX = re.compile(r"Google\s+Cloud\s+SDK\s+([\d\.]+)\W")
+
+
+def version() -> str | None:
+    """
+    Get the installed version, returns None if not installed
+    """
+    try:
+        res = shell.run("gcloud -v", check=True, capture_output=True)
+
+        # Extract the version string from output
+        match = VERSION_REGEX.match(res.stdout_oneline)
+
+        return match[1] if match else None
+
+    except shell.CalledProcessError:
+        return None
 
 
 class GCloudHelper:
@@ -79,3 +98,6 @@ class GCloudHelper:
 
         else:
             return []
+
+
+__tool_name__ = "gCloud SDK"

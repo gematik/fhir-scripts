@@ -7,6 +7,7 @@ VERSION_REGEX = re.compile(r"SUSHI\sv([\d\.]+)\s", re.IGNORECASE)
 
 
 def run():
+    is_installed()
     log.info("Run sushi")
     try:
         shell.run("sushi build .")
@@ -14,6 +15,17 @@ def run():
 
     except shell.CalledProcessError:
         raise Exception("Sushi run failed")
+
+
+def is_installed() -> None:
+    """
+    Checks if installed
+    """
+    try:
+        shell.run("which sushi", check=True, capture_output=True)
+
+    except shell.CalledProcessError:
+        raise Exception("sushi is needed but not installed")
 
 
 def update():

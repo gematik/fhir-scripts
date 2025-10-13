@@ -11,6 +11,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
 
 
 def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
+    versions = {}
     for name, module in tools.__dict__.items():
         if (
             not name.startswith("__")
@@ -18,7 +19,10 @@ def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
             and (version := version_func())
         ):
             tool_name = getattr(module, "__tool_name__", None) or name
-            log.info(f"{tool_name}: {version}")
+            versions[tool_name] = version
+
+    for name, version in sorted(versions.items(), key=lambda x: x[0].lower()):
+        log.info(f"{name}: {version}")
 
     return True
 

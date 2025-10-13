@@ -14,6 +14,7 @@ PUBLISHER_JAR = INPUT_CACHE_DIR / "publisher.jar"
 
 
 def run():
+    is_installed()
     log.info("Run IG Publisher")
 
     sushi_config = yaml.safe_load(Path("./sushi-config.yaml").read_text("utf-8"))
@@ -26,6 +27,14 @@ def run():
 
     except shell.CalledProcessError:
         raise Exception("IG Publisher run failed")
+
+
+def is_installed() -> None:
+    """
+    Checks if installed
+    """
+    if not PUBLISHER_JAR.exists():
+        raise Exception(f"{__tool_name__} is needed but not installed")
 
 
 def qa():

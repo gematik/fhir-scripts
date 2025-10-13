@@ -22,13 +22,30 @@ def install(pkg_name: str, as_global: bool = False):
 
 def is_installed() -> None:
     """
-    Checks if NPM is installed
+    Checks if installed
     """
     try:
         shell.run("which npm", check=True, capture_output=True)
 
     except shell.CalledProcessError:
-        raise Exception("NPM is needed but not installed")
+        raise Exception(f"{__tool_name__} is needed but not installed")
+
+
+def version() -> str | None:
+    """
+    Get the installed version, returns None if not installed
+    """
+    try:
+        res = shell.run("npm -v", check=True, capture_output=True)
+        version = res.stdout_oneline
+
+        res = shell.run("node -v", check=True, capture_output=True)
+        sdk_version = res.stdout_oneline.lstrip("v")
+
+        return f"{version} ({sdk_version})"
+
+    except shell.CalledProcessError:
+        return None
 
 
 def download(
@@ -56,3 +73,6 @@ def download(
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
+
+
+__tool_name__ = "npm"

@@ -1,6 +1,9 @@
+import re
 from pathlib import Path
 
 from . import shell
+
+VERSION_REGEX = re.compile(r"\w*jdk\w*\s+([\d\.]+)\W", re.IGNORECASE)
 
 
 def run_jar(jar: Path, *args, capture_output: bool = False):
@@ -19,6 +22,21 @@ def run_jar(jar: Path, *args, capture_output: bool = False):
     return res
 
 
+def version() -> str | None:
+    """
+    Get the installed version, returns None if not installed
+    """
+    try:
+        res = shell.run("java --version", check=True, capture_output=True)
+
+        # Extract the version string from output
+        match = VERSION_REGEX.match(res.stdout_oneline)
+        return match[1] if match else None
+
+    except shell.CalledProcessError:
+        return None
+
+
 def is_installed() -> None:
     """
     Checks if Java is installed
@@ -28,3 +46,6 @@ def is_installed() -> None:
 
     except shell.CalledProcessError:
         raise Exception("Java is needed but not installed")
+
+
+__tool_name__ = "Java"

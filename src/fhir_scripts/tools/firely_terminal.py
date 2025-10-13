@@ -1,11 +1,16 @@
+import re
 from pathlib import Path
 
 from . import shell
+
+VERSION_REGEX = re.compile(r"Firely Terminal\s+([\d\.]+)\W", re.IGNORECASE)
 
 
 def install(
     pkg: str | None = None, version: str | None = None, file: Path | None = None
 ):
+    is_installed()
+
     if pkg and version:
         cmd = f"fhir install {pkg} {version}"
 
@@ -21,6 +26,32 @@ def install(
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
+
+
+def is_installed() -> None:
+    """
+    Checks if installed
+    """
+    try:
+        shell.run("which fhir", check=True, capture_output=True)
+
+    except shell.CalledProcessError:
+        raise Exception(f"{__tool_name__} is needed but not installed")
+
+
+def version() -> str | None:
+    """
+    Get the installed version, returns None if not installed
+    """
+    try:
+        res = shell.run("fhir -v", check=True, capture_output=True)
+
+        # Extract the version string from output
+        match = VERSION_REGEX.match(res.stdout_oneline)
+        return match[1] if match else None
+
+    except shell.CalledProcessError:
+        return None
 
 
 def restore():
