@@ -42,7 +42,7 @@ def version() -> str | None:
         res = shell.run("node -v", check=True, capture_output=True)
         sdk_version = res.stdout_oneline.lstrip("v")
 
-        return f"{version} ({sdk_version})"
+        return f"{version} [{sdk_version}]"
 
     except shell.CalledProcessError:
         return None
@@ -73,6 +73,3 @@ def download(
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
-
-
-__tool_name__ = "npm"

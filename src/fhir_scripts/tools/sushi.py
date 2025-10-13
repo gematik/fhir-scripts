@@ -1,7 +1,7 @@
 import re
 
 from .. import log
-from . import npm, shell
+from .basic import npm, shell
 
 VERSION_REGEX = re.compile(r"SUSHI\sv([\d\.]+)\s", re.IGNORECASE)
 
@@ -42,7 +42,7 @@ def version() -> str | None:
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
 
-        return match[1] if match else None
+        return f"{match[1]} ({npm.version()})" if match else None
 
     except shell.CalledProcessError:
         return None

@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from . import shell
+from .basic import dotnet, shell
 
 VERSION_REGEX = re.compile(r"Firely Terminal\s+([\d\.]+)\W", re.IGNORECASE)
 
@@ -48,7 +48,7 @@ def version() -> str | None:
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
-        return match[1] if match else None
+        return f"{match[1]} ({dotnet.version()})" if match else None
 
     except shell.CalledProcessError:
         return None

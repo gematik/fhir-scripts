@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 
 from .. import log
-from . import java, shell
+from .basic import java, shell
 
 DOWNLOAD_URL = (
     "https://github.com/HL7/fhir-ig-publisher/releases/latest/download/publisher.jar"
@@ -79,7 +79,8 @@ def version() -> str | None:
     try:
         res = java.run_jar(PUBLISHER_JAR, "-v", capture_output=True)
 
-        return res.stdout_oneline if res.stdout_oneline else None
+        version = res.stdout_oneline
+        return f"{version} ({java.version()})" if version else None
 
     except shell.CalledProcessError:
         return None

@@ -4,7 +4,8 @@ from argparse import Namespace, _SubParsersAction
 from pathlib import Path
 
 from . import log
-from .tools import firely_terminal, npm
+from .tools import firely_terminal
+from .tools.basic import npm
 
 PKG = "package"
 PKG_DIR = "--package-dir"

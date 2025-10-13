@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 
 from .. import helper, log
-from . import shell
+from .basic import shell
 
 CMD_LIST = "gcloud projects list"
 CMD_LOGIN = "gcloud auth login"

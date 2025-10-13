@@ -46,6 +46,3 @@ def is_installed() -> None:
 
     except shell.CalledProcessError:
         raise Exception("Java is needed but not installed")
-
-
-__tool_name__ = "Java"

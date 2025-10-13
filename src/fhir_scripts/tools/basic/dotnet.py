@@ -11,6 +11,3 @@ def version() -> str | None:
 
     except shell.CalledProcessError:
         return None
-
-
-__tool_name__ = ".NET"
