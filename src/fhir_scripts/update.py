@@ -62,6 +62,12 @@ def update_script(*args, **kwargs):
     pass
 
 
+def update_everything(*args, **kwargs):
+    update_script()
+    update_pytools()
+    update_tools()
+
+
 __doc__ = "Update tools"
 __handlers__ = {
     SCRIPT: update_script,
@@ -69,5 +75,6 @@ __handlers__ = {
     IGPUB: update_igpub,
     TOOLS: update_tools,
     PYTOOLS: update_pytools,
+    ALL: update_everything,
 }
 __setup_subparser__ = setup_subparser
