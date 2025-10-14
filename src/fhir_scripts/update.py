@@ -20,18 +20,21 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     subparser.add_parser(ALL, help="Update everything")
 
 
+def _update(module, *args, **kwargs):
+    name = getattr(module, "__tool_name__", None) or module.__name__
+    log.info(f"Update {name}")
+
+    prev_version = module.version(short=True)
+    module.update()
+    log.succ(f"Updated {name}: {str(prev_version)} → {module.version(short=True)}")
+
+
 def update_sushi(*args, **kwargs):
-    log.info("Update Sushi")
-    prev_version = sushi.version()
-    sushi.update()
-    log.succ(f"Updated Sushi: {str(prev_version)} → {sushi.version()}")
+    _update(sushi, *args, **kwargs)
 
 
 def update_igpub(*args, **kwargs):
-    log.info("Update IG Publisher")
-    prev_version = igpub.version()
-    igpub.update()
-    log.succ(f"Updated IG Publisher: {str(prev_version)} → {igpub.version()}")
+    _update(igpub, *args, **kwargs)
 
 
 def update_tools(*args, **kwargs):
@@ -40,17 +43,11 @@ def update_tools(*args, **kwargs):
 
 
 def update_igtools(*args, **kwargs):
-    log.info("Update igtools")
-    prev_version = igtools.version()
-    igtools.update()
-    log.succ(f"Updated igtools: {str(prev_version)} → {igtools.version()}")
+    _update(igtools, *args, **kwargs)
 
 
 def update_epatools(*args, **kwargs):
-    log.info("Update epatools")
-    prev_version = epatools.version()
-    epatools.update()
-    log.succ(f"Updated epatools: {str(prev_version)} → {epatools.version()}")
+    _update(epatools, *args, **kwargs)
 
 
 def update_pytools(*args, **kwargs):

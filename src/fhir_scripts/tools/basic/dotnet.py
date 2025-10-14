@@ -1,7 +1,7 @@
 from . import shell
 
 
-def version() -> str | None:
+def version(short: bool = False, *args, **kwargs) -> str | None:
     """
     Get the installed version, returns None if not installed
     """

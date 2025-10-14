@@ -34,7 +34,7 @@ def is_installed() -> None:
         raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
-def version() -> str | None:
+def version(short: bool = False, *args, **kwargs) -> str | None:
     """
     Get the installed version of FSH Sushi, returns None if sushi is not installed
     """

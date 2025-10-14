@@ -32,7 +32,7 @@ def is_installed() -> None:
         raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
-def version() -> str | None:
+def version(short: bool = False, *args, **kwargs) -> str | None:
     """
     Get the installed version, returns None if not installed
     """

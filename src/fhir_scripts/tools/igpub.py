@@ -72,7 +72,7 @@ def update():
     )
 
 
-def version() -> str | None:
+def version(short: bool = False, *args, **kwargs) -> str | None:
     """
     Get the installed version of IG Publisher, returns None if not installed
     """
@@ -81,7 +81,12 @@ def version() -> str | None:
         res = java.run_jar(PUBLISHER_JAR, "-v", capture_output=True)
 
         version = res.stdout_oneline
-        return f"{version} ({java.version()})" if version else None
+
+        if short:
+            return version if version else None
+
+        else:
+            return f"{version} ({java.version()})" if version else None
 
     except shell.CalledProcessError:
         return None

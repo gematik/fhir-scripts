@@ -14,7 +14,7 @@ CMD_CP_R = "gcloud storage cp --additional-headers=Cache-Control=no-cache -R {} 
 VERSION_REGEX = re.compile(r"Google\s+Cloud\s+SDK\s+(\d+(?:\.\d+){,2})\b")
 
 
-def version() -> str | None:
+def version(*args, **kwargs) -> str | None:
     """
     Get the installed version, returns None if not installed
     """

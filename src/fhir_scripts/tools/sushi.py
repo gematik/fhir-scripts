@@ -33,7 +33,7 @@ def update():
     npm.install("fsh-sushi", as_global=True)
 
 
-def version() -> str | None:
+def version(short: bool = False, *args, **kwargs) -> str | None:
     """
     Get the installed version of FSH Sushi, returns None if sushi is not installed
     """
@@ -43,7 +43,11 @@ def version() -> str | None:
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
 
-        return f"{match[1]} ({npm.version()})" if match else None
+        if short:
+            return match[1] if match else None
+
+        else:
+            return f"{match[1]} ({npm.version()})" if match else None
 
     except shell.CalledProcessError:
         return None
