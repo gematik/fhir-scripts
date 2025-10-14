@@ -12,6 +12,12 @@ from .exception import CancelException
 
 def main():
     parser = argparse.ArgumentParser(description="Scripts to support FHIR development")
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=None,
+        help="Name and path of the config file; default `./config.yaml`",
+    )
     subparsers = parser.add_subparsers(dest="cmd")
 
     modules = [build, cache, deploy, update, versions]
@@ -50,7 +56,7 @@ def main():
 
     try:
         # Read config; initialize with default values if not found
-        config_file = Path("./config.yaml")
+        config_file = args.config or Path("./config.yaml")
         if config_file.exists():
             config_file_contents = yaml.safe_load(
                 config_file.read_text(encoding="utf-8")
