@@ -22,6 +22,7 @@ def main():
 
     modules = [build, cache, deploy, update, versions]
     module_dict = {}
+    parser_dict = {}
 
     for module in modules:
         if not getattr(module, "__doc__", None) or (
@@ -39,6 +40,7 @@ def main():
 
         # Setup parser
         _parser = subparsers.add_parser(cmd, help=desc)
+        parser_dict[cmd] = _parser
 
         if setup_parser := getattr(module, "__setup_parser__", None):
             setup_parser(parser=_parser)
@@ -73,15 +75,16 @@ def main():
             handle = func
 
         # Has multiple handlers
-        elif func_dict := getattr(module, "__handlers__", None):
-            handle = func_dict[getattr(args, args.cmd)]
-
-        else:
-            raise Exception("No handler defined")
+        elif (
+            (func_dict := getattr(module, "__handlers__", None))
+            and (sub_cmd := getattr(args, args.cmd))
+            and (func := func_dict.get(sub_cmd))
+        ):
+            handle = func
 
         # Print help if command not handled
-        if handle is None:
-            parser.print_help()
+        else:
+            parser_dict[args.cmd].print_help()
             return
 
         # Otherwise handle the command
