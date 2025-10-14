@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+from ...exception import NotInstalledException
 from . import shell
 
 VERSION_REGEX = re.compile(r"\w*jdk\w*\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -45,4 +46,4 @@ def is_installed() -> None:
         shell.run("which java", check=True, capture_output=True)
 
     except shell.CalledProcessError:
-        raise Exception("Java is needed but not installed")
+        raise NotInstalledException("Java is needed but not installed")

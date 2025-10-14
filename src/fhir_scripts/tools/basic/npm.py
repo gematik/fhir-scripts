@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from ...exception import NotInstalledException
 from . import shell
 
 
@@ -28,7 +29,7 @@ def is_installed() -> None:
         shell.run("which npm", check=True, capture_output=True)
 
     except shell.CalledProcessError:
-        raise Exception(f"{__tool_name__} is needed but not installed")
+        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
 def version() -> str | None:
@@ -73,3 +74,6 @@ def download(
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
+
+
+__tool_name__ = "npm"

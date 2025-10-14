@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 
 from .. import log
-from ..exception import NoConfigException
+from ..exception import NoConfigException, NotInstalledException
 from .basic import pipx, shell
 
 VERSION_REGEX = re.compile(r"IGTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -53,7 +53,7 @@ def is_installed() -> None:
         shell.run("which igtools", check=True, capture_output=True)
 
     except shell.CalledProcessError:
-        raise Exception(f"{__tool_name__} is needed but not installed")
+        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
 def is_configured() -> None:

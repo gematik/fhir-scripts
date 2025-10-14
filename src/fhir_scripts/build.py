@@ -2,7 +2,7 @@ from argparse import _SubParsersAction
 from pathlib import Path
 
 from . import log
-from .exception import NoConfigException
+from .exception import NoConfigException, NotInstalledException
 from .tools import igpub, igtools, sushi
 
 DEFS = "defs"
@@ -34,8 +34,8 @@ def build_req(*args, **kwargs):
         igtools.release_notes(output_dir)
         igtools.export(output_dir)
 
-    except NoConfigException:
-        log.warn("igtools not configured, skipping")
+    except NoConfigException or NotInstalledException:
+        log.warn("igtools not configured or installed, skipping")
 
     log.succ("Requirements processed successfully")
 

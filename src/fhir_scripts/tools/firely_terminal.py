@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+from ..exception import NotInstalledException
 from .basic import dotnet, shell
 
 VERSION_REGEX = re.compile(r"Firely Terminal\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -36,7 +37,7 @@ def is_installed() -> None:
         shell.run("which fhir", check=True, capture_output=True)
 
     except shell.CalledProcessError:
-        raise Exception(f"{__tool_name__} is needed but not installed")
+        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
 def version() -> str | None:

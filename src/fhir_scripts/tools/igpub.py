@@ -4,6 +4,7 @@ from pathlib import Path
 import yaml
 
 from .. import log
+from ..exception import NotInstalledException
 from .basic import java, shell
 
 DOWNLOAD_URL = (
@@ -34,7 +35,7 @@ def is_installed() -> None:
     Checks if installed
     """
     if not PUBLISHER_JAR.exists():
-        raise Exception(f"{__tool_name__} is needed but not installed")
+        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
 def qa():

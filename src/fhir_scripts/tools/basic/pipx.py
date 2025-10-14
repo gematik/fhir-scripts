@@ -1,5 +1,6 @@
 import re
 
+from ...exception import NotInstalledException
 from . import shell
 
 VERSION_REGEX = re.compile(r"Python\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -30,7 +31,7 @@ def is_installed() -> None:
         shell.run("which pipx", check=True, capture_output=True)
 
     except shell.CalledProcessError:
-        raise Exception(f"{__tool_name__} is needed but not installed")
+        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
 def version() -> str | None:

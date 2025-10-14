@@ -1,6 +1,7 @@
 import re
 
 from .. import log
+from ..exception import NotInstalledException
 from .basic import npm, shell
 
 VERSION_REGEX = re.compile(r"SUSHI\sv(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -25,7 +26,7 @@ def is_installed() -> None:
         shell.run("which sushi", check=True, capture_output=True)
 
     except shell.CalledProcessError:
-        raise Exception("sushi is needed but not installed")
+        raise NotInstalledException("sushi is needed but not installed")
 
 
 def update():
