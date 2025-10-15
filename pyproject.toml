@@ -23,6 +23,5 @@ dev = [
 ]
 
 [project.optional-dependencies]
-igtools = [
-    "igtools @ git+https://github.com/onyg/req-tooling"
-]
+igtools = ["igtools @ git+https://github.com/onyg/req-tooling"]
+epatools = ["epatools @ git+https://github.com/onyg/epa-tools.git"]

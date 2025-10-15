@@ -1,3 +1,4 @@
+import importlib.metadata
 import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -6,38 +7,134 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from .. import log
 from ..config import EpaToolsArchiveConfig, EpaToolsConfig
 from ..exception import NoConfigException, NotInstalledException
-from .basic import pipx, shell
 
-VERSION_REGEX = re.compile(r"EPATOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
-PACKAGE = "git+https://github.com/onyg/epa-tools.git"
+try:
+    importlib.metadata.version("epatools")
+    EPATOOLS_PACKAGE_AVAILABLE = True
+except importlib.metadata.PackageNotFoundError:
+    EPATOOLS_PACKAGE_AVAILABLE = False
+
+###
+# Use the module
+###
+if EPATOOLS_PACKAGE_AVAILABLE:
+    from epatools.common import DEFAULT_CONFIG
+    from epatools.merger import Merger
+    from epatools.oaconverter import OpenApiConverter
+
+    def merge_capabilities():
+        """
+        Merge CapabilityStatements
+        """
+        is_configured()
+
+        log.info("Merge CapabilityStatements")
+
+        try:
+            merger = Merger(config_file=DEFAULT_CONFIG).load()
+            merger.merge()
+
+        except Exception as e:
+            raise Exception("Failed to merge CapabilityStatements: " + str(e))
+
+        log.succ("CapabilityStatements merged successfully")
+
+    def openapi(config: EpaToolsConfig | None):
+        """
+        Build the Open APIs
+        """
+        is_configured()
+
+        if config is None:
+            raise Exception("Missing config for epatools")
+
+        log.info("Build Open APIs")
+
+        try:
+            converter = OpenApiConverter(config_file=DEFAULT_CONFIG).load()
+            converter.convert()
+
+        except Exception as e:
+            raise Exception("Failed to build Open APIs: " + str(e))
+
+        update_archive(config.archive)
+
+    def update():
+        pass
+
+    def version(short: bool = False, *args, **kwargs) -> str | None:
+        """
+        Get the installed version of epatools, returns None if not installed
+        """
+        return importlib.metadata.version("igtools")
 
 
-def merge_capabilities():
-    """
-    Merge CapabilityStatements
-    """
-    is_installed()
-    is_configured()
+###
+# Use the command line
+###
+else:
+    from .basic import pipx, shell
 
-    log.info("Merge CapabilityStatements")
-    shell.run("epatools merge", capture_output=True)
-    log.succ("CapabilityStatements merged successfully")
+    VERSION_REGEX = re.compile(r"EPATOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
+    PACKAGE = "git+https://github.com/onyg/epa-tools.git"
 
+    def merge_capabilities():
+        """
+        Merge CapabilityStatements
+        """
+        is_installed()
+        is_configured()
 
-def openapi(config: EpaToolsConfig | None):
-    """
-    Build the Open APIs
-    """
-    is_installed()
-    is_configured()
+        log.info("Merge CapabilityStatements")
+        shell.run("epatools merge", capture_output=True)
+        log.succ("CapabilityStatements merged successfully")
 
-    if config is None:
-        raise Exception("Missing config for epatools")
+    def openapi(config: EpaToolsConfig | None):
+        """
+        Build the Open APIs
+        """
+        is_installed()
+        is_configured()
 
-    log.info("Build Open APIs")
-    shell.run("epatools openapi", capture_output=True)
-    log.succ("Open APIs built successfully")
-    update_archive(config.archive)
+        if config is None:
+            raise Exception("Missing config for epatools")
+
+        log.info("Build Open APIs")
+        shell.run("epatools openapi", capture_output=True)
+        log.succ("Open APIs built successfully")
+        update_archive(config.archive)
+
+    def is_installed() -> None:
+        """
+        Checks if installed
+        """
+        try:
+            shell.run("which epatools", check=True, capture_output=True)
+
+        except shell.CalledProcessError:
+            raise NotInstalledException(f"{__tool_name__} is needed but not installed")
+
+    def update():
+        pipx.install(PACKAGE, as_global=True)
+
+    def version(short: bool = False, *args, **kwargs) -> str | None:
+        """
+        Get the installed version of epatools, returns None if not installed
+        """
+        try:
+            res = shell.run("epatools -v", check=True, capture_output=True)
+
+            # Extract the version string from output
+            match = VERSION_REGEX.match(res.stdout_oneline)
+
+            if short:
+                return match[1] if match else None
+
+            else:
+                return f"{match[1]} ({pipx.version()})" if match else None
+
+        except shell.CalledProcessError:
+            return None
 
 
 def update_archive(config: EpaToolsArchiveConfig):
@@ -72,17 +169,6 @@ def update_archive(config: EpaToolsArchiveConfig):
     log.succ(f"IG archive updated successfully: {str(archive)}")
 
 
-def is_installed() -> None:
-    """
-    Checks if installed
-    """
-    try:
-        shell.run("which epatools", check=True, capture_output=True)
-
-    except shell.CalledProcessError:
-        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
-
-
 def is_configured() -> None:
     """
     Checks if project is configured for tool"
@@ -91,30 +177,6 @@ def is_configured() -> None:
 
     if not config.exists():
         raise NoConfigException(f"{__tool_name__} not configured for project")
-
-
-def update():
-    pipx.install(PACKAGE, as_global=True)
-
-
-def version(short: bool = False, *args, **kwargs) -> str | None:
-    """
-    Get the installed version of epatools, returns None if not installed
-    """
-    try:
-        res = shell.run("epatools -v", check=True, capture_output=True)
-
-        # Extract the version string from output
-        match = VERSION_REGEX.match(res.stdout_oneline)
-
-        if short:
-            return match[1] if match else None
-
-        else:
-            return f"{match[1]} ({pipx.version()})" if match else None
-
-    except shell.CalledProcessError:
-        return None
 
 
 __tool_name__ = "epatools"

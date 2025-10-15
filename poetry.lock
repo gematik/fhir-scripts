@@ -88,7 +88,7 @@ description = "Python package for providing Mozilla's CA Bundle."
 optional = true
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "extra == \"igtools\""
+markers = "extra == \"igtools\" or extra == \"epatools\""
 files = [
     {file = "certifi-2025.10.5-py3-none-any.whl", hash = "sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de"},
     {file = "certifi-2025.10.5.tar.gz", hash = "sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43"},
@@ -101,7 +101,7 @@ description = "The Real First Universal Charset Detector. Open, modern and activ
 optional = true
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "extra == \"igtools\""
+markers = "extra == \"igtools\" or extra == \"epatools\""
 files = [
     {file = "charset_normalizer-3.4.4-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:e824f1492727fa856dd6eda4f7cee25f8518a12f3c4a56a74e8095695089cf6d"},
     {file = "charset_normalizer-3.4.4-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4bd5d4137d500351a30687c2d3971758aac9a19208fc110ccb9d7188fbe709e8"},
@@ -247,13 +247,34 @@ files = [
 ]
 
 [[package]]
+name = "epatools"
+version = "0.0.11"
+description = "ePA Tools"
+optional = true
+python-versions = "*"
+groups = ["main"]
+markers = "extra == \"epatools\""
+files = []
+develop = false
+
+[package.dependencies]
+PyYAML = "6.0.2"
+requests = "2.32.3"
+
+[package.source]
+type = "git"
+url = "https://github.com/onyg/epa-tools.git"
+reference = "HEAD"
+resolved_reference = "157435f39175ad88baa972e508bae8cd1d8fc10b"
+
+[[package]]
 name = "idna"
 version = "3.11"
 description = "Internationalized Domain Names in Applications (IDNA)"
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"igtools\""
+markers = "extra == \"igtools\" or extra == \"epatools\""
 files = [
     {file = "idna-3.11-py3-none-any.whl", hash = "sha256:771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea"},
     {file = "idna-3.11.tar.gz", hash = "sha256:795dafcc9c04ed0c1fb032c2aa73654d8e8c5023a7df64a53f39190ada629902"},
@@ -559,7 +580,7 @@ description = "Python HTTP for Humans."
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"igtools\""
+markers = "extra == \"igtools\" or extra == \"epatools\""
 files = [
     {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
     {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
@@ -644,7 +665,7 @@ description = "HTTP library with thread-safe connection pooling, file post, and 
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"igtools\""
+markers = "extra == \"igtools\" or extra == \"epatools\""
 files = [
     {file = "urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc"},
     {file = "urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760"},
@@ -657,9 +678,10 @@ socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [extras]
+epatools = ["epatools"]
 igtools = ["igtools"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "0c921b4e03a1b2f5d7989577f2b8a4f115be641a5ef1637050c0985850caddef"
+content-hash = "3eb4638ef16c3162133fbc7cd3318c7dbf5379fa86cd91723cf01c90a13ad406"
