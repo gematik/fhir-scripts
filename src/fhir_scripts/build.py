@@ -2,7 +2,7 @@ from argparse import Namespace, _SubParsersAction
 from pathlib import Path
 
 from . import log
-from .config import Config
+from .config import BuildConfig, Config
 from .exception import NoConfigException, NotInstalledException
 from .tools import epatools, igpub, igtools, sushi
 
@@ -42,16 +42,20 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     all_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
 
 
-def build_defs(cli_args: Namespace, *args, **kwargs):
+def build_defs(cli_args: Namespace, config: Config, *args, **kwargs):
     log.info("Building definitions")
 
-    if (cli_args.req or cli_args.only_req) and not cli_args.only_cap:
+    defs_config = config.build.steps.definitions
+    only_cap = getattr(cli_args, "only_cap", False)
+    only_req = getattr(cli_args, "only_req", False)
+
+    if defs_config.requirements or ((cli_args.req or only_req) and not only_cap):
         build_req(args, kwargs)
 
-    if not cli_args.only_req and not cli_args.only_cap:
+    if not only_req and not only_cap:
         sushi.run()
 
-    if (cli_args.cap or cli_args.only_cap) and not cli_args.only_req:
+    if defs_config.cap_statements or ((cli_args.cap or only_cap) and not only_req):
         build_cap()
 
     log.succ("Definitions built successfully")
@@ -86,11 +90,14 @@ def build_cap(*args, **kwargs):
 def build_ig(cli_args: Namespace, config: Config, *args, **kwargs):
     log.info("Building IG")
 
-    if not cli_args.only_oapi:
+    ig_config = config.build.steps.ig
+    only_oapi = getattr(cli_args, "only_oapi", False)
+
+    if not only_oapi:
         igpub.run()
         log.succ("IG built successfully")
 
-    if cli_args.only_oapi or cli_args.oapi:
+    if ig_config.openapi or only_oapi or cli_args.oapi:
         build_openapi(config)
 
     igpub.qa()
