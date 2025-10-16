@@ -64,7 +64,7 @@ if EPATOOLS_PACKAGE_AVAILABLE:
 
     def version(short: bool = False, *args, **kwargs) -> str | None:
         """
-        Get the installed version of epatools, returns None if not installed
+        Get the installed version
         """
         return importlib.metadata.version("epatools")
 
