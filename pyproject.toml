@@ -8,7 +8,11 @@ authors = [
 license = { text = "Apache-2.0" }
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["pydantic (>=2.11.9,<3.0.0)", "pyyaml (>=6.0.2,<7.0.0)", "tqdm (>=4.67.1,<5.0.0)"]
+dependencies = [
+    "pydantic (>=2.11.9,<3.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "tqdm (>=4.67.1,<5.0.0)",
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -18,10 +22,11 @@ build-backend = "poetry.core.masonry.api"
 fhirscripts = "fhir_scripts.main:main"
 
 [dependency-groups]
-dev = [
-    "black (>=25.9.0,<26.0.0)"
-]
+dev = ["black (>=25.9.0,<26.0.0)"]
 
 [project.optional-dependencies]
 igtools = ["igtools @ git+https://github.com/onyg/req-tooling"]
 epatools = ["epatools @ git+https://github.com/onyg/epa-tools.git"]
+publishtools = [
+    "publish-tools @ git+https://github.com/gematik/publish-tools.git",
+]

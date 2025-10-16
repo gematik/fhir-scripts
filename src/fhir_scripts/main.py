@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-from . import build, cache, deploy, log, update, versions
+from . import build, cache, deploy, log, publish, update, versions
 from .config import Config
 from .exception import CancelException
 
@@ -20,7 +20,7 @@ def main():
     )
     subparsers = parser.add_subparsers(dest="cmd")
 
-    modules = [build, cache, deploy, update, versions]
+    modules = [build, cache, deploy, publish, update, versions]
     module_dict = {}
     parser_dict = {}
 
