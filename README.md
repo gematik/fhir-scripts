@@ -1,5 +1,32 @@
 # FHIR Scripts
 
+## Python Script (preferred)
+
+Install using pipx
+
+```bash
+pipx install "fhir_scripts @ git+https://github.com/gematik/fhir-scripts.git"
+```
+
+Optionally, one can provide addtional arguments for `pipx install`:
+
+* `-f`, `--force`: overwrite an existing installation
+* `--global`: install for all users (may need to be called using `sudo`)
+
+Also there can optional compentens be defined to be also installed using `fhir_scripts[opt,...]`. These are Python packages that otherwise may be called using a shell. Available components are:
+
+* `epatools`: Handle CapabilityStatements and OpenAPI
+* `igtools`: Handle requirements
+* `publishtools`: Support the publish workflow
+
+Get information about the usage with
+
+```bash
+fhirscripts --help
+```
+
+## Bash script
+
 The FHIR Scripts scripts provide commands that support the develop process for FHIR profiles and IGs.
 
 The following commands arw available:
@@ -14,7 +41,7 @@ The following commands arw available:
 | `build`     | Build IG                                            |
 | `deploy`    | Deploy an IG                                        |
 
-## Update the script itself
+### Update the script itself
 
 Download the latest version of the script to the current directory.
 
@@ -25,11 +52,11 @@ Install the latest version of the Python tools:
 * [igtools](https://github.com/onyg/req-tooling)
 * [epatools](https://github.com/onyg/epa-tools)
 
-## Update Sushi and IG Publisher
+### Update Sushi and IG Publisher
 
 Install the latest version of FSH Sushi and IG Publisher.
 
-## Rebuild FHIR Cache
+### Rebuild FHIR Cache
 
 Clears the FHIR cache and rebuilds it from FHIR packages. Optionally it can install packages from a local directory and cache dependency packages in this directory.
 
@@ -39,11 +66,11 @@ Clears the FHIR cache and rebuilds it from FHIR packages. Optionally it can inst
 
 When `<pkgdir>` is provided, the dependencies from `package.json` are read and available packages from `<pkgdir>` will be installed. Additionally, direct dependencies that are not present in `<pkgdir>` will be downloaded for later usages.
 
-## Delete the build cache
+### Delete the build cache
 
 Delete cached schemas and TX from `input-cache/`.
 
-## Build IG
+### Build IG
 
 Performs several steps to support the process of building a FHIR IG.
 
@@ -54,7 +81,7 @@ It is separated into two parts, building
 
 whereas, the optional argument `noig` only builds the definitions and `nodefs` only builds the IG.
 
-### FHIR Definitions
+#### FHIR Definitions
 
 Steps:
 
@@ -62,7 +89,7 @@ Steps:
 * Build FHIR definitions using FSH Sushi
 * Merge CapabilityStatements, if *epatools* are available
 
-### FHIR IG
+#### FHIR IG
 
 Steps:
 
@@ -72,11 +99,11 @@ Steps:
 
 For building the IG `config.sh` needs to present in the current directory defining the publish URL for the IG Publisher as `PUBLISH_URL`. For updating the archive a list of files needs to be defined as `CONTENT_FILES`.
 
-## Deploy an IG
+### Deploy an IG
 
 Deploy the IG from the build directory (`output/`) to the webserver.
 
-### Google Cloud
+#### Google Cloud
 
 Uses a gCloud as a target and requires the following tools:
 
