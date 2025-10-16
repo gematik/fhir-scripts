@@ -66,7 +66,7 @@ if EPATOOLS_PACKAGE_AVAILABLE:
         """
         Get the installed version of epatools, returns None if not installed
         """
-        return importlib.metadata.version("igtools")
+        return importlib.metadata.version("epatools")
 
 
 ###
