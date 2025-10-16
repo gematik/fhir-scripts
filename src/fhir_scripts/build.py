@@ -13,27 +13,45 @@ ALL = "all"
 
 def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     defs_parser = subparser.add_parser(DEFS, help="Build definitions")
-    defs_parser.add_argument("--only-sushi", action="store_true", help="Only run sushi")
+    defs_parser.add_argument(
+        "--req", action="store_true", help="Also process requirements"
+    )
     defs_parser.add_argument(
         "--only-req", action="store_true", help="Only process requirements"
     )
+    defs_parser.add_argument(
+        "--cap", action="store_true", help="Also merge CapabilityStatements"
+    )
+    defs_parser.add_argument(
+        "--only-cap", action="store_true", help="Only merge CapabilityStatements"
+    )
 
     ig_parser = subparser.add_parser(IG, help="Build IG")
-    ig_parser.add_argument("--only-open-api", action="store_true", help="Only Open API")
+    ig_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
+    ig_parser.add_argument(
+        "--only-oapi", action="store_true", help="Only build OpenAPI"
+    )
 
-    subparser.add_parser(ALL, help="Build everything")
+    all_parser = subparser.add_parser(ALL, help="Build everything")
+    all_parser.add_argument(
+        "--req", action="store_true", help="Also process requirements"
+    )
+    all_parser.add_argument(
+        "--cap", action="store_true", help="Also merge CapabilityStatements"
+    )
+    all_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
 
 
 def build_defs(cli_args: Namespace, *args, **kwargs):
     log.info("Building definitions")
 
-    if not getattr(cli_args, "only_sushi", False):
+    if (cli_args.req or cli_args.only_req) and not cli_args.only_cap:
         build_req(args, kwargs)
 
-    if not getattr(cli_args, "only_req", False):
+    if not cli_args.only_req and not cli_args.only_cap:
         sushi.run()
 
-    if not getattr(cli_args, "only_req", False):
+    if (cli_args.cap or cli_args.only_cap) and not cli_args.only_req:
         build_cap()
 
     log.succ("Definitions built successfully")
@@ -68,11 +86,12 @@ def build_cap(*args, **kwargs):
 def build_ig(cli_args: Namespace, config: Config, *args, **kwargs):
     log.info("Building IG")
 
-    if not getattr(cli_args, "only_open_api", False):
+    if not cli_args.only_oapi:
         igpub.run()
         log.succ("IG built successfully")
 
-    build_openapi(config)
+    if cli_args.only_oapi or cli_args.oapi:
+        build_openapi(config)
 
     igpub.qa()
 
