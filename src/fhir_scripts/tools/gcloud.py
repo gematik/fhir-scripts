@@ -19,10 +19,7 @@ VERSION_REGEX = re.compile(r"Google\s+Cloud\s+SDK\s+(\d+(?:\.\d+){,2})\b")
 
 _logged_in = False
 
-require_installed = require_installed("gcloud", __tool_name__)
 
-
-@require_installed
 def logged_in(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -64,7 +61,7 @@ def version(*args, **kwargs) -> str | None:
         return None
 
 
-@require_installed
+@require_installed("gcloud", __tool_name__)
 @logged_in
 def copy(source: Path, target: str, force=False):
     # Check for overwrite
@@ -103,7 +100,7 @@ def copy(source: Path, target: str, force=False):
     )
 
 
-@require_installed
+@require_installed("gcloud", __tool_name__)
 @logged_in
 def ls(path: str) -> list[str]:
     res = shell.run(CMD_LS.format(path), capture_output=True)

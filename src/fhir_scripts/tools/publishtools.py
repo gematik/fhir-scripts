@@ -56,9 +56,7 @@ else:
     VERSION_REGEX = re.compile(r"IGTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/gematik/publish-tools.git"
 
-    require_installed = require_installed("publishtools", __tool_name__)
-
-    @require_installed
+    @require_installed("publishtools", __tool_name__)
     def publish(project_dir: Path, ig_registry: Path):
         """
         Publish project
@@ -70,7 +68,7 @@ else:
         )
         log.succ("Project published successfully")
 
-    @require_installed
+    @require_installed("publishtools", __tool_name__)
     def render_list(ig_registry: Path):
         """
         Render the IG overview list

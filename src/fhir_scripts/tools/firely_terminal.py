@@ -8,10 +8,8 @@ from .basic import dotnet, shell
 
 VERSION_REGEX = re.compile(r"Firely Terminal\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
-require_installed = require_installed("fhir", __tool_name__)
 
-
-@require_installed
+@require_installed("fhir", __tool_name__)
 def install(
     pkg: str | None = None, version: str | None = None, file: Path | None = None
 ):
@@ -52,6 +50,6 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
         return None
 
 
-@require_installed
+@require_installed("fhir", __tool_name__)
 def restore():
     shell.run("fhir restore")

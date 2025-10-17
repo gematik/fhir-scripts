@@ -7,10 +7,8 @@ from . import shell
 
 VERSION_REGEX = re.compile(r"Python\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
-require_installed = require_installed("pipx", __tool_name__)
 
-
-@require_installed
+@require_installed("pipx", __tool_name__)
 def install(pkg_name: str, as_global: bool = False):
 
     if as_global:

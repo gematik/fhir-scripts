@@ -5,10 +5,8 @@ from pathlib import Path
 from ...helper import require_installed
 from . import shell
 
-require_installed = require_installed("npm", __tool_name__)
 
-
-@require_installed
+@require_installed("npm", __tool_name__)
 def install(pkg_name: str, as_global: bool = False):
 
     if as_global:
@@ -42,7 +40,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
         return None
 
 
-@require_installed
+@require_installed("npm", __tool_name__)
 def download(
     pkg_name: str, version: str, target_dir: Path, registry: str | None = None
 ):

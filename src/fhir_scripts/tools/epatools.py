@@ -98,10 +98,8 @@ else:
     VERSION_REGEX = re.compile(r"EPATOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/onyg/epa-tools.git"
 
-    require_installed = require_installed("epatools", __tool_name__)
-
     @is_configured
-    @require_installed
+    @require_installed("epatools", __tool_name__)
     def merge_capabilities():
         """
         Merge CapabilityStatements
@@ -111,7 +109,7 @@ else:
         log.succ("CapabilityStatements merged successfully")
 
     @is_configured
-    @require_installed
+    @require_installed("epatools", __tool_name__)
     def openapi(config: EpaToolsConfig | None):
         """
         Build the Open APIs

@@ -130,12 +130,10 @@ else:
     VERSION_REGEX = re.compile(r"IGTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/onyg/req-tooling.git"
 
-    require_installed = require_installed("igtools", __tool_name__)
-
     config = Path("./.igtools/config.yaml")
 
     @is_configured
-    @require_installed
+    @require_installed("igtools", __tool_name__)
     def process():
         """
         Process requirements
@@ -145,7 +143,7 @@ else:
         log.succ("Requirements processed")
 
     @is_configured
-    @require_installed
+    @require_installed("igtools", __tool_name__)
     def release_notes(output_dir: Path | str):
         """
         Update release notes
@@ -155,7 +153,7 @@ else:
         log.succ("Release-notes updated")
 
     @is_configured
-    @require_installed
+    @require_installed("igtools", __tool_name__)
     def export(output_dir: Path | str):
         """
         Exports requirements

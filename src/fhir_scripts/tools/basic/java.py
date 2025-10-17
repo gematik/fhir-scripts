@@ -8,10 +8,8 @@ from . import shell
 
 VERSION_REGEX = re.compile(r"\w*jdk\w*\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
-require_installed = require_installed("java", __tool_name__)
 
-
-@require_installed
+@require_installed("java", __tool_name__)
 def run_jar(jar: Path, *args, capture_output: bool = False):
 
     cmd = f"java -jar {str(jar)} {' '.join(args)}"

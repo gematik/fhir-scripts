@@ -8,10 +8,8 @@ from .basic import npm, shell
 
 VERSION_REGEX = re.compile(r"SUSHI\sv(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
-require_installed = require_installed("sushi", __tool_name__)
 
-
-@require_installed
+@require_installed("sushi", __tool_name__)
 def run():
     log.info("Run sushi")
     try:
