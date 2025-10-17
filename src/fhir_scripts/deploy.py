@@ -123,7 +123,7 @@ def _deploy_ig(target: str, confirm_yes: bool = False):
 
 
 def _deploy_history(target, confirm_yes: bool = False):
-    publish_dir = Path("./publish") / _project_name()
+    publish_dir = Path("./publish") / _project_name(needs_project=True)
 
     history_file_name = "index.html"
     history_file = publish_dir / history_file_name
