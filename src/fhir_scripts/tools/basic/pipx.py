@@ -1,13 +1,17 @@
+__tool_name__ = "pipx"
+
 import re
 
-from ...exception import NotInstalledException
+from ...helper import require_installed
 from . import shell
 
 VERSION_REGEX = re.compile(r"Python\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
+require_installed = require_installed("pipx", __tool_name__)
 
+
+@require_installed
 def install(pkg_name: str, as_global: bool = False):
-    is_installed()
 
     if as_global:
         cmd = f"sudo pipx install --global {pkg_name}"
@@ -21,17 +25,6 @@ def install(pkg_name: str, as_global: bool = False):
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
-
-
-def is_installed() -> None:
-    """
-    Checks if installed
-    """
-    try:
-        shell.run("which pipx", check=True, capture_output=True)
-
-    except shell.CalledProcessError:
-        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
 def version(short: bool = False, *args, **kwargs) -> str | None:
@@ -48,6 +41,3 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
 
     except shell.CalledProcessError:
         return None
-
-
-__tool_name__ = "pipx"

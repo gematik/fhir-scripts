@@ -1,11 +1,15 @@
+__tool_name__ = "npm"
+
 from pathlib import Path
 
-from ...exception import NotInstalledException
+from ...helper import require_installed
 from . import shell
 
+require_installed = require_installed("npm", __tool_name__)
 
+
+@require_installed
 def install(pkg_name: str, as_global: bool = False):
-    is_installed()
 
     if as_global:
         cmd = f"sudo npm install -g {pkg_name}"
@@ -19,17 +23,6 @@ def install(pkg_name: str, as_global: bool = False):
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
-
-
-def is_installed() -> None:
-    """
-    Checks if installed
-    """
-    try:
-        shell.run("which npm", check=True, capture_output=True)
-
-    except shell.CalledProcessError:
-        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
 def version(short: bool = False, *args, **kwargs) -> str | None:
@@ -49,6 +42,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
         return None
 
 
+@require_installed
 def download(
     pkg_name: str, version: str, target_dir: Path, registry: str | None = None
 ):
@@ -57,7 +51,6 @@ def download(
 
     If `registry` is provided it used instead of the default NPM one.
     """
-    is_installed()
 
     if not target_dir.exists():
         target_dir.mkdir(parents=True)
@@ -74,6 +67,3 @@ def download(
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
-
-
-__tool_name__ = "npm"

@@ -1,14 +1,18 @@
+__tool_name__ = "Java"
+
 import re
 from pathlib import Path
 
-from ...exception import NotInstalledException
+from ...helper import require_installed
 from . import shell
 
 VERSION_REGEX = re.compile(r"\w*jdk\w*\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
+require_installed = require_installed("java", __tool_name__)
 
+
+@require_installed
 def run_jar(jar: Path, *args, capture_output: bool = False):
-    is_installed()
 
     cmd = f"java -jar {str(jar)} {' '.join(args)}"
 
@@ -36,14 +40,3 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
 
     except shell.CalledProcessError:
         return None
-
-
-def is_installed() -> None:
-    """
-    Checks if Java is installed
-    """
-    try:
-        shell.run("which java", check=True, capture_output=True)
-
-    except shell.CalledProcessError:
-        raise NotInstalledException("Java is needed but not installed")

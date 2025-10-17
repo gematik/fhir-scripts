@@ -48,7 +48,6 @@ def logged_in(func):
     return wrapper
 
 
-@require_installed
 def version(*args, **kwargs) -> str | None:
     """
     Get the installed version, returns None if not installed
