@@ -6,8 +6,8 @@ from pathlib import Path
 import yaml
 
 from . import build, cache, deploy, log, publish, update, versions
-from .config import Config
 from .exception import CancelException
+from .models.config import Config
 
 
 def main():
