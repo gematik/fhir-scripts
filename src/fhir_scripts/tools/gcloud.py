@@ -41,7 +41,7 @@ class GCloudHelper:
                 shell.run(CMD_LIST, check=True, capture_output=True)
                 log.succ("Already logged in")
 
-            except shell.CalledProcessError:
+            except Exception:
                 # Not logged in
                 try:
                     shell.run(CMD_LOGIN)
