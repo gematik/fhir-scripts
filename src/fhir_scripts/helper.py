@@ -1,4 +1,7 @@
-from .exception import CancelException
+from functools import wraps
+
+from .exception import CancelException, NotInstalledException
+from .tools.basic import shell
 
 
 def confirm(prompt: str, log_no: str, confirm_yes: bool = False, default: bool = False):
@@ -27,3 +30,27 @@ def confirm(prompt: str, log_no: str, confirm_yes: bool = False, default: bool =
 
         if ans in ("n", "no"):
             raise CancelException(log_no)
+
+
+def require_installed(cmd: str, name: str):
+    """
+    Decorator that checks if `cmd` can be found
+
+    It will be checked if `cmd` can be found on the current environment.
+    Will throw an NotInstalledException if not found using `name` in the error message.
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                shell.run(f"which {cmd}", check=True, capture_output=True)
+
+            except shell.CalledProcessError:
+                raise NotInstalledException(f"{name} is needed but not installed")
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
