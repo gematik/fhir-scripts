@@ -5,7 +5,7 @@ from pathlib import Path
 from . import log
 from .config import Config, DeployConfig
 from .helper import confirm
-from .tools.gcloud import GCloudHelper
+from .tools import gcloud
 
 TARGET_BASE_DIR = "ig/fhir"
 
@@ -32,37 +32,32 @@ def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
     if deploy_config is None:
         raise Exception("deploy configuration missing")
 
-    gcloud = GCloudHelper()
-
-    # Login if necessary
-    gcloud.login()
-
     if cli_args.ig_registry:
         # Build target URL
         target = _target_path(deploy_config, cli_args.environment)
-        _deploy_ig_registry(target, gcloud, confirm_yes=cli_args.yes)
+        _deploy_ig_registry(target, confirm_yes=cli_args.yes)
 
     else:
         # Build target URL
         target = _target_path(deploy_config, cli_args.environment, needs_project=True)
 
         if cli_args.all:
-            _deploy_ig(target, gcloud, confirm_yes=cli_args.yes)
-            _deploy_history(target, gcloud, confirm_yes=cli_args.yes)
+            _deploy_ig(target, confirm_yes=cli_args.yes)
+            _deploy_history(target, confirm_yes=cli_args.yes)
 
         elif cli_args.only_ig:
-            _deploy_ig(target, gcloud, confirm_yes=cli_args.yes)
+            _deploy_ig(target, confirm_yes=cli_args.yes)
 
         elif cli_args.only_history:
-            _deploy_history(target, gcloud, confirm_yes=cli_args.yes)
+            _deploy_history(target, confirm_yes=cli_args.yes)
 
         else:
-            _deploy_ig(target, gcloud, confirm_yes=cli_args.yes)
+            _deploy_ig(target, confirm_yes=cli_args.yes)
 
     return True
 
 
-def _deploy_ig_registry(target, gcloud: GCloudHelper, confirm_yes: bool = False):
+def _deploy_ig_registry(target, confirm_yes: bool = False):
     reg_dir = Path("./")
 
     log.info(f"Deploy IG registry files to {target}")
@@ -107,7 +102,7 @@ def _target_path(
     return "gs://" + "/".join([p.strip("/") for p in path_parts])
 
 
-def _deploy_ig(target: str, gcloud: GCloudHelper, confirm_yes: bool = False):
+def _deploy_ig(target: str, confirm_yes: bool = False):
     output_dir = Path("./output")
 
     # Get built version
@@ -127,7 +122,7 @@ def _deploy_ig(target: str, gcloud: GCloudHelper, confirm_yes: bool = False):
     log.succ("Deployed IG")
 
 
-def _deploy_history(target, gcloud: GCloudHelper, confirm_yes: bool = False):
+def _deploy_history(target, confirm_yes: bool = False):
     publish_dir = Path("./publish") / _project_name()
 
     history_file_name = "index.html"

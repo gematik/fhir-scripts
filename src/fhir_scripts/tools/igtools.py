@@ -1,9 +1,12 @@
+__tool_name__ = "igtools"
+
 import importlib.metadata
 import re
+from functools import wraps
 from pathlib import Path
 
 from .. import log
-from ..exception import NoConfigException, NotInstalledException
+from ..exception import NoConfigException
 
 # Check if igtools package is installed
 try:
@@ -11,6 +14,21 @@ try:
     IGTOOLS_PACKAGE_AVAILABLE = True
 except importlib.metadata.PackageNotFoundError:
     IGTOOLS_PACKAGE_AVAILABLE = False
+
+
+def is_configured(func):
+    """
+    Checks if project is configured for tool"
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not config.exists():
+            raise NoConfigException(f"{__tool_name__} not configured for project")
+
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 ###
@@ -29,12 +47,11 @@ if IGTOOLS_PACKAGE_AVAILABLE:
 
     config = Path(CONFIG_DEFAULT_DIR) / CONFIG_FILE
 
+    @is_configured
     def process():
         """
         Process requirements
         """
-        is_configured()
-
         log.info("Processing requirements")
 
         try:
@@ -48,12 +65,11 @@ if IGTOOLS_PACKAGE_AVAILABLE:
 
         log.succ("Requirements processed")
 
+    @is_configured
     def release_notes(output_dir: Path | str):
         """
         Update release notes
         """
-        is_configured()
-
         log.info("Updating release-notes")
 
         try:
@@ -68,12 +84,11 @@ if IGTOOLS_PACKAGE_AVAILABLE:
 
         log.succ("Release-notes updated")
 
+    @is_configured
     def export(output_dir: Path | str):
         """
         Exports requirements
         """
-        is_configured()
-
         log.info("Export requirements")
 
         try:
@@ -109,55 +124,45 @@ if IGTOOLS_PACKAGE_AVAILABLE:
 # Use the command line
 ###
 else:
+    from ..helper import require_installed
     from .basic import pipx, shell
 
     VERSION_REGEX = re.compile(r"IGTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/onyg/req-tooling.git"
 
+    require_installed = require_installed("igtools", __tool_name__)
+
     config = Path("./.igtools/config.yaml")
 
+    @is_configured
+    @require_installed
     def process():
         """
         Process requirements
         """
-        is_configured()
-        is_installed()
-
         log.info("Processing requirements")
         shell.run("igtools process", capture_output=True)
         log.succ("Requirements processed")
 
+    @is_configured
+    @require_installed
     def release_notes(output_dir: Path | str):
         """
         Update release notes
         """
-        is_configured()
-        is_installed()
-
         log.info("Updating release-notes")
         shell.run(f"igtools ig-release-notes {str(output_dir)}", capture_output=True)
         log.succ("Release-notes updated")
 
+    @is_configured
+    @require_installed
     def export(output_dir: Path | str):
         """
         Exports requirements
         """
-        is_configured()
-        is_installed()
-
         log.info("Export requirements")
         shell.run(f"igtools export {str(output_dir)}", capture_output=True)
         log.succ("Requirements exported successfully")
-
-    def is_installed() -> None:
-        """
-        Checks if installed
-        """
-        try:
-            shell.run("which igtools", check=True, capture_output=True)
-
-        except shell.CalledProcessError:
-            raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
     def update():
         pipx.install(PACKAGE, as_global=True)
@@ -180,15 +185,3 @@ else:
 
         except shell.CalledProcessError:
             return None
-
-
-def is_configured() -> None:
-    """
-    Checks if project is configured for tool"
-    """
-
-    if not config.exists():
-        raise NoConfigException(f"{__tool_name__} not configured for project")
-
-
-__tool_name__ = "igtools"

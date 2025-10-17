@@ -1,14 +1,18 @@
+__tool_name__ = "FSH Sushi"
+
 import re
 
 from .. import log
-from ..exception import NotInstalledException
+from ..helper import require_installed
 from .basic import npm, shell
 
 VERSION_REGEX = re.compile(r"SUSHI\sv(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
+require_installed = require_installed("sushi", __tool_name__)
 
+
+@require_installed
 def run():
-    is_installed()
     log.info("Run sushi")
     try:
         shell.run("sushi build .")
@@ -16,17 +20,6 @@ def run():
 
     except shell.CalledProcessError:
         raise Exception("Sushi run failed")
-
-
-def is_installed() -> None:
-    """
-    Checks if installed
-    """
-    try:
-        shell.run("which sushi", check=True, capture_output=True)
-
-    except shell.CalledProcessError:
-        raise NotInstalledException("sushi is needed but not installed")
 
 
 def update():
@@ -51,6 +44,3 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
 
     except shell.CalledProcessError:
         return None
-
-
-__tool_name__ = "FSH Sushi"

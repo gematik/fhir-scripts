@@ -1,9 +1,10 @@
+__tool_name__ = "publishtools"
+
 import importlib.metadata
 import re
 from pathlib import Path
 
 from .. import log
-from ..exception import NotInstalledException
 
 # Check if igtools package is installed
 try:
@@ -23,7 +24,6 @@ if PUBLISHTOOLS_PACKAGE_AVAILABLE:
         """
         Publish project
         """
-
         log.info("Publish project")
         ig.publish(project_dir, ig_registry)
         log.succ("Project published successfully")
@@ -32,7 +32,6 @@ if PUBLISHTOOLS_PACKAGE_AVAILABLE:
         """
         Render the IG overview list
         """
-
         log.info("Render IG overview list")
         render.render_ig_list(ig_registry)
         log.succ("IG overview rendered successfully")
@@ -51,17 +50,19 @@ if PUBLISHTOOLS_PACKAGE_AVAILABLE:
 # Use the command line
 ###
 else:
+    from ..helper import require_installed
     from .basic import pipx, shell
 
     VERSION_REGEX = re.compile(r"IGTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/gematik/publish-tools.git"
 
+    require_installed = require_installed("publishtools", __tool_name__)
+
+    @require_installed
     def publish(project_dir: Path, ig_registry: Path):
         """
         Publish project
         """
-        is_installed()
-
         log.info("Publish project")
         shell.run(
             f"publishtools publish --project-dir {str(project_dir)} --ig-registry {str(ig_registry)}",
@@ -69,28 +70,17 @@ else:
         )
         log.succ("Project published successfully")
 
+    @require_installed
     def render_list(ig_registry: Path):
         """
         Render the IG overview list
         """
-        is_installed()
-
         log.info("Render IG overview list")
         shell.run(
             f"publishtools render-list --ig-registry {str(ig_registry)}",
             capture_output=True,
         )
         log.succ("IG overview rendered successfully")
-
-    def is_installed() -> None:
-        """
-        Checks if installed
-        """
-        try:
-            shell.run("which publishtools", check=True, capture_output=True)
-
-        except shell.CalledProcessError:
-            raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
     def update():
         pipx.install(PACKAGE, as_global=True)
@@ -111,6 +101,3 @@ else:
 
         except shell.CalledProcessError:
             return None
-
-
-__tool_name__ = "publishtools"

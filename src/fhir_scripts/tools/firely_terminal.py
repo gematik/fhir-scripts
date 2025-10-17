@@ -1,17 +1,20 @@
+__tool_name__ = "Firely Terminal"
+
 import re
 from pathlib import Path
 
-from ..exception import NotInstalledException
+from ..helper import require_installed
 from .basic import dotnet, shell
 
 VERSION_REGEX = re.compile(r"Firely Terminal\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
+require_installed = require_installed("fhir", __tool_name__)
 
+
+@require_installed
 def install(
     pkg: str | None = None, version: str | None = None, file: Path | None = None
 ):
-    is_installed()
-
     if pkg and version:
         cmd = f"fhir install {pkg} {version}"
 
@@ -27,17 +30,6 @@ def install(
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
-
-
-def is_installed() -> None:
-    """
-    Checks if installed
-    """
-    try:
-        shell.run("which fhir", check=True, capture_output=True)
-
-    except shell.CalledProcessError:
-        raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
 def version(short: bool = False, *args, **kwargs) -> str | None:
@@ -60,8 +52,6 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
         return None
 
 
+@require_installed
 def restore():
     shell.run("fhir restore")
-
-
-__tool_name__ = "Firely Terminal"

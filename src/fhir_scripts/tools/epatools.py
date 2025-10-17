@@ -1,18 +1,39 @@
+__tool_name__ = "epatools"
+
 import importlib.metadata
 import re
+from functools import wraps
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from .. import log
 from ..config import EpaToolsArchiveConfig, EpaToolsConfig
-from ..exception import NoConfigException, NotInstalledException
+from ..exception import NoConfigException
 
 try:
     importlib.metadata.version("epatools")
     EPATOOLS_PACKAGE_AVAILABLE = True
 except importlib.metadata.PackageNotFoundError:
     EPATOOLS_PACKAGE_AVAILABLE = False
+
+
+def is_configured(func):
+    """
+    Checks if project is configured for tool"
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        config = Path("./epatools.yaml")
+
+        if not config.exists():
+            raise NoConfigException(f"{__tool_name__} not configured for project")
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
 
 ###
 # Use the module
@@ -22,12 +43,11 @@ if EPATOOLS_PACKAGE_AVAILABLE:
     from epatools.merger import Merger
     from epatools.oaconverter import OpenApiConverter
 
+    @is_configured
     def merge_capabilities():
         """
         Merge CapabilityStatements
         """
-        is_configured()
-
         log.info("Merge CapabilityStatements")
 
         try:
@@ -39,12 +59,11 @@ if EPATOOLS_PACKAGE_AVAILABLE:
 
         log.succ("CapabilityStatements merged successfully")
 
+    @is_configured
     def openapi(config: EpaToolsConfig | None):
         """
         Build the Open APIs
         """
-        is_configured()
-
         if config is None:
             raise Exception("Missing config for epatools")
 
@@ -73,29 +92,30 @@ if EPATOOLS_PACKAGE_AVAILABLE:
 # Use the command line
 ###
 else:
+    from ..helper import require_installed
     from .basic import pipx, shell
 
     VERSION_REGEX = re.compile(r"EPATOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/onyg/epa-tools.git"
 
+    require_installed = require_installed("epatools", __tool_name__)
+
+    @is_configured
+    @require_installed
     def merge_capabilities():
         """
         Merge CapabilityStatements
         """
-        is_installed()
-        is_configured()
-
         log.info("Merge CapabilityStatements")
         shell.run("epatools merge", capture_output=True)
         log.succ("CapabilityStatements merged successfully")
 
+    @is_configured
+    @require_installed
     def openapi(config: EpaToolsConfig | None):
         """
         Build the Open APIs
         """
-        is_installed()
-        is_configured()
-
         if config is None:
             raise Exception("Missing config for epatools")
 
@@ -103,16 +123,6 @@ else:
         shell.run("epatools openapi", capture_output=True)
         log.succ("Open APIs built successfully")
         update_archive(config.archive)
-
-    def is_installed() -> None:
-        """
-        Checks if installed
-        """
-        try:
-            shell.run("which epatools", check=True, capture_output=True)
-
-        except shell.CalledProcessError:
-            raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
     def update():
         pipx.install(PACKAGE, as_global=True)
@@ -167,16 +177,3 @@ def update_archive(config: EpaToolsArchiveConfig):
                     zip_ref.write(file_path, file_path.relative_to(tmp_path))
 
     log.succ(f"IG archive updated successfully: {str(archive)}")
-
-
-def is_configured() -> None:
-    """
-    Checks if project is configured for tool"
-    """
-    config = Path("./epatools.yaml")
-
-    if not config.exists():
-        raise NoConfigException(f"{__tool_name__} not configured for project")
-
-
-__tool_name__ = "epatools"
