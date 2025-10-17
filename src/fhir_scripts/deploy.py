@@ -3,8 +3,8 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 from . import log
-from .config import Config, DeployConfig
 from .helper import confirm
+from .models.config import Config, DeployConfig
 from .tools import gcloud
 
 TARGET_BASE_DIR = "ig/fhir"

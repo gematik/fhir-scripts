@@ -2,8 +2,8 @@ from argparse import Namespace, _SubParsersAction
 from pathlib import Path
 
 from . import log
-from .config import Config
 from .exception import NoConfigException, NotInstalledException
+from .models.config import Config
 from .tools import epatools, igpub, igtools, sushi
 
 DEFS = "defs"

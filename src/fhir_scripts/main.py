@@ -3,11 +3,8 @@ import os
 import sys
 from pathlib import Path
 
-import yaml
-
-from . import build, cache, deploy, log, publish, update, versions
+from . import build, cache, config, deploy, log, publish, update, versions
 from .exception import CancelException
-from .models.config import Config
 
 
 def main():
@@ -57,15 +54,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        # Read config; initialize with default values if not found
-        config_file = args.config or Path("./config.yaml")
-        if config_file.exists():
-            config_file_contents = yaml.safe_load(
-                config_file.read_text(encoding="utf-8")
-            )
-        else:
-            config_file_contents = {}
-        config = Config.model_validate(config_file_contents)
+        cfg = config.load(args.config)
 
         # Get handle function for command
         module = module_dict[args.cmd]
@@ -88,7 +77,7 @@ def main():
             return
 
         # Otherwise handle the command
-        handle(cli_args=args, config=config)
+        handle(cli_args=args, config=cfg)
 
     except CancelException as e:
         log.warn(str(e))
