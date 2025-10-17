@@ -2,7 +2,7 @@ from argparse import Namespace, _SubParsersAction
 from pathlib import Path
 
 from . import log
-from .config import BuildConfig, Config
+from .config import Config
 from .exception import NoConfigException, NotInstalledException
 from .tools import epatools, igpub, igtools, sushi
 
