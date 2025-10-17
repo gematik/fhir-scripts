@@ -5,7 +5,6 @@ import re
 from pathlib import Path
 
 from .. import log
-from ..exception import NotInstalledException
 
 # Check if igtools package is installed
 try:
