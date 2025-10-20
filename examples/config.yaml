@@ -1,0 +1,16 @@
+deploy:
+  env:
+    dev: dev_bucket
+    prod: prod_bucket
+epatools:
+  archive:
+    content_files:
+      - openapi.json
+      - openapi.yaml
+build:
+  steps:
+    definitions:
+      requirements: true
+      cap_statements: true
+    ig:
+      openapi: true
