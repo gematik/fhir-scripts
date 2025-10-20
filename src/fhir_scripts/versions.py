@@ -1,7 +1,6 @@
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 
 from . import log, tools
-from .config import Config
 
 TARGET_BASE_DIR = "ig/fhir"
 
@@ -10,7 +9,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     pass
 
 
-def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
+def handle(*args, **kwargs) -> bool:
     versions = {}
     for name, module in tools.__dict__.items():
         if (

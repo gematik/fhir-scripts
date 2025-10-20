@@ -1,40 +1,26 @@
 from pathlib import Path
 
-from pydantic import BaseModel
+import yaml
+
+from .models.config import Config
 
 
-class BuildStepDefsConfig(BaseModel):
-    requirements: bool = False
-    cap_statements: bool = False
+def load(config_path: Path | None = None):
+    """
+    Load config
 
+    Read values from a config file. If no `config_path` is provided or it is `None`, the default is `./config.yaml`.
 
-class BuildStepIgConfig(BaseModel):
-    openapi: bool = False
+    If the file does not exists, the values are initialized with defaults.
+    """
+    config_file = config_path or Path("./config.yaml")
 
+    # Read an existing config
+    if config_file.exists():
+        config_file_contents = yaml.safe_load(config_file.read_text(encoding="utf-8"))
 
-class BuildStepConfig(BaseModel):
-    definitions: BuildStepDefsConfig = BuildStepDefsConfig()
-    ig: BuildStepIgConfig = BuildStepIgConfig()
+    # Else provide an empty config to get the default values
+    else:
+        config_file_contents = {}
 
-
-class BuildConfig(BaseModel):
-    steps: BuildStepConfig = BuildStepConfig()
-
-
-class DeployConfig(BaseModel):
-    env: dict[str, str]
-    path: str | None = None
-
-
-class EpaToolsArchiveConfig(BaseModel):
-    content_files: list[Path]
-
-
-class EpaToolsConfig(BaseModel):
-    archive: EpaToolsArchiveConfig
-
-
-class Config(BaseModel):
-    deploy: DeployConfig | None = None
-    epatools: EpaToolsConfig | None = None
-    build: BuildConfig = BuildConfig()
+    return Config.model_validate(config_file_contents)

@@ -8,8 +8,8 @@ from tempfile import TemporaryDirectory
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from .. import log
-from ..config import EpaToolsArchiveConfig, EpaToolsConfig
 from ..exception import NoConfigException
+from ..models.config import EpaToolsArchiveConfig, EpaToolsConfig
 
 try:
     importlib.metadata.version("epatools")
