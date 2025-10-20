@@ -16,11 +16,8 @@ def load(config_path: Path | None = None):
     config_file = config_path or Path("./config.yaml")
 
     # Read an existing config
-    if config_file.exists():
-        config_file_contents = yaml.safe_load(config_file.read_text(encoding="utf-8"))
-
-    # Else provide an empty config to get the default values
-    else:
-        config_file_contents = {}
+    config_file_contents = (
+        yaml.safe_load(config_file.read_text("utf-8")) if config_file.exists() else {}
+    )
 
     return Config.model_validate(config_file_contents)
