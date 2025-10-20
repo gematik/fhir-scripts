@@ -1,6 +1,6 @@
 [project]
 name = "fhir-scripts"
-version = "0.3.4"
+version = "0.4.0"
 description = ""
 authors = [
     { name = "Alexander Essenwanger", email = "alexander.essenwanger@gematik.de" },
