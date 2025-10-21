@@ -1,7 +1,7 @@
 from argparse import _SubParsersAction
 
 from . import log
-from .tools import epatools, igpub, igtools, sushi
+from .tools import epatools, igpub, igtools, publishtools, sushi
 
 SCRIPT = "script"
 TOOLS = "tools"
@@ -38,8 +38,8 @@ def update_igpub(*args, **kwargs):
 
 
 def update_tools(*args, **kwargs):
-    update_sushi(args, kwargs)
-    update_igpub(args, kwargs)
+    update_sushi(*args, **kwargs)
+    update_igpub(*args, **kwargs)
 
 
 def update_igtools(*args, **kwargs):
@@ -50,9 +50,14 @@ def update_epatools(*args, **kwargs):
     _update(epatools, *args, **kwargs)
 
 
+def update_publishtools(*args, **kwargs):
+    _update(publishtools, *args, **kwargs)
+
+
 def update_pytools(*args, **kwargs):
-    update_igtools(args, kwargs)
-    update_epatools(args, kwargs)
+    update_igtools(*args, **kwargs)
+    update_epatools(*args, **kwargs)
+    update_publishtools(*args, **kwargs)
 
 
 def update_script(*args, **kwargs):
@@ -60,9 +65,9 @@ def update_script(*args, **kwargs):
 
 
 def update_everything(*args, **kwargs):
-    update_script()
-    update_pytools()
-    update_tools()
+    update_script(*args, **kwargs)
+    update_pytools(*args, **kwargs)
+    update_tools(*args, **kwargs)
 
 
 __doc__ = "Update tools"
