@@ -45,17 +45,28 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
 def build_defs(cli_args: Namespace, config: Config, *args, **kwargs):
     log.info("Building definitions")
 
-    defs_config = config.build.steps.definitions
+    epatools_config = config.build.builtin.epatools
+    igtools_config = config.build.builtin.igtools
+
     only_cap = getattr(cli_args, "only_cap", False)
     only_req = getattr(cli_args, "only_req", False)
 
-    if defs_config.requirements or ((cli_args.req or only_req) and not only_cap):
+    enable_requirements = (igtools_config or cli_args.req or only_req) and not only_cap
+    enable_sushi = not only_req and not only_cap
+    enable_cap_statements = (
+        (isinstance(epatools_config, bool) and epatools_config)
+        or epatools_config.cap_statements  # type: ignore
+        or ((cli_args.cap or only_cap))
+        and not only_req
+    )
+
+    if enable_requirements:
         build_req(args, kwargs)
 
-    if not only_req and not only_cap:
+    if enable_sushi:
         sushi.run()
 
-    if defs_config.cap_statements or ((cli_args.cap or only_cap) and not only_req):
+    if enable_cap_statements:
         build_cap()
 
     log.succ("Definitions built successfully")
@@ -90,14 +101,22 @@ def build_cap(*args, **kwargs):
 def build_ig(cli_args: Namespace, config: Config, *args, **kwargs):
     log.info("Building IG")
 
-    ig_config = config.build.steps.ig
+    epatools_config = config.build.builtin.epatools
     only_oapi = getattr(cli_args, "only_oapi", False)
 
-    if not only_oapi:
+    enable_igpub = not only_oapi
+    enable_openapi = (
+        (isinstance(epatools_config, bool) and epatools_config)
+        or epatools_config.cap_statements  # type: ignore
+        or only_oapi
+        or cli_args.oapi
+    )
+
+    if enable_igpub:
         igpub.run()
         log.succ("IG built successfully")
 
-    if ig_config.openapi or only_oapi or cli_args.oapi:
+    if enable_openapi:
         build_openapi(config)
 
     igpub.qa()
@@ -105,7 +124,7 @@ def build_ig(cli_args: Namespace, config: Config, *args, **kwargs):
 
 def build_openapi(config: Config, *args, **kwargs):
     log.info("Updating OpenAPI")
-    epatools.openapi(config.epatools)
+    epatools.openapi(config.build.builtin.epatools)
     log.succ("OpenAPI updated successfully")
 
 
