@@ -1,6 +1,5 @@
 __tool_name__ = "igtools"
 
-import importlib.metadata
 import re
 from functools import wraps
 from pathlib import Path
@@ -9,11 +8,11 @@ from .. import log
 from ..exception import NoConfigException
 
 # Check if igtools package is installed
-try:
-    importlib.metadata.version("igtools")
-    IGTOOLS_PACKAGE_AVAILABLE = True
-except importlib.metadata.PackageNotFoundError:
-    IGTOOLS_PACKAGE_AVAILABLE = False
+# try:
+#     importlib.metadata.version("igtools")
+#     IGTOOLS_PACKAGE_AVAILABLE = True
+# except importlib.metadata.PackageNotFoundError:
+IGTOOLS_PACKAGE_AVAILABLE = False
 
 
 def is_configured(func):
@@ -35,89 +34,92 @@ def is_configured(func):
 # Use the module
 ###
 if IGTOOLS_PACKAGE_AVAILABLE:
-    from igtools.config import CONFIG_DEFAULT_DIR, CONFIG_FILE, Config
-    from igtools.specifications import (
-        Processor,
-        ReleaseNoteManager,
-        RequirementExporter,
-    )
+    # Disable for now as the module does not provide a stable interface
+    pass
 
-    DEFAULT_EXPORT_FORMAT = "JSON"
-    DEFAULT_EXPORT_VERSION = "current"
+    # from igtools.config import CONFIG_DEFAULT_DIR, CONFIG_FILE, Config
+    # from igtools.specifications import (
+    #     Processor,
+    #     ReleaseNoteManager,
+    #     RequirementExporter,
+    # )
 
-    config = Path(CONFIG_DEFAULT_DIR) / CONFIG_FILE
+    # DEFAULT_EXPORT_FORMAT = "JSON"
+    # DEFAULT_EXPORT_VERSION = "current"
 
-    @is_configured
-    def process():
-        """
-        Process requirements
-        """
-        log.info("Processing requirements")
+    # config = Path(CONFIG_DEFAULT_DIR) / CONFIG_FILE
 
-        try:
-            config = Config()
-            config.load()
-            processor = Processor(config=config)
-            processor.process()
+    # @is_configured
+    # def process():
+    #     """
+    #     Process requirements
+    #     """
+    #     log.info("Processing requirements")
 
-        except Exception as e:
-            raise Exception("Failed to process requirements: " + str(e))
+    #     try:
+    #         config = Config()
+    #         config.load()
+    #         processor = Processor(config=config)
+    #         processor.process()
 
-        log.succ("Requirements processed")
+    #     except Exception as e:
+    #         raise Exception("Failed to process requirements: " + str(e))
 
-    @is_configured
-    def release_notes(output_dir: Path | str):
-        """
-        Update release notes
-        """
-        log.info("Updating release-notes")
+    #     log.succ("Requirements processed")
 
-        try:
-            config = Config()
-            config.load()
+    # @is_configured
+    # def release_notes(output_dir: Path | str):
+    #     """
+    #     Update release notes
+    #     """
+    #     log.info("Updating release-notes")
 
-            release_note_manager = ReleaseNoteManager(config=config)
-            release_note_manager.generate(output=output_dir)
+    #     try:
+    #         config = Config()
+    #         config.load()
 
-        except Exception as e:
-            raise Exception("Failed to update release-notes: " + str(e))
+    #         release_note_manager = ReleaseNoteManager(config=config)
+    #         release_note_manager.generate(output=output_dir)
 
-        log.succ("Release-notes updated")
+    #     except Exception as e:
+    #         raise Exception("Failed to update release-notes: " + str(e))
 
-    @is_configured
-    def export(output_dir: Path | str):
-        """
-        Exports requirements
-        """
-        log.info("Export requirements")
+    #     log.succ("Release-notes updated")
 
-        try:
-            config = Config()
-            config.load()
-            filename = RequirementExporter.generate_filename(
-                format=DEFAULT_EXPORT_FORMAT, version=DEFAULT_EXPORT_VERSION
-            )
-            exporter = RequirementExporter(
-                config=config,
-                format=DEFAULT_EXPORT_FORMAT,
-                filename=filename,
-                version=DEFAULT_EXPORT_VERSION,
-            )
-            exporter.export(output=output_dir)
+    # @is_configured
+    # def export(output_dir: Path | str):
+    #     """
+    #     Exports requirements
+    #     """
+    #     log.info("Export requirements")
 
-        except Exception as e:
-            raise Exception("Failed to export requirements: " + str(e))
+    #     try:
+    #         config = Config()
+    #         config.load()
+    #         filename = RequirementExporter.generate_filename(
+    #             format=DEFAULT_EXPORT_FORMAT, version=DEFAULT_EXPORT_VERSION
+    #         )
+    #         exporter = RequirementExporter(
+    #             config=config,
+    #             format=DEFAULT_EXPORT_FORMAT,
+    #             filename=filename,
+    #             version=DEFAULT_EXPORT_VERSION,
+    #         )
+    #         exporter.export(output=output_dir)
 
-        log.succ("Requirements exported successfully")
+    #     except Exception as e:
+    #         raise Exception("Failed to export requirements: " + str(e))
 
-    def update():
-        pass
+    #     log.succ("Requirements exported successfully")
 
-    def version(short: bool = False, *args, **kwargs) -> str | None:
-        """
-        Get the installed version
-        """
-        return importlib.metadata.version("igtools")
+    # def update():
+    #     pass
+
+    # def version(short: bool = False, *args, **kwargs) -> str | None:
+    #     """
+    #     Get the installed version
+    #     """
+    #     return importlib.metadata.version("igtools")
 
 
 ###

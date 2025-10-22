@@ -1,6 +1,5 @@
 __tool_name__ = "epatools"
 
-import importlib.metadata
 import re
 from functools import wraps
 from pathlib import Path
@@ -11,11 +10,11 @@ from .. import log
 from ..exception import NoConfigException
 from ..models.config import EpaToolsArchiveConfig, EpaToolsConfig
 
-try:
-    importlib.metadata.version("epatools")
-    EPATOOLS_PACKAGE_AVAILABLE = True
-except importlib.metadata.PackageNotFoundError:
-    EPATOOLS_PACKAGE_AVAILABLE = False
+# try:
+#     importlib.metadata.version("epatools")
+#     EPATOOLS_PACKAGE_AVAILABLE = True
+# except importlib.metadata.PackageNotFoundError:
+EPATOOLS_PACKAGE_AVAILABLE = False
 
 
 def is_configured(func):
@@ -39,53 +38,56 @@ def is_configured(func):
 # Use the module
 ###
 if EPATOOLS_PACKAGE_AVAILABLE:
-    from epatools.common import DEFAULT_CONFIG
-    from epatools.merger import Merger
-    from epatools.oaconverter import OpenApiConverter
+    # Disable for now as the module does not provide a stable interface
+    pass
 
-    @is_configured
-    def merge_capabilities():
-        """
-        Merge CapabilityStatements
-        """
-        log.info("Merge CapabilityStatements")
+    # from epatools.common import DEFAULT_CONFIG
+    # from epatools.merger import Merger
+    # from epatools.oaconverter import OpenApiConverter
 
-        try:
-            merger = Merger(config_file=DEFAULT_CONFIG).load()
-            merger.merge()
+    # @is_configured
+    # def merge_capabilities():
+    #     """
+    #     Merge CapabilityStatements
+    #     """
+    #     log.info("Merge CapabilityStatements")
 
-        except Exception as e:
-            raise Exception("Failed to merge CapabilityStatements: " + str(e))
+    #     try:
+    #         merger = Merger(config_file=DEFAULT_CONFIG).load()
+    #         merger.merge()
 
-        log.succ("CapabilityStatements merged successfully")
+    #     except Exception as e:
+    #         raise Exception("Failed to merge CapabilityStatements: " + str(e))
 
-    @is_configured
-    def openapi(config: EpaToolsConfig | None):
-        """
-        Build the Open APIs
-        """
-        if config is None:
-            raise Exception("Missing config for epatools")
+    #     log.succ("CapabilityStatements merged successfully")
 
-        log.info("Build Open APIs")
+    # @is_configured
+    # def openapi(config: EpaToolsConfig | None):
+    #     """
+    #     Build the Open APIs
+    #     """
+    #     if config is None:
+    #         raise Exception("Missing config for epatools")
 
-        try:
-            converter = OpenApiConverter(config_file=DEFAULT_CONFIG).load()
-            converter.convert()
+    #     log.info("Build Open APIs")
 
-        except Exception as e:
-            raise Exception("Failed to build Open APIs: " + str(e))
+    #     try:
+    #         converter = OpenApiConverter(config_file=DEFAULT_CONFIG).load()
+    #         converter.convert()
 
-        update_archive(config.archive)
+    #     except Exception as e:
+    #         raise Exception("Failed to build Open APIs: " + str(e))
 
-    def update():
-        pass
+    #     update_archive(config.archive)
 
-    def version(short: bool = False, *args, **kwargs) -> str | None:
-        """
-        Get the installed version
-        """
-        return importlib.metadata.version("epatools")
+    # def update():
+    #     pass
+
+    # def version(short: bool = False, *args, **kwargs) -> str | None:
+    #     """
+    #     Get the installed version
+    #     """
+    #     return importlib.metadata.version("epatools")
 
 
 ###
