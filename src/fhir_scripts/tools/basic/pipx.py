@@ -12,10 +12,10 @@ VERSION_REGEX = re.compile(r"Python\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 def install(pkg_name: str, as_global: bool = False):
 
     if as_global:
-        cmd = f"sudo pipx install --global {pkg_name}"
+        cmd = f"sudo pipx install -f --global {pkg_name}"
 
     else:
-        cmd = f"pipx install {pkg_name}"
+        cmd = f"pipx install -f {pkg_name}"
 
     res = shell.run(cmd, capture_output=True)
 
