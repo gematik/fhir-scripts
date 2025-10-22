@@ -8,6 +8,3 @@ build:
     epatools: # true would enable all steps, but does not allow
       cap_statements: true
       openapi: true
-      archive_files:
-        - openapi.json
-        - openapi.yaml
