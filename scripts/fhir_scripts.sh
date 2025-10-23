@@ -282,7 +282,6 @@ function maintain_pytools() {
         ;;
     not_installed)
         echo "📦 $package_name not installed"
-        update_pytool "git+https://github.com/onyg/epa-tools.git" "Updated epa-tools to $(epatools_version)" "Failed to update epa-tools"
         ;;
     esac
 
@@ -303,7 +302,6 @@ function maintain_pytools() {
         ;;
     not_installed)
         echo "📦 $package_name not installed"
-        update_pytool "git+https://github.com/onyg/req-tooling.git" "Upated reqtooling to $(igtools_version)" "Failed to update req-tooling"
         ;;
     esac
 }
