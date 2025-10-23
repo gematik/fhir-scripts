@@ -10,10 +10,11 @@ from .basic import shell
 
 CMD_LIST = "gcloud projects list"
 CMD_LOGIN = "gcloud auth login"
-CMD_RM = "gcloud storage rm --recursive {}"
-CMD_LS = "gcloud storage ls --recursive {}"
+CMD_LS = "gcloud storage ls {}"
 CMD_CP = "gcloud storage cp --additional-headers=Cache-Control=no-cache {} {}"
-CMD_CP_R = "gcloud storage cp --additional-headers=Cache-Control=no-cache -R {} {}"
+CMD_RSYNC = (
+    "gcloud storage rsync {} {} --recursive --delete-unmatched-destination-objects"
+)
 
 VERSION_REGEX = re.compile(r"Google\s+Cloud\s+SDK\s+(\d+(?:\.\d+){,2})\b")
 
@@ -72,41 +73,47 @@ def copy(source: Path, target: str, force=False):
                 f"Target {target} exists. Overwrite?", "Copy aborted by user"
             )
 
-        # Clear existing directory
-        log.info("Remove existing target")
+    _rsync(source, target)
 
-        shell.run_progress(
-            CMD_RM.format(target),
-            total=len(existing),
-            prefixes=["Removing "],
-            desc="Deleting",
-        )
 
-    # Copy data
-    log.info(f"Copy to {target}")
+@require_installed("gcloud", __tool_name__)
+@logged_in
+def _rsync(source: Path, target: str):
+
+    log.info(f"Copy {str(source)} to {target}")
+
     if source.is_dir():
         total = len(list(source.glob("**/*")))
-        cmd = CMD_CP_R
+        shell.run_progress(
+            CMD_RSYNC.format(source.absolute(), target),
+            total=total,
+            prefixes=["Copying "],
+            desc="Syncing",
+        )
 
     else:
-        total = 1
-        cmd = CMD_CP
-
-    shell.run_progress(
-        cmd.format(source.absolute(), target),
-        total=total,
-        prefixes=["Copying "],
-        desc="Copying",
-    )
+        shell.run_progress(
+            CMD_CP.format(source.absolute(), target),
+            total=1,
+            prefixes=["Copying "],
+            desc="Copying",
+        )
 
 
 @require_installed("gcloud", __tool_name__)
 @logged_in
 def ls(path: str) -> list[str]:
-    res = shell.run(CMD_LS.format(path), capture_output=True)
-
-    if res.returncode == 0:
+    # Try interpret `path` as directory
+    try:
+        path_dir = path.rstrip("/") + "/**" if not path.endswith("/**") else path
+        res = shell.run(CMD_LS.format(path_dir), check=False, capture_output=True)
         return res.stdout
 
-    else:
-        return []
+    except shell.CalledProcessError:
+        # If this fails it might be a single file
+        try:
+            res = shell.run(CMD_LS.format(path), check=False, capture_output=True)
+            return res.stdout
+
+        except shell.CalledProcessError:
+            return []
