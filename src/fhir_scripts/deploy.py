@@ -133,7 +133,6 @@ def _deploy_history(target, confirm_yes: bool = False):
     # Copy history
     target_history = target + "/" + history_file_name
     log.info(f"Deploy history file to {target_history}")
-    confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
     gcloud.copy(source=history_file, target=target_history, force=True)
 
     log.succ("Deployed history file")
