@@ -6,15 +6,19 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZIP_DEFLATED, ZipFile
 
+import yaml
+
 from .. import log
 from ..exception import NoConfigException
-from ..models.config import EpaToolsArchiveConfig, EpaToolsConfig
+from ..models.build_config import BuildBuiltinEpaToolsConfig
 
 # try:
 #     importlib.metadata.version("epatools")
 #     EPATOOLS_PACKAGE_AVAILABLE = True
 # except importlib.metadata.PackageNotFoundError:
 EPATOOLS_PACKAGE_AVAILABLE = False
+
+config_file = Path("./epatools.yaml")
 
 
 def is_configured(func):
@@ -24,9 +28,7 @@ def is_configured(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        config = Path("./epatools.yaml")
-
-        if not config.exists():
+        if not config_file.exists():
             raise NoConfigException(f"{__tool_name__} not configured for project")
 
         return func(*args, **kwargs)
@@ -62,7 +64,7 @@ if EPATOOLS_PACKAGE_AVAILABLE:
     #     log.succ("CapabilityStatements merged successfully")
 
     # @is_configured
-    # def openapi(config: EpaToolsConfig | None):
+    # def openapi(config: EpaToolsConfig | bool | None):
     #     """
     #     Build the Open APIs
     #     """
@@ -75,10 +77,17 @@ if EPATOOLS_PACKAGE_AVAILABLE:
     #         converter = OpenApiConverter(config_file=DEFAULT_CONFIG).load()
     #         converter.convert()
 
-    #     except Exception as e:
-    #         raise Exception("Failed to build Open APIs: " + str(e))
+    #     # Get the generated API files from the tool config
+    #     tool_config = yaml.safe_load(config_file.read_text("utf-8"))
+    #     output_dir = Path("./output")
+    #     api_files = [
+    #         file
+    #         for item in tool_config["openapi"]["capability-statement"]
+    #         if (file := Path(item["output"])) and (output_dir / file).exists()
+    #     ]
 
-    #     update_archive(config.archive)
+    #     # Archive the API files
+    #     update_archive(api_files)
 
     # def update():
     #     pass
@@ -112,7 +121,7 @@ else:
 
     @is_configured
     @require_installed("epatools", __tool_name__)
-    def openapi(config: EpaToolsConfig | None):
+    def openapi(config: BuildBuiltinEpaToolsConfig | bool | None):
         """
         Build the Open APIs
         """
@@ -122,7 +131,18 @@ else:
         log.info("Build Open APIs")
         shell.run("epatools openapi", capture_output=True)
         log.succ("Open APIs built successfully")
-        update_archive(config.archive)
+
+        # Get the generated API files from the tool config
+        tool_config = yaml.safe_load(config_file.read_text("utf-8"))
+        output_dir = Path("./output")
+        api_files = [
+            file
+            for item in tool_config["openapi"]["capability-statement"]
+            if (file := Path(item["output"])) and (output_dir / file).exists()
+        ]
+
+        # Archive the API files
+        update_archive(api_files)
 
     def update():
         pipx.install(PACKAGE, as_global=True)
@@ -147,8 +167,11 @@ else:
             return None
 
 
-def update_archive(config: EpaToolsArchiveConfig):
+def update_archive(archive_files: list[Path], output_dir: Path | None = None):
     archive = Path("./output/full-ig.zip")
+
+    if output_dir is None:
+        output_dir = Path("./output")
 
     if not archive.exists():
         raise Exception("Archive does not exists: " + str(archive))
@@ -162,8 +185,8 @@ def update_archive(config: EpaToolsArchiveConfig):
             zip_ref.extractall(tmp_path)
 
         # Add new content files from config
-        for content_file in config.content_files:
-            content_path = Path("./output") / content_file
+        for content_file in archive_files:
+            content_path = output_dir / content_file
             if content_path.exists():
                 # Copy to temp directory
                 log.info(f"Adding or replacing '{content_file}' in '{archive}'")
