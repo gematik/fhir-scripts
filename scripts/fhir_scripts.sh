@@ -277,8 +277,8 @@ function maintain_pytools() {
     up_to_date)
         echo "✅ $package_name up to date ($current)"
         ;;
-    error*)
-        echo "⚠️  $package_name check failed ($status)"
+    error*)#
+        echo "⚠️  $package_name check failed ($current)"
         ;;
     not_installed)
         echo "📦 $package_name not installed"
@@ -298,7 +298,7 @@ function maintain_pytools() {
         echo "✅ $package_name up to date ($current)"
         ;;
     error*)
-        echo "⚠️  $package_name check failed ($status)"
+        echo "⚠️  $package_name check failed ($current)"
         ;;
     not_installed)
         echo "📦 $package_name not installed"
@@ -317,17 +317,24 @@ function update_pytools() {
 function build() {
     case "$1" in
         pytools)
+            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
             run_igtools
             merge_capabilities
         ;;
         sushi) run_sushi ;;
-        defs) build_definitions ;;
-        ig) build_ig ;;
+        defs)
+            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+            build_definitions
+        ;;
+        ig)
+            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+            build_ig
+        ;;
         *)
+            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
             build_definitions
             build_ig
         ;;
-
     esac
 }
 
@@ -576,9 +583,24 @@ function gcloud_cp() {
     gsutil -m -h "Cache-Control:no-cache" cp -r ./output/* gs://$1
 }
 
+
+###
+# Parse global flags
+###
+TOOLS_FROZEN=false
+for arg in "$@"; do
+  if [[ "$arg" == "toolsfrozen" ]]; then
+    TOOLS_FROZEN=true
+    # remove it from arguments to avoid breaking other logic
+    set -- "${@/toolsfrozen/}"
+    break
+  fi
+done
+
 ###
 # Handle command-line argument or menu
 ###
+
 case "$1" in
   update) update $2 ;;
   fhircache) rebuild_fhir_cache $2 ;;
@@ -614,6 +636,23 @@ case "$1" in
       4) rebuild_fhir_cache ;;
       5) delete_build_cache ;;
       6)
+
+        if [[ "$TOOLS_FROZEN" == false && -t 0 && $# -eq 0 ]]; then
+
+        default_choice="n"
+        echo
+        echo "Would you like to skip automatic pytool updates?"
+        echo -n "Enter y or n [default: n]: "
+        read -t 15 choice || choice="$default_choice"
+        choice="${choice:-$default_choice}"
+        echo
+        echo "You selected: $choice"
+        echo
+        if [[ "$choice" =~ ^[Yy]$ ]]; then
+            TOOLS_FROZEN=true
+        fi
+        fi
+        
         default_choice=0 # Exit on default
 
         echo "Please select an option:"
@@ -631,15 +670,15 @@ case "$1" in
 
         case "$choice" in
             1)
-                maintain_pytools
+                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
                 build_definitions
                 build_ig
             ;;
             2)
-                maintain_pytools
+                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
                 build_definitions ;;
             3)
-                maintain_pytools
+                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
                 build_ig ;;
             0) exit 0 ;;
             *) echo "Invalid option." ;;
