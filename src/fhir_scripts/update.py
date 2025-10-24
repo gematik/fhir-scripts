@@ -3,13 +3,6 @@ from argparse import ArgumentParser
 from . import log
 from .tools import epatools, igpub, igtools, publishtools, sushi
 
-SCRIPT = "script"
-TOOLS = "tools"
-SUSHI = "sushi"
-IGPUB = "igpub"
-PYTOOLS = "pytools"
-ALL = "all"
-
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     pass
