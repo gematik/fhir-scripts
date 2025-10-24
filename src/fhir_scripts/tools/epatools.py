@@ -121,12 +121,10 @@ else:
 
     @is_configured
     @require_installed("epatools", __tool_name__)
-    def openapi(config: BuildBuiltinEpaToolsConfig | bool | None):
+    def openapi(*args, **kwargs):
         """
         Build the Open APIs
         """
-        if config is None:
-            raise Exception("Missing config for epatools")
 
         log.info("Build Open APIs")
         shell.run("epatools openapi", capture_output=True)

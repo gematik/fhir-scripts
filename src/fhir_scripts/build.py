@@ -5,10 +5,12 @@ from . import log
 from .exception import NoConfigException, NotInstalledException
 from .models.config import Config
 from .tools import epatools, igpub, igtools, sushi
+from .tools.basic import shell
 
 DEFS = "defs"
 IG = "ig"
 ALL = "all"
+PIPELINE = "pipeline"
 
 
 def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
@@ -41,6 +43,8 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     )
     all_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
 
+    subparser.add_parser(PIPELINE, help="Build IG")
+
 
 def build_defs(cli_args: Namespace, config: Config, *args, **kwargs):
     log.info("Building definitions")
@@ -61,15 +65,19 @@ def build_defs(cli_args: Namespace, config: Config, *args, **kwargs):
     )
 
     if enable_requirements:
-        build_req(args, kwargs)
+        build_req(*args, **kwargs)
 
     if enable_sushi:
-        sushi.run()
+        build_sushi(*args, **kwargs)
 
     if enable_cap_statements:
-        build_cap()
+        build_cap(*args, **kwargs)
 
     log.succ("Definitions built successfully")
+
+
+def build_sushi(*args, **kwargs):
+    sushi.run()
 
 
 def build_req(*args, **kwargs):
@@ -113,24 +121,76 @@ def build_ig(cli_args: Namespace, config: Config, *args, **kwargs):
     )
 
     if enable_igpub:
-        igpub.run()
-        log.succ("IG built successfully")
+        build_igpub(*args, **kwargs)
 
     if enable_openapi:
         build_openapi(config)
 
+    log.succ("IG built successfully")
+    build_igpub_qa(*args, **kwargs)
+
+
+def build_igpub(*args, **kwargs):
+    igpub.run()
+
+
+def build_igpub_qa(*args, **kwargs):
     igpub.qa()
 
 
-def build_openapi(config: Config, *args, **kwargs):
+def build_openapi(*args, **kwargs):
     log.info("Updating OpenAPI")
-    epatools.openapi(config.build.builtin.epatools)
+    epatools.openapi(*args, **kwargs)
     log.succ("OpenAPI updated successfully")
 
 
 def build_all(cli_args: Namespace, config: Config, *args, **kwargs):
-    build_defs(cli_args, config, args, kwargs)
-    build_ig(cli_args, config, args, kwargs)
+    build_defs(cli_args, config, *args, **kwargs)
+    build_ig(cli_args, config, *args, **kwargs)
+
+
+def build_shell(c_args: str, *args, **kwargs):
+    log.info(f"Processing shell command '{c_args}'")
+    shell.run(c_args, capture_output=True)
+    log.succ("Processed shell command successfully")
+
+
+def _step_name(any) -> str:
+    return any if isinstance(any, str) else list(any.model_dump().keys())[0]
+
+
+PIPELINE_STEPS = {
+    "requirements": build_req,
+    "sushi": build_sushi,
+    "cap_statements": build_cap,
+    "igpub": build_igpub,
+    "igpub_qa": build_igpub_qa,
+    "openapi": build_openapi,
+    "shell": build_shell,
+}
+
+
+def build_pipeline(config: Config, *args, **kwargs):
+    pipeline = config.build.pipeline
+
+    invalid_steps = [
+        step_name
+        for step in pipeline
+        if not isinstance(step, str)
+        if (step_name := _step_name(step)) and step_name not in PIPELINE_STEPS
+    ]
+
+    if invalid_steps:
+        raise Exception(
+            f"Pipeline configuration contains invalid step(s): {", ".join(invalid_steps)}"
+        )
+
+    for step in pipeline:
+        step_name = _step_name(step)
+        c_args = getattr(step, step_name) if not isinstance(step, str) else None
+
+        log.info(f"Processing step '{step_name}'")
+        PIPELINE_STEPS[step_name](config=config, c_args=c_args, *args, **kwargs)
 
 
 __doc__ = "Build FHIR definitions and IGs"
@@ -138,5 +198,6 @@ __handlers__ = {
     DEFS: build_defs,
     IG: build_ig,
     ALL: build_all,
+    PIPELINE: build_pipeline,
 }
 __setup_subparser__ = setup_subparser

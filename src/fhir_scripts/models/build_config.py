@@ -11,5 +11,10 @@ class BuildBuiltinConfig(StrictBaseModel):
     epatools: BuildBuiltinEpaToolsConfig | bool = False
 
 
+class BuildPipelineShellStep(StrictBaseModel):
+    shell: str
+
+
 class BuildConfig(StrictBaseModel):
     builtin: BuildBuiltinConfig = BuildBuiltinConfig()
+    pipeline: list[str | BuildPipelineShellStep] = []
