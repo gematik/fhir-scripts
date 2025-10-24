@@ -9,7 +9,7 @@ build:
       cap_statements: true
       openapi: true
   pipeline:
-    - igtools
+    - requirements
     - sushi
     - cap_statements
     - shell: touch test.txt
