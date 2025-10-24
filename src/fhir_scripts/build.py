@@ -126,11 +126,15 @@ def build_ig(cli_args: Namespace, config: Config, *args, **kwargs):
         build_openapi(config)
 
     log.succ("IG built successfully")
-    igpub.qa()
+    build_igpub_qa(*args, **kwargs)
 
 
 def build_igpub(*args, **kwargs):
     igpub.run()
+
+
+def build_igpub_qa(*args, **kwargs):
+    igpub.qa()
 
 
 def build_openapi(*args, **kwargs):
@@ -153,6 +157,7 @@ PIPELINE_STEPS = {
     "sushi": build_sushi,
     "cap_statements": build_cap,
     "igpub": build_igpub,
+    "igpub_qa": build_igpub_qa,
     "openapi": build_openapi,
 }
 
