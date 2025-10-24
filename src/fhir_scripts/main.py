@@ -3,12 +3,12 @@ import sys
 from argparse import ArgumentParser
 from types import ModuleType
 
-from . import build, cache, cli, config, deploy, log, publish, update, versions
+from . import build, cache, cli, config, deploy, install, log, publish, update, versions
 from .exception import CancelException
 
 
 def main():
-    modules = [build, cache, deploy, publish, update, versions]
+    modules = [build, cache, deploy, install, publish, update, versions]
     module_dict: dict[str, ModuleType] = {}
     parser_dict: dict[str, ArgumentParser] = {}
 

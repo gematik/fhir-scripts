@@ -41,6 +41,20 @@ Get the version of installed tooling
 fhirscripts versions
 ```
 
+### Install
+
+Install one or multiple tools
+
+```bash
+fhirscripts install --<tool> [--<tool> [...]]
+```
+
+Get a list of available tools to install
+
+```bash
+fhirscripts install --help
+```
+
 ### Update
 
 Update each installed tool
