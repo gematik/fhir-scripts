@@ -1,10 +1,13 @@
+import importlib
+import pkgutil
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from types import ModuleType
 
+import fhir_scripts
+
 
 def get_args(
-    modules: list[ModuleType],
     module_dict: dict[str, ModuleType],
     parser_dict: dict[str, ArgumentParser],
 ) -> Namespace:
@@ -18,15 +21,22 @@ def get_args(
     )
     subparsers = parser.add_subparsers(dest="cmd")
 
-    for module in modules:
-        if not getattr(module, "__doc__", None) or (
-            not getattr(module, "__handlers__", None)
-            and not getattr(module, "__handler__", None)
-        ):
-            raise Exception(
-                f"Module '{module.__name__}' does not provide all needed attributes"
-            )
+    # Get modules dynmaically
+    mod_names = [
+        name
+        for _, name, _ in pkgutil.iter_modules(
+            fhir_scripts.__path__, fhir_scripts.__name__ + "."
+        )
+    ]
+    modules = [
+        mod
+        for mod_name in mod_names
+        if (mod := importlib.import_module(mod_name))
+        and hasattr(mod, "__doc__")
+        and (hasattr(mod, "__handler__") or hasattr(mod, "__handlers__"))
+    ]
 
+    for module in modules:
         cmd = module.__name__.split(".")[-1]
         desc = module.__doc__
 
@@ -40,7 +50,7 @@ def get_args(
             setup_parser(parser=_parser)
 
         elif setup_subparser := getattr(module, "__setup_subparser__", None):
-            sub_parser = _parser.add_subparsers(dest=module.__name__.split(".")[-1])
+            sub_parser = _parser.add_subparsers(dest=cmd)
             setup_subparser(subparser=sub_parser)
 
         else:

@@ -3,16 +3,15 @@ import sys
 from argparse import ArgumentParser
 from types import ModuleType
 
-from . import build, cache, cli, config, deploy, log, publish, update, versions
+from . import cli, config, log
 from .exception import CancelException
 
 
 def main():
-    modules = [build, cache, deploy, publish, update, versions]
     module_dict: dict[str, ModuleType] = {}
     parser_dict: dict[str, ArgumentParser] = {}
 
-    args = cli.get_args(modules, module_dict, parser_dict)
+    args = cli.get_args(module_dict, parser_dict)
 
     try:
         cfg = config.load(args.config)

@@ -27,7 +27,7 @@ fhirscripts --help
 
 ### Config
 
-The script uses a config file. An example can be found [here](./examples/config.yaml). The default path for this file `./config.yaml`. A different path can be defined
+The script uses a config file. [An example can be found here](./examples/config.yaml). The default path for this file `./config.yaml`. A different path can be defined
 
 ```bash
 fhirscripts --config <config> <command>
@@ -41,15 +41,29 @@ Get the version of installed tooling
 fhirscripts versions
 ```
 
-### Update
+### Install
 
-Update or install one or multiple tools
+Install one or multiple tools
 
 ```bash
-fhirscripts update [parameter]
+fhirscripts install --<tool> [--<tool> [...]]
 ```
 
-With the available parameters
+Get a list of available tools to install
+
+```bash
+fhirscripts install --help
+```
+
+### Update
+
+Update each installed tool
+
+```bash
+fhirscripts update
+```
+
+<!-- With the available parameters
 
 | Top Level | Sub Level | Lowest Level | Description                                                             |
 | :-------: | :-------: | :----------: | :---------------------------------------------------------------------- |
@@ -57,7 +71,7 @@ With the available parameters
 |           |  `tools`  |              | Update tooling from the FHIR community, e.g. IG Publisher and FSH Sushi |
 |           |           |   `sushi`    | Update FSH Sushi                                                        |
 |           |           |   `igpub`    | Update IG Publisher                                                     |
-|           | `pytools` |              | Update gematik's Python tooling, e.g. epatools, igtools, publishtools   |
+|           | `pytools` |              | Update gematik's Python tooling, e.g. epatools, igtools, publishtools   | --> |
 
 ### Cache
 
@@ -190,7 +204,7 @@ The following commands arw available:
 | Command     | Description                                         |
 | ----------- | --------------------------------------------------- |
 | `update`    | Update the script itself                            |
-| `pytools`   | Update the Python tools, e.g. *igtools*, *epatools* |
+| `pytools`   | Update the Python tools, e.g. _igtools_, _epatools_ |
 | `tools`     | Update Sushi and IG Publisher                       |
 | `fhircache` | Rebuild FHIR cache                                  |
 | `bdcache`   | Delete the build cache                              |
@@ -241,17 +255,17 @@ whereas, the optional argument `noig` only builds the definitions and `nodefs` o
 
 Steps:
 
-* Track and update requirements and update release notes, if *igtools* are available
+* Track and update requirements and update release notes, if _igtools_ are available
 * Build FHIR definitions using FSH Sushi
-* Merge CapabilityStatements, if *epatools* are available
+* Merge CapabilityStatements, if _epatools_ are available
 
 #### FHIR IG
 
 Steps:
 
 * Build IG using IG Publisher
-* Generate OpenAPI specifications, if *epatools* are available
-* Update archived IG, if *epatools* are available
+* Generate OpenAPI specifications, if _epatools_ are available
+* Update archived IG, if _epatools_ are available
 
 For building the IG `config.sh` needs to present in the current directory defining the publish URL for the IG Publisher as `PUBLISH_URL`. For updating the archive a list of files needs to be defined as `CONTENT_FILES`.
 
@@ -263,8 +277,8 @@ Deploy the IG from the build directory (`output/`) to the webserver.
 
 Uses a gCloud as a target and requires the following tools:
 
-* *gcloud*
-* *gsutils*
+* _gcloud_
+* _gsutils_
 
 The IG will be deployed to `<bucket>/<path>/<version>`. Depending on the argument `dev` or `prod` the respective bucket is used.
 
