@@ -204,6 +204,108 @@ function igtools_version() {
     fi
 }
 
+function check_pytool_version() {
+    local package_name="$1"
+    local repo_url="$2"
+    local current_version=""
+    local latest_version=""
+    local response=""
+
+    # Handle missing parameters gracefully
+    if [[ -z "$package_name" || -z "$repo_url" ]]; then
+        echo "error:missing_parameters"
+        return 0
+    fi
+
+    # Get current version from pipx
+    current_version=$(sudo pipx list --global --short 2>/dev/null | awk -v pkg="$package_name" '$1 == pkg {print $2}') || true
+
+    if [[ -z "$current_version" ]]; then
+        echo "not_installed"
+        return 0
+    fi
+
+    # Try to fetch latest version from GitHub with 1s timeout
+    response=$(curl -s --connect-timeout 1 --max-time 1 "$repo_url" 2>/dev/null || true)
+
+    if [[ -z "$response" ]]; then
+        echo "error:fetch_failed_or_timeout:${current_version}"
+        return 0
+    fi
+
+    # Try to find versions from filenames (dist/*.tar.gz, *.whl)
+    latest_version=$(echo "$response" \
+        | grep -Eo "${package_name}-[0-9]+(\.[0-9]+){1,2}(\.tar\.gz|\.whl)" \
+        | sort -V \
+        | tail -n 1 \
+        | grep -Eo '[0-9]+(\.[0-9]+){1,2}' || true)
+
+    # If not found, try to extract from __VERSION__ in source code listing
+    if [[ -z "$latest_version" ]]; then
+        latest_version=$(echo "$response" \
+            | grep -Eo "__VERSION__\s*=\s*['\"][0-9]+(\.[0-9]+){1,2}['\"]" \
+            | sed -E "s/.*__VERSION__\s*=\s*['\"]([^'\"]+)['\"].*/\1/" \
+            | sort -V \
+            | tail -n 1 || true)
+    fi
+
+    if [[ -z "$latest_version" ]]; then
+        echo "error:could_not_parse_latest_version:${current_version}"
+        return 0
+    fi
+
+    # Compare installed vs. latest
+    if [[ "$current_version" == "$latest_version" ]]; then
+        echo "up_to_date:${current_version}"
+    else
+        echo "update_available:${current_version}:${latest_version}"
+    fi
+
+    return 0
+}
+
+function maintain_pytools() {
+    echo "Checking epatools version"
+    result=$(check_pytool_version epatools "https://api.github.com/repos/onyg/epa-tools/contents/dist")
+    IFS=':' read -r status current latest <<< "$result"
+
+    case "$status" in
+    update_available)
+        echo "⬆️  $package_name: $current → $latest"
+        update_pytool "git+https://github.com/onyg/epa-tools.git" "Updated epa-tools to $(epatools_version)" "Failed to update epa-tools"
+        ;;
+    up_to_date)
+        echo "✅ $package_name up to date ($current)"
+        ;;
+    error*)#
+        echo "⚠️  $package_name check failed ($current)"
+        ;;
+    not_installed)
+        echo "📦 $package_name not installed"
+        ;;
+    esac
+
+    echo "Checking igtools version"
+    result=$(check_pytool_version igtools "https://raw.githubusercontent.com/onyg/req-tooling/main/src/igtools/version.py")
+    IFS=':' read -r status current latest <<< "$result"
+
+    case "$status" in
+    update_available)
+        echo "⬆️  $package_name: $current → $latest"
+        update_pytool "git+https://github.com/onyg/req-tooling.git" "Upated reqtooling to $(igtools_version)" "Failed to update req-tooling"
+        ;;
+    up_to_date)
+        echo "✅ $package_name up to date ($current)"
+        ;;
+    error*)
+        echo "⚠️  $package_name check failed ($current)"
+        ;;
+    not_installed)
+        echo "📦 $package_name not installed"
+        ;;
+    esac
+}
+
 function update_pytools() {
     update_pytool "git+https://github.com/onyg/epa-tools.git" "Updated epa-tools to $(epatools_version)" "Failed to update epa-tools"
     update_pytool "git+https://github.com/onyg/req-tooling.git" "Upated reqtooling to $(igtools_version)" "Failed to update req-tooling"
@@ -215,17 +317,24 @@ function update_pytools() {
 function build() {
     case "$1" in
         pytools)
+            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
             run_igtools
             merge_capabilities
         ;;
         sushi) run_sushi ;;
-        defs) build_definitions ;;
-        ig) build_ig ;;
+        defs)
+            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+            build_definitions
+        ;;
+        ig)
+            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+            build_ig
+        ;;
         *)
+            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
             build_definitions
             build_ig
         ;;
-
     esac
 }
 
@@ -474,9 +583,24 @@ function gcloud_cp() {
     gsutil -m -h "Cache-Control:no-cache" cp -r ./output/* gs://$1
 }
 
+
+###
+# Parse global flags
+###
+TOOLS_FROZEN=false
+for arg in "$@"; do
+  if [[ "$arg" == "toolsfrozen" ]]; then
+    TOOLS_FROZEN=true
+    # remove it from arguments to avoid breaking other logic
+    set -- "${@/toolsfrozen/}"
+    break
+  fi
+done
+
 ###
 # Handle command-line argument or menu
 ###
+
 case "$1" in
   update) update $2 ;;
   fhircache) rebuild_fhir_cache $2 ;;
@@ -512,6 +636,23 @@ case "$1" in
       4) rebuild_fhir_cache ;;
       5) delete_build_cache ;;
       6)
+
+        if [[ "$TOOLS_FROZEN" == false && -t 0 && $# -eq 0 ]]; then
+
+        default_choice="n"
+        echo
+        echo "Would you like to skip automatic pytool updates?"
+        echo -n "Enter y or n [default: n]: "
+        read -t 15 choice || choice="$default_choice"
+        choice="${choice:-$default_choice}"
+        echo
+        echo "You selected: $choice"
+        echo
+        if [[ "$choice" =~ ^[Yy]$ ]]; then
+            TOOLS_FROZEN=true
+        fi
+        fi
+        
         default_choice=0 # Exit on default
 
         echo "Please select an option:"
@@ -529,11 +670,16 @@ case "$1" in
 
         case "$choice" in
             1)
+                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
                 build_definitions
                 build_ig
             ;;
-            2) build_definitions ;;
-            3) build_ig ;;
+            2)
+                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+                build_definitions ;;
+            3)
+                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+                build_ig ;;
             0) exit 0 ;;
             *) echo "Invalid option." ;;
         esac
