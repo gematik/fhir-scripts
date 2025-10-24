@@ -22,11 +22,14 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
 
 def _update(module, *args, **kwargs):
     name = getattr(module, "__tool_name__", None) or module.__name__
-    log.info(f"Update {name}")
-
     prev_version = module.version(short=True)
-    module.update()
-    log.succ(f"Updated {name}: {str(prev_version)} → {module.version(short=True)}")
+
+    # Only update if was previously installed
+    if prev_version:
+        log.info(f"Update {name}")
+
+        module.update()
+        log.succ(f"Updated {name}: {str(prev_version)} → {module.version(short=True)}")
 
 
 def update_sushi(*args, **kwargs):

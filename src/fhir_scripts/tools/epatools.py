@@ -10,7 +10,6 @@ import yaml
 
 from .. import log
 from ..exception import NoConfigException
-from ..models.build_config import BuildBuiltinEpaToolsConfig
 
 # try:
 #     importlib.metadata.version("epatools")
