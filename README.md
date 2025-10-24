@@ -43,13 +43,13 @@ fhirscripts versions
 
 ### Update
 
-Update or install one or multiple tools
+Update each installed tool
 
 ```bash
-fhirscripts update [parameter]
+fhirscripts update
 ```
 
-With the available parameters
+<!-- With the available parameters
 
 | Top Level | Sub Level | Lowest Level | Description                                                             |
 | :-------: | :-------: | :----------: | :---------------------------------------------------------------------- |
@@ -57,7 +57,7 @@ With the available parameters
 |           |  `tools`  |              | Update tooling from the FHIR community, e.g. IG Publisher and FSH Sushi |
 |           |           |   `sushi`    | Update FSH Sushi                                                        |
 |           |           |   `igpub`    | Update IG Publisher                                                     |
-|           | `pytools` |              | Update gematik's Python tooling, e.g. epatools, igtools, publishtools   |
+|           | `pytools` |              | Update gematik's Python tooling, e.g. epatools, igtools, publishtools   | --> |
 
 ### Cache
 
