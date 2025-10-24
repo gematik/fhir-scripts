@@ -114,6 +114,33 @@ fhirscripts build all [--req] [--cap] [--oapi]
 
 with `--req`, `--cap` and `--oapi` additionally enabling the steps mentioned before.
 
+#### Pipeline
+
+Build from a pipeline defined in the configuration
+
+```bash
+fhirscripts build pipeline
+```
+
+The pipeline is defined like
+
+```yaml
+- <step>
+- <step>:<args>
+```
+
+Available steps are:
+
+| Step Name        | Arguments     | Description                                                                 |
+| ---------------- | ------------- | --------------------------------------------------------------------------- |
+| `sushi`          | None          | Run FSH Sushi                                                               |
+| `igpub`          | None          | Run IG Publisher                                                            |
+| `igpub_qa`       | None          | Display IG Publisher QA results                                             |
+| `requirements`   | None          | Process requirements using _igtools_                                        |
+| `cap_statements` | None          | Process and merge CapabilityStatements using _epatools_                     |
+| `openapi`        | None          | Generate OpenAPI definitions using _epatools_ and add the to the IG archive |
+| `shell`          | Shell command | Execute a command on the shell, e.g. "touch file"                           |
+
 ### Publish
 
 _Requirements:_
