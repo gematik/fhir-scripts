@@ -35,18 +35,6 @@ def handle(cli_args, *args, **kwargs):
         log.succ(f"Installed {module.__tool_name__} ({module.version(short=True)})")
 
 
-def _update(module, *args, **kwargs):
-    name = getattr(module, "__tool_name__", None) or module.__name__
-    prev_version = module.version(short=True)
-
-    # Only update if was previously installed
-    if prev_version:
-        log.info(f"Update {name}")
-
-        module.update()
-        log.succ(f"Updated {name}: {str(prev_version)} → {module.version(short=True)}")
-
-
 __doc__ = "Update tools"
 __handler__ = handle
 __setup_parser__ = setup_parser
