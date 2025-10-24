@@ -5,6 +5,13 @@ deploy:
 build:
   builtin:
     igtools: true
-    epatools: # true would enable all steps, but does not allow
+    epatools: # true would enable all steps
       cap_statements: true
       openapi: true
+  pipeline:
+    - igtools
+    - sushi
+    - cap_statements
+    - shell: touch test.txt
+    - igpub
+    - openapi
