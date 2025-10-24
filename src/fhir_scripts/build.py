@@ -5,6 +5,7 @@ from . import log
 from .exception import NoConfigException, NotInstalledException
 from .models.config import Config
 from .tools import epatools, igpub, igtools, sushi
+from .tools.basic import shell
 
 DEFS = "defs"
 IG = "ig"
@@ -148,6 +149,12 @@ def build_all(cli_args: Namespace, config: Config, *args, **kwargs):
     build_ig(cli_args, config, *args, **kwargs)
 
 
+def build_shell(c_args: str, *args, **kwargs):
+    log.info(f"Processing shell command '{c_args}'")
+    shell.run(c_args, capture_output=True)
+    log.succ("Processed shell command successfully")
+
+
 def _step_name(any) -> str:
     return any if isinstance(any, str) else list(any.model_dump().keys())[0]
 
@@ -159,6 +166,7 @@ PIPELINE_STEPS = {
     "igpub": build_igpub,
     "igpub_qa": build_igpub_qa,
     "openapi": build_openapi,
+    "shell": build_shell,
 }
 
 
@@ -179,10 +187,10 @@ def build_pipeline(config: Config, *args, **kwargs):
 
     for step in pipeline:
         step_name = _step_name(step)
+        c_args = getattr(step, step_name) if not isinstance(step, str) else None
 
         log.info(f"Processing step '{step_name}'")
-        PIPELINE_STEPS[step_name](config, *args, **kwargs)
-        pass
+        PIPELINE_STEPS[step_name](config=config, c_args=c_args, *args, **kwargs)
 
 
 __doc__ = "Build FHIR definitions and IGs"
