@@ -1,17 +1,28 @@
+import importlib
+import pkgutil
 from argparse import ArgumentParser
-from types import ModuleType
 
-from . import log, tools
+import fhir_scripts.tools
+
+from . import log
 
 TOOL_MODULES = {}
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     global TOOL_MODULES
+
+    # Get modules dynmaically
+    mod_names = [
+        name
+        for _, name, _ in pkgutil.iter_modules(
+            fhir_scripts.tools.__path__, fhir_scripts.tools.__name__ + "."
+        )
+    ]
     TOOL_MODULES = {
-        k: v
-        for k, v in tools.__dict__.items()
-        if isinstance(v, ModuleType) and hasattr(v, "update")
+        mod_name.rsplit(".")[-1]: mod
+        for mod_name in mod_names
+        if (mod := importlib.import_module(mod_name)) and hasattr(mod, "update")
     }
 
     for name, mod in TOOL_MODULES.items():

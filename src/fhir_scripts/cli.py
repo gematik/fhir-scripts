@@ -22,11 +22,16 @@ def get_args(
     subparsers = parser.add_subparsers(dest="cmd")
 
     # Get modules dynmaically
-    mod_names = [name for _, name, _ in pkgutil.iter_modules(fhir_scripts.__path__)]
+    mod_names = [
+        name
+        for _, name, _ in pkgutil.iter_modules(
+            fhir_scripts.__path__, fhir_scripts.__name__ + "."
+        )
+    ]
     modules = [
         mod
         for mod_name in mod_names
-        if (mod := importlib.import_module("." + mod_name, fhir_scripts.__name__))
+        if (mod := importlib.import_module(mod_name))
         and hasattr(mod, "__doc__")
         and (hasattr(mod, "__handler__") or hasattr(mod, "__handlers__"))
     ]

@@ -1,7 +1,10 @@
+import importlib
+import pkgutil
 from argparse import ArgumentParser
 
+import fhir_scripts.tools
+
 from . import log
-from .tools import epatools, igpub, igtools, publishtools, sushi
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
@@ -9,7 +12,19 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
 
 
 def handle(*args, **kwargs):
-    modules = [epatools, igpub, igtools, publishtools, sushi]
+    # Get modules dynmaically
+    mod_names = [
+        name
+        for _, name, _ in pkgutil.iter_modules(
+            fhir_scripts.tools.__path__, fhir_scripts.tools.__name__ + "."
+        )
+    ]
+    modules = [
+        mod
+        for mod_name in mod_names
+        if (mod := importlib.import_module(mod_name)) and hasattr(mod, "update")
+    ]
+
     for module in modules:
         _update(module, *args, **kwargs)
 
