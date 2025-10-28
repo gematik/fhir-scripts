@@ -59,7 +59,7 @@ def build_defs(cli_args: Namespace, config: Config, *args, **kwargs):
     enable_sushi = not only_req and not only_cap
     enable_cap_statements = (
         (isinstance(epatools_config, bool) and epatools_config)
-        or epatools_config.cap_statements  # type: ignore
+        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
         or ((cli_args.cap or only_cap))
         and not only_req
     )
@@ -115,7 +115,7 @@ def build_ig(cli_args: Namespace, config: Config, *args, **kwargs):
     enable_igpub = not only_oapi
     enable_openapi = (
         (isinstance(epatools_config, bool) and epatools_config)
-        or epatools_config.cap_statements  # type: ignore
+        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
         or only_oapi
         or cli_args.oapi
     )
