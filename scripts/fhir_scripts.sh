@@ -243,8 +243,8 @@ function check_pytool_version() {
     # If not found, try to extract from __VERSION__ in source code listing
     if [[ -z "$latest_version" ]]; then
         latest_version=$(echo "$response" \
-            | grep -Eo "__VERSION__\s*=\s*['\"][0-9]+(\.[0-9]+){1,2}['\"]" \
-            | sed -E "s/.*__VERSION__\s*=\s*['\"]([^'\"]+)['\"].*/\1/" \
+            | grep -Eo "__VERSION__\s*=\s*(Version\()?['\"][0-9]+(\.[0-9]+){1,2}['\"]\)?" \
+            | sed -E "s/.*__VERSION__\s*=\s*(Version\()?['\"]([^'\"]+)['\"]\)?/\2/" \
             | sort -V \
             | tail -n 1 || true)
     fi
