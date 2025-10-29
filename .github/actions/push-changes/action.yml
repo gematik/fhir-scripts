@@ -1,0 +1,21 @@
+name: "Push changes"
+description: "Build IG using the IG publisher"
+inputs:
+  commit-message:
+    description: "Commit message to use if changes are detected"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Push changes
+      run: |
+        if [[ `git status --porcelain` ]]; then
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.${INPUT_ORGANIZATION_DOMAIN}"
+          git add .
+          git commit -m "${{ inputs.commit-message }}"
+          git fetch -p
+          git rebase origin/${GITHUB_REF_NAME}
+          git push origin ${GITHUB_REF_NAME}
+        fi
+      shell: bash

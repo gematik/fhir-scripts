@@ -1,0 +1,29 @@
+name: Process Requirements
+
+on:
+    workflow_call:
+
+permissions:
+    contents: write
+
+jobs:
+    build-profiles:
+        name: Process Requirements
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install fhirscripts
+              run: pipx install -f git+https://github.com/gematik/fhir-scripts.git
+
+            - name: Install igtools
+              run: fhirscripts install --igtools
+
+            - name: Process requirements
+              run: fhirscripts build defs --only-req
+
+            - name: Push changes
+              uses: ./.github/actions/push-changes
+              with:
+                  commit-message: "📋 re-generate"
