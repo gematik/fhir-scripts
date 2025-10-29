@@ -286,7 +286,7 @@ function maintain_pytools() {
     esac
 
     echo "Checking igtools version"
-    result=$(check_pytool_version igtools "https://raw.githubusercontent.com/onyg/req-tooling/main/src/igtools/version.py")
+    result=$(check_pytool_version igtools "https://raw.githubusercontent.com/onyg/req-tooling/refs/heads/main/src/igtools/versioning.py")
     IFS=':' read -r status current latest <<< "$result"
 
     case "$status" in
@@ -317,21 +317,21 @@ function update_pytools() {
 function build() {
     case "$1" in
         pytools)
-            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+            [[ "$UPDATE_PYTOOLS" == true ]] && maintain_pytools
             run_igtools
             merge_capabilities
         ;;
         sushi) run_sushi ;;
         defs)
-            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+            [[ "$UPDATE_PYTOOLS" == true ]] && maintain_pytools
             build_definitions
         ;;
         ig)
-            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+            [[ "$UPDATE_PYTOOLS" == true ]] && maintain_pytools
             build_ig
         ;;
         *)
-            [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+            [[ "$UPDATE_PYTOOLS" == true ]] && maintain_pytools
             build_definitions
             build_ig
         ;;
@@ -587,12 +587,13 @@ function gcloud_cp() {
 ###
 # Parse global flags
 ###
-TOOLS_FROZEN=false
+UPDATE_PYTOOLS=false
 for arg in "$@"; do
-  if [[ "$arg" == "toolsfrozen" ]]; then
-    TOOLS_FROZEN=true
-    # remove it from arguments to avoid breaking other logic
-    set -- "${@/toolsfrozen/}"
+  if [[ "$arg" == "-updatepytools" || "$arg" == "-u" ]]; then
+    UPDATE_PYTOOLS=true
+    # remove flag from arguments
+    set -- "${@/-updatepytools/}"
+    set -- "${@/-u/}"
     break
   fi
 done
@@ -637,11 +638,11 @@ case "$1" in
       5) delete_build_cache ;;
       6)
 
-        if [[ "$TOOLS_FROZEN" == false && -t 0 && $# -eq 0 ]]; then
+        if [[ "$UPDATE_PYTOOLS" == false && -t 0 && $# -eq 0 ]]; then
 
         default_choice="n"
         echo
-        echo "Would you like to skip automatic pytool updates?"
+        echo "Would you like to check for and install new pytool verions on the go?"
         echo -n "Enter y or n [default: n]: "
         read -t 15 choice || choice="$default_choice"
         choice="${choice:-$default_choice}"
@@ -649,7 +650,7 @@ case "$1" in
         echo "You selected: $choice"
         echo
         if [[ "$choice" =~ ^[Yy]$ ]]; then
-            TOOLS_FROZEN=true
+            UPDATE_PYTOOLS=true
         fi
         fi
         
@@ -670,15 +671,15 @@ case "$1" in
 
         case "$choice" in
             1)
-                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+                [[ "$UPDATE_PYTOOLS" == true ]] && maintain_pytools
                 build_definitions
                 build_ig
             ;;
             2)
-                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+                [[ "$UPDATE_PYTOOLS" == true ]] && maintain_pytools
                 build_definitions ;;
             3)
-                [[ "$TOOLS_FROZEN" == false ]] && maintain_pytools
+                [[ "$UPDATE_PYTOOLS" == true ]] && maintain_pytools
                 build_ig ;;
             0) exit 0 ;;
             *) echo "Invalid option." ;;
