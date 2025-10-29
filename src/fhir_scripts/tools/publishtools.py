@@ -36,7 +36,7 @@ if PUBLISHTOOLS_PACKAGE_AVAILABLE:
         render.render_ig_list(ig_registry)
         log.succ("IG overview rendered successfully")
 
-    def update():
+    def update(*args, **kwargs):
         pass
 
     def version(short: bool = False, *args, **kwargs) -> str | None:
@@ -80,7 +80,7 @@ else:
         )
         log.succ("IG overview rendered successfully")
 
-    def update():
+    def update(*args, **kwargs):
         pipx.install(PACKAGE, as_global=True)
 
     def version(short: bool = False, *args, **kwargs) -> str | None:

@@ -20,7 +20,7 @@ def run():
         raise Exception("Sushi run failed")
 
 
-def update():
+def update(*args, **kwargs):
     npm.install("fsh-sushi", as_global=True)
 
 

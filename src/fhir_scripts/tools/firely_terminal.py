@@ -8,6 +8,8 @@ from .basic import dotnet, shell
 
 VERSION_REGEX = re.compile(r"Firely Terminal\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
+PACKAGE = "firely.terminal"
+
 
 @require_installed("fhir", __tool_name__)
 def install(
@@ -28,6 +30,14 @@ def install(
         raise shell.CalledProcessError(
             res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
         )
+
+
+def update(install: bool = False, *args, **kwargs):
+    if install:
+        dotnet.install(PACKAGE)
+
+    else:
+        dotnet.update(PACKAGE)
 
 
 def version(short: bool = False, *args, **kwargs) -> str | None:
