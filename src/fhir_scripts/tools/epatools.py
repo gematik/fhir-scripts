@@ -141,7 +141,7 @@ else:
         # Archive the API files
         update_archive(api_files)
 
-    def update():
+    def update(*args, **kwargs):
         pipx.install(PACKAGE, as_global=True)
 
     def version(short: bool = False, *args, **kwargs) -> str | None:

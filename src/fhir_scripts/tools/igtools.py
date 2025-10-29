@@ -164,7 +164,7 @@ else:
         shell.run(f"igtools export {str(output_dir)}", capture_output=True)
         log.succ("Requirements exported successfully")
 
-    def update():
+    def update(*args, **kwargs):
         pipx.install(PACKAGE, as_global=True)
 
     def version(short: bool = False, *args, **kwargs) -> str | None:

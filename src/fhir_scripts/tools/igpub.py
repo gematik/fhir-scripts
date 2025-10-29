@@ -61,7 +61,7 @@ def qa():
     log.info(f"QA result: {', '.join(result)}")
 
 
-def update():
+def update(*args, **kwargs):
     if not INPUT_CACHE_DIR.exists():
         INPUT_CACHE_DIR.mkdir(parents=True)
 
