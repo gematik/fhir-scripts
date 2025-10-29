@@ -215,7 +215,7 @@ The following commands arw available:
 
 Download the latest version of the script to the current directory.
 
-## Update the Python tools
+### Update the Python tools
 
 Install the latest version of the Python tools:
 
@@ -291,4 +291,79 @@ TARGET=<version>
 BUCKET_PATH=<path>
 BUCKET_NAME_DEV=<dev-bucket>
 BUCKET_NAME_PROD=<prod-ucket>
+```
+
+## Re-usable github Workflows
+
+These are the available workflows from this repository:
+
+### Build Profiles
+
+Build (re-)build the FSH definition using the lastest version of _FSH Sushi_ and commit possible changes. To use this workflow
+
+```yaml
+name: Build Profiles
+
+on:
+  pull_request:
+    paths:
+      - "**/build-profiles.yml"
+      - "**.fsh"
+      - "**/sushi-config.yaml"
+    branches:
+      - main
+      - develop
+
+  push:
+    paths:
+      - "**/build-profiles.yml"
+      - "**.fsh"
+      - "**/sushi-config.yaml"
+    branches:
+      - main
+      - develop
+    tags:
+      - v*
+
+
+permissions:
+  contents: write
+
+jobs:
+  build-profiles:
+    uses: gematik/fhir-scripts/.github/workflows/build-profiles.yml
+```
+
+### Process Requirements
+
+Process the requirements that are specified in the Markdown files using _igtools_ and commit possible changes. To use the workflow
+
+```yaml
+name: Process Requirements
+
+on:
+  pull_request:
+    paths:
+      - "**/process-requirements.yml"
+      - "**.md"
+    branches:
+      - main
+      - develop
+
+  push:
+    paths:
+      - "**/process-requirements.yml"
+      - "**.md"
+    branches:
+      - main
+      - develop
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-profiles:
+    uses: gematik/fhir-scripts/.github/workflows/process-requirements.yml
 ```
