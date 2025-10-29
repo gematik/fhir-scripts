@@ -27,7 +27,9 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
 
     for name, mod in TOOL_MODULES.items():
         parser.add_argument(
-            f"--{name}", action="store_true", help=f"Install {mod.__tool_name__}"
+            f"--{name.replace("_", "-")}",
+            action="store_true",
+            help=f"Install {mod.__tool_name__}",
         )
 
 
@@ -42,7 +44,7 @@ def handle(cli_args, *args, **kwargs):
     ]
     for module in install_tools:
         log.info(f"Install {module.__tool_name__}")
-        module.update()
+        module.update(install=True)
         log.succ(f"Installed {module.__tool_name__} ({module.version(short=True)})")
 
 
