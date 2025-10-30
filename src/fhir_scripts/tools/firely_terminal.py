@@ -37,7 +37,9 @@ def update(install: bool = False, *args, **kwargs):
         dotnet.install(PACKAGE)
 
     else:
-        dotnet.update(PACKAGE)
+        # Disable for now as this appears to cause problems
+        # dotnet.update(PACKAGE)
+        pass
 
 
 def version(short: bool = False, *args, **kwargs) -> str | None:
