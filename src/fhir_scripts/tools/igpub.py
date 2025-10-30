@@ -5,11 +5,10 @@ import yaml
 
 from .. import log
 from ..exception import NotInstalledException
-from .basic import java, shell
+from .basic import github, java, shell
 
-DOWNLOAD_URL = (
-    "https://github.com/HL7/fhir-ig-publisher/releases/latest/download/publisher.jar"
-)
+REPO_URL = "https://github.com/HL7/fhir-ig-publisher"
+DOWNLOAD_URL = REPO_URL + "/releases/latest/download/publisher.jar"
 INPUT_CACHE_DIR = Path("./input-cache")
 PUBLISHER_JAR = INPUT_CACHE_DIR / "publisher.jar"
 
@@ -90,6 +89,10 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
 
     except shell.CalledProcessError:
         return None
+
+
+def latest_version(*args, **kwargs) -> str | None:
+    return github.latest_version_number(REPO_URL)
 
 
 __tool_name__ = "IG Publisher"
