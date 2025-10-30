@@ -233,18 +233,11 @@ function check_pytool_version() {
         return 0
     fi
 
-    # Try to find versions from filenames (dist/*.tar.gz, *.whl)
-    latest_version=$(echo "$response" \
-        | grep -Eo "${package_name}-[0-9]+(\.[0-9]+){1,2}(\.tar\.gz|\.whl)" \
-        | sort -V \
-        | tail -n 1 \
-        | grep -Eo '[0-9]+(\.[0-9]+){1,2}' || true)
-
-    # If not found, try to extract from __VERSION__ in source code listing
+    # extract from __VERSION__ in source code listing
     if [[ -z "$latest_version" ]]; then
         latest_version=$(echo "$response" \
             | grep -Eo "__VERSION__\s*=\s*(Version\()?['\"][0-9]+(\.[0-9]+){1,2}['\"]\)?" \
-            | sed -E "s/.*__VERSION__\s*=\s*(Version\()?['\"]([^'\"]+)['\"]\)?/\2/" \
+            | sed -E "s/.*__VERSION__\s*=\s*(Version\()?['\"]([0-9]+(\.[0-9]+){1,2})['\"]\)?/\2/" \
             | sort -V \
             | tail -n 1 || true)
     fi
@@ -292,7 +285,7 @@ function maintain_pytool() {
 
 function maintain_pytools() {
     maintain_pytool "epatools" \
-        "https://api.github.com/repos/onyg/epa-tools/contents/dist" \
+        "https://raw.githubusercontent.com/onyg/epa-tools/refs/heads/main/src/epatools/version.py" \
         "git+https://github.com/onyg/epa-tools.git"
 
     maintain_pytool "igtools" \
