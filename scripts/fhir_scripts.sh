@@ -255,7 +255,7 @@ function check_pytool_version() {
     fi
 
     # Compare installed vs. latest
-    if [[ "$current_version" == "$latest_version" ]]; then
+    if [ "$current_version" = "$latest_version" ]; then
         echo "up_to_date:${current_version}"
     else
         echo "update_available:${current_version}:${latest_version}"
