@@ -35,7 +35,10 @@ def _update(module, *args, **kwargs):
 
     # Only update if was previously installed
     if prev_version:
-        log.info(f"Update {name}")
+        latest_func = getattr(module, "latest_version", None)
+        latest = latest_func() if latest_func else None
+
+        if not latest or latest != prev_version:
 
         module.update()
         log.succ(f"Updated {name}: {str(prev_version)} → {module.version(short=True)}")
