@@ -9,6 +9,9 @@ from ...helper import require_installed
 from . import shell
 
 VERSION_REGEX = re.compile(r"Python\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
+VERSION_FILE_REGEX = re.compile(
+    r"(?:Version\()?['\"]?([\d\.]+)['\"]?\)?", re.IGNORECASE
+)
 
 
 @require_installed("pipx", __tool_name__)
@@ -29,7 +32,7 @@ def install(pkg_name: str, as_global: bool = False):
 
 
 def latest_version_number(url: str) -> str | None:
-    url_raw = url.lstrip("git+").rstrip(".git") + "/raw/main/"
+    url_raw = url.removeprefix("git+").removesuffix(".git") + "/raw/main/"
 
     pyproject_url = url_raw + "pyproject.toml"
     content = requests.get(pyproject_url)
@@ -59,14 +62,15 @@ def latest_version_number(url: str) -> str | None:
 
             attrs = {
                 split[0].strip().strip("'"): split[1].strip().strip("'")
-                for l in content.split("\n")
-                if "=" in l and (split := l.split("=")) and len(split) == 2
+                for line in content.split("\n")
+                if "=" in line and (split := line.split("=")) and len(split) == 2
             }
 
             version = attrs.get(attr)
 
             if version is not None:
-                return version
+                match = VERSION_FILE_REGEX.match(version)
+                return match[1] if match else version
 
     # Else nothing was found
     return None
