@@ -264,46 +264,40 @@ function check_pytool_version() {
     return 0
 }
 
+function maintain_pytool() {
+    local package_name=$1
+    local check_url=$2
+    local update_url=$3
+
+    echo "Checking $package_name version"
+    result=$(check_pytool_version "$package_name" "$check_url")
+    IFS=':' read -r status current latest <<< "$result"
+
+    case "$status" in
+        update_available)
+            echo "⬆️ $package_name: $current → $latest"
+            update_pytool "$update_url" "Updated" "Failed to update $package_name"
+            ;;
+        up_to_date)
+            echo "✅ $package_name up to date ($current)"
+            ;;
+        error*)
+            echo "⚠️ $package_name check failed ($current)"
+            ;;
+        not_installed)
+            echo "📦 $package_name not installed"
+            ;;
+    esac
+}
+
 function maintain_pytools() {
-    echo "Checking epatools version"
-    result=$(check_pytool_version epatools "https://api.github.com/repos/onyg/epa-tools/contents/dist")
-    IFS=':' read -r status current latest <<< "$result"
+    maintain_pytool "epatools" \
+        "https://api.github.com/repos/onyg/epa-tools/contents/dist" \
+        "git+https://github.com/onyg/epa-tools.git"
 
-    case "$status" in
-    update_available)
-        echo "⬆️  $package_name: $current → $latest"
-        update_pytool "git+https://github.com/onyg/epa-tools.git" "Updated epa-tools to $(epatools_version)" "Failed to update epa-tools"
-        ;;
-    up_to_date)
-        echo "✅ $package_name up to date ($current)"
-        ;;
-    error*)#
-        echo "⚠️  $package_name check failed ($current)"
-        ;;
-    not_installed)
-        echo "📦 $package_name not installed"
-        ;;
-    esac
-
-    echo "Checking igtools version"
-    result=$(check_pytool_version igtools "https://raw.githubusercontent.com/onyg/req-tooling/refs/heads/main/src/igtools/versioning.py")
-    IFS=':' read -r status current latest <<< "$result"
-
-    case "$status" in
-    update_available)
-        echo "⬆️  $package_name: $current → $latest"
-        update_pytool "git+https://github.com/onyg/req-tooling.git" "Upated reqtooling to $(igtools_version)" "Failed to update req-tooling"
-        ;;
-    up_to_date)
-        echo "✅ $package_name up to date ($current)"
-        ;;
-    error*)
-        echo "⚠️  $package_name check failed ($current)"
-        ;;
-    not_installed)
-        echo "📦 $package_name not installed"
-        ;;
-    esac
+    maintain_pytool "igtools" \
+        "https://raw.githubusercontent.com/onyg/req-tooling/refs/heads/main/src/igtools/versioning.py" \
+        "git+https://github.com/onyg/req-tooling.git"
 }
 
 function update_pytools() {
