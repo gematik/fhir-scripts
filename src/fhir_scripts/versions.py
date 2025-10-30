@@ -34,6 +34,10 @@ def handle(cli_args, *args, **kwargs) -> bool:
             else:
                 versions[tool_name] = version_func(), None
 
+    if cli_args.outdated and len(versions) == 0:
+        log.succ("Everything up-to-date")
+        return True
+
     for name, (version, latest) in sorted(versions.items(), key=lambda x: x[0].lower()):
         if latest is not None:
             log.info(f"{name}: {version} < {latest}")
