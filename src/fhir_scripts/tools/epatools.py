@@ -88,9 +88,6 @@ if EPATOOLS_PACKAGE_AVAILABLE:
     #     # Archive the API files
     #     update_archive(api_files)
 
-    # def update():
-    #     pass
-
     # def version(short: bool = False, *args, **kwargs) -> str | None:
     #     """
     #     Get the installed version
@@ -162,6 +159,9 @@ else:
 
         except shell.CalledProcessError:
             return None
+
+    def latest_version(*args, **kwargs) -> str | None:
+        return pipx.latest_version_number(PACKAGE)
 
 
 def update_archive(archive_files: list[Path], output_dir: Path | None = None):

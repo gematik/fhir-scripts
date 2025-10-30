@@ -36,9 +36,6 @@ if PUBLISHTOOLS_PACKAGE_AVAILABLE:
         render.render_ig_list(ig_registry)
         log.succ("IG overview rendered successfully")
 
-    def update(*args, **kwargs):
-        pass
-
     def version(short: bool = False, *args, **kwargs) -> str | None:
         """
         Get the installed version
@@ -99,3 +96,6 @@ else:
 
         except shell.CalledProcessError:
             return None
+
+    def latest_version(*args, **kwargs) -> str | None:
+        return pipx.latest_version_number(PACKAGE)
