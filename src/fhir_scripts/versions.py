@@ -6,22 +6,44 @@ TARGET_BASE_DIR = "ig/fhir"
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
+    parser.add_argument(
+        "--outdated", action="store_true", help="List outdated versions"
+    )
     pass
 
 
-def handle(*args, **kwargs) -> bool:
+def handle(cli_args, *args, **kwargs) -> bool:
     versions = {}
     for name, module in tools.__dict__.items():
-        if (
-            not name.startswith("__")
-            and (version_func := getattr(module, "version", None))
-            and (version := version_func())
+        if not name.startswith("__") and (
+            version_func := getattr(module, "version", None)
         ):
             tool_name = getattr(module, "__tool_name__", None) or name
-            versions[tool_name] = version
 
-    for name, version in sorted(versions.items(), key=lambda x: x[0].lower()):
-        log.info(f"{name}: {version}")
+            if cli_args.outdated:
+                latest_func = getattr(module, "latest_version", None)
+                latest = latest_func() if latest_func else None
+
+                if (
+                    latest is not None
+                    and (version := version_func(short=True))
+                    and latest != version
+                ):
+                    versions[tool_name] = (version, latest)
+
+            else:
+                versions[tool_name] = version_func(), None
+
+    if cli_args.outdated and len(versions) == 0:
+        log.succ("Everything up-to-date")
+        return True
+
+    for name, (version, latest) in sorted(versions.items(), key=lambda x: x[0].lower()):
+        if latest is not None:
+            log.info(f"{name}: {version} < {latest}")
+
+        else:
+            log.info(f"{name}: {version}")
 
     return True
 

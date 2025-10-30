@@ -4,9 +4,10 @@ import re
 
 from .. import log
 from ..helper import require_installed
-from .basic import npm, shell
+from .basic import github, npm, shell
 
 VERSION_REGEX = re.compile(r"SUSHI\sv(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
+REPO_URL = "https://github.com/FHIR/sushi"
 
 
 @require_installed("sushi", __tool_name__)
@@ -42,3 +43,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
 
     except shell.CalledProcessError:
         return None
+
+
+def latest_version(*args, **kwargs) -> str | None:
+    return github.latest_version_number(REPO_URL)

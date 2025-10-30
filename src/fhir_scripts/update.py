@@ -8,10 +8,10 @@ from . import log
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
-    pass
+    parser.add_argument("--dry-run", action="store_true", help="Only simulate updating")
 
 
-def handle(*args, **kwargs):
+def handle(cli_args, *args, **kwargs):
     # Get modules dynmaically
     mod_names = [
         name
@@ -26,19 +26,27 @@ def handle(*args, **kwargs):
     ]
 
     for module in modules:
-        _update(module, *args, **kwargs)
+        _update(module, cli_args, *args, **kwargs)
 
 
-def _update(module, *args, **kwargs):
+def _update(module, cli_args, *args, **kwargs):
     name = getattr(module, "__tool_name__", None) or module.__name__
     prev_version = module.version(short=True)
 
     # Only update if was previously installed
     if prev_version:
-        log.info(f"Update {name}")
+        latest_func = getattr(module, "latest_version", None)
+        latest = latest_func() if latest_func else None
 
-        module.update()
-        log.succ(f"Updated {name}: {str(prev_version)} → {module.version(short=True)}")
+        if not latest or latest != prev_version:
+            if cli_args.dry_run:
+                log.info(f"Would update {name}")
+
+            else:
+                module.update()
+                log.succ(
+                    f"Updated {name}: {str(prev_version)} → {module.version(short=True)}"
+                )
 
 
 __doc__ = "Update tools"
