@@ -40,7 +40,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
         )
 
 
-def handle(config: Config, config_file: bool = False, *args, **kwargs):
+def install(config: Config, config_file: bool = False, *args, **kwargs):
     # If '--config-file' argument, get list of tools to install from the config file 'install' section
     if config_file:
         install_tools = config.install
@@ -75,5 +75,5 @@ def handle(config: Config, config_file: bool = False, *args, **kwargs):
 
 
 __doc__ = "Update tools"
-__handler__ = handle
+__handler__ = install
 __setup_parser__ = setup_parser

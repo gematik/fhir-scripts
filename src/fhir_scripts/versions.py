@@ -12,7 +12,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     pass
 
 
-def handle(outdated: bool = False, *args, **kwargs) -> bool:
+def versions(outdated: bool = False, *args, **kwargs) -> bool:
     versions = {}
     for name, module in tools.__dict__.items():
         if not name.startswith("__") and (
@@ -49,5 +49,5 @@ def handle(outdated: bool = False, *args, **kwargs) -> bool:
 
 
 __doc__ = "Version information of all tools"
-__handler__ = handle
+__handler__ = versions
 __setup_parser__ = setup_parser

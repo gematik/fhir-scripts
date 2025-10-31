@@ -11,7 +11,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument("--dry-run", action="store_true", help="Only simulate updating")
 
 
-def handle(*args, **kwargs):
+def update(*args, **kwargs):
     # Get modules dynmaically
     mod_names = [
         name
@@ -50,5 +50,5 @@ def _update(module, dry_run: bool = False, *args, **kwargs):
 
 
 __doc__ = "Update tools"
-__handler__ = handle
+__handler__ = update
 __setup_parser__ = setup_parser

@@ -27,7 +27,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     )
 
 
-def handle(
+def deploy(
     config: Config,
     environment: str,
     ig_registry: bool = False,
@@ -168,5 +168,5 @@ def _project_name(needs_project: bool = True) -> str | None:
 
 
 __doc__ = "Deploy IG"
-__handler__ = handle
+__handler__ = deploy
 __setup_parser__ = setup_parser
