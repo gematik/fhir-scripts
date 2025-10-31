@@ -12,7 +12,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     pass
 
 
-def handle(cli_args, *args, **kwargs) -> bool:
+def handle(outdated: bool = False, *args, **kwargs) -> bool:
     versions = {}
     for name, module in tools.__dict__.items():
         if not name.startswith("__") and (
@@ -20,7 +20,7 @@ def handle(cli_args, *args, **kwargs) -> bool:
         ):
             tool_name = getattr(module, "__tool_name__", None) or name
 
-            if cli_args.outdated:
+            if outdated:
                 latest_func = getattr(module, "latest_version", None)
                 latest = latest_func() if latest_func else None
 
@@ -34,7 +34,7 @@ def handle(cli_args, *args, **kwargs) -> bool:
             else:
                 versions[tool_name] = version_func(), None
 
-    if cli_args.outdated and len(versions) == 0:
+    if outdated and len(versions) == 0:
         log.succ("Everything up-to-date")
         return True
 

@@ -36,8 +36,12 @@ def main():
             parser_dict[args.cmd].print_help()
             return
 
+        # Unpack the cli arguments
+        cli_args = vars(args)
+        del cli_args["config"]
+
         # Otherwise handle the command
-        handle(cli_args=args, config=cfg)
+        handle(config=cfg, **cli_args)
 
     except CancelException as e:
         log.warn(str(e))

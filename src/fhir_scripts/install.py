@@ -40,15 +40,15 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
         )
 
 
-def handle(cli_args, config: Config, *args, **kwargs):
+def handle(config: Config, config_file: bool = False, *args, **kwargs):
     # If '--config-file' argument, get list of tools to install from the config file 'install' section
-    if cli_args.config_file:
+    if config_file:
         install_tools = config.install
 
     # Else get them from arguments
     else:
         install_tools = [
-            tool for tool, v in cli_args.__dict__.items() if isinstance(v, bool) and v
+            tool for tool, v in kwargs.items() if isinstance(v, bool) and v
         ]
 
     # Get the module for each tool

@@ -1,6 +1,6 @@
 import json
 import shutil
-from argparse import Namespace, _SubParsersAction
+from argparse import _SubParsersAction
 from pathlib import Path
 
 from . import log
@@ -28,7 +28,9 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     )
 
 
-def cache_rebuild_fhir_cache(cli_args: Namespace, *args, **kwargs):
+def cache_rebuild_fhir_cache(
+    package_dir: Path | None = None, no_clear: bool = False, *args, **kwargs
+):
     # TODO: Get dependencies from sushi config
     # Can include some "meta" packages that cannot be downloaded from the registry
     # sushi_config = Path("./sushi-config.yaml")
@@ -51,7 +53,7 @@ def cache_rebuild_fhir_cache(cli_args: Namespace, *args, **kwargs):
     pkg_json = Path("./package.json")
     pkg_json_bak = Path("./package.bak.json")
 
-    if not cli_args.no_clear:
+    if not no_clear:
         # Remove all previous packages
         fhir_cache = Path.home() / ".fhir/packages"
         log.info("Remove all previous packages")
@@ -62,15 +64,13 @@ def cache_rebuild_fhir_cache(cli_args: Namespace, *args, **kwargs):
                 shutil.rmtree(item)
         log.succ("Removed all packages")
 
-    if cli_args.package_dir is not None:
+    if package_dir is not None:
 
         # Create package dir if it does not exist
-        if not cli_args.package_dir.exists():
-            cli_args.package_dir.mkdir(parents=True)
+        if not package_dir.exists():
+            package_dir.mkdir(parents=True)
 
-        log.info(
-            f"Using package directory '{cli_args.package_dir}' to restore package cache"
-        )
+        log.info(f"Using package directory '{package_dir}' to restore package cache")
 
         try:
             # Handle each dependency
@@ -83,13 +83,13 @@ def cache_rebuild_fhir_cache(cli_args: Namespace, *args, **kwargs):
                 found = False
 
                 # Check the naming for official packages
-                pkg_file = cli_args.package_dir / f"{pkg}-{version}.tgz"
+                pkg_file = package_dir / f"{pkg}-{version}.tgz"
                 if pkg_file.exists():
                     found = True
                     log.info(f"Cache hit for {pkg}@{version}")
 
                 else:
-                    pkg_file = cli_args.package_dir / f"{pkg}_{version}.tgz"
+                    pkg_file = package_dir / f"{pkg}_{version}.tgz"
 
                     # Check naming for own build packages
                     if pkg_file.exists():
@@ -99,9 +99,9 @@ def cache_rebuild_fhir_cache(cli_args: Namespace, *args, **kwargs):
                     # No file was found, so it needs to be downloaded
                     if not found:
                         log.info(f"Cache miss for {pkg}@{version}")
-                        npm.download(pkg, version, cli_args.package_dir, FHIR_REGISTRY)
+                        npm.download(pkg, version, package_dir, FHIR_REGISTRY)
                         log.succ(f"Downloaded {pkg}@{version}")
-                        pkg_file = cli_args.package_dir / f"{pkg}-{version}.tgz"
+                        pkg_file = package_dir / f"{pkg}-{version}.tgz"
 
                 ###
                 # Install

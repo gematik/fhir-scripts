@@ -11,7 +11,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument("--dry-run", action="store_true", help="Only simulate updating")
 
 
-def handle(cli_args, *args, **kwargs):
+def handle(*args, **kwargs):
     # Get modules dynmaically
     mod_names = [
         name
@@ -26,10 +26,10 @@ def handle(cli_args, *args, **kwargs):
     ]
 
     for module in modules:
-        _update(module, cli_args, *args, **kwargs)
+        _update(module, *args, **kwargs)
 
 
-def _update(module, cli_args, *args, **kwargs):
+def _update(module, dry_run: bool = False, *args, **kwargs):
     name = getattr(module, "__tool_name__", None) or module.__name__
     prev_version = module.version(short=True)
 
@@ -39,7 +39,7 @@ def _update(module, cli_args, *args, **kwargs):
         latest = latest_func() if latest_func else None
 
         if not latest or latest != prev_version:
-            if cli_args.dry_run:
+            if dry_run:
                 log.info(f"Would update {name}")
 
             else:
