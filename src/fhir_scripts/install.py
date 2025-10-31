@@ -47,7 +47,7 @@ def handle(cli_args, config: Config, *args, **kwargs):
 
     # Else get them from arguments
     else:
-    install_tools = [
+        install_tools = [
             tool for tool, v in cli_args.__dict__.items() if isinstance(v, bool) and v
         ]
 
@@ -64,6 +64,11 @@ def handle(cli_args, config: Config, *args, **kwargs):
         log.warn("Nothing to install")
 
     for module in modules:
+        # Skip if already installed
+        if module.version() is not None:
+            log.warn(f"{module.__tool_name__} already installed, skipping")
+            continue
+
         log.info(f"Install {module.__tool_name__}")
         module.update(install=True)
         log.succ(f"Installed {module.__tool_name__} ({module.version(short=True)})")
