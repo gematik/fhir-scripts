@@ -1,4 +1,4 @@
-from argparse import Namespace, _SubParsersAction
+from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
 from . import log
@@ -6,6 +6,7 @@ from .exception import NoConfigException, NotInstalledException
 from .models.config import Config
 from .tools import epatools, igpub, igtools, sushi
 from .tools.basic import shell
+from .update import update as handle_update
 
 DEFS = "defs"
 IG = "ig"
@@ -13,7 +14,13 @@ ALL = "all"
 PIPELINE = "pipeline"
 
 
-def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
+def setup_subparser(
+    parser: ArgumentParser, subparser: _SubParsersAction, *args, **kwarsg
+):
+    parser.add_argument(
+        "--update", action="store_true", help="Update tooling before building"
+    )
+
     defs_parser = subparser.add_parser(DEFS, help="Build definitions")
     defs_parser.add_argument(
         "--req", action="store_true", help="Also process requirements"
@@ -46,21 +53,30 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     subparser.add_parser(PIPELINE, help="Build IG")
 
 
-def build_defs(cli_args: Namespace, config: Config, *args, **kwargs):
+def build_defs(
+    config: Config,
+    only_cap: bool = False,
+    only_req: bool = False,
+    req: bool = False,
+    cap: bool = False,
+    update: bool = False,
+    *args,
+    **kwargs,
+):
+    if update:
+        handle_update(*args, **kwargs)
+
     log.info("Building definitions")
 
     epatools_config = config.build.builtin.epatools
     igtools_config = config.build.builtin.igtools
 
-    only_cap = getattr(cli_args, "only_cap", False)
-    only_req = getattr(cli_args, "only_req", False)
-
-    enable_requirements = (igtools_config or cli_args.req or only_req) and not only_cap
+    enable_requirements = (igtools_config or req or only_req) and not only_cap
     enable_sushi = not only_req and not only_cap
     enable_cap_statements = (
         (isinstance(epatools_config, bool) and epatools_config)
         or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
-        or ((cli_args.cap or only_cap))
+        or ((cap or only_cap))
         and not only_req
     )
 
@@ -106,18 +122,27 @@ def build_cap(*args, **kwargs):
         log.warn(f"epatools not configured or installed, skipping: {str(e)}")
 
 
-def build_ig(cli_args: Namespace, config: Config, *args, **kwargs):
+def build_ig(
+    config: Config,
+    only_oapi: bool = False,
+    oapi: bool = False,
+    update: bool = False,
+    *args,
+    **kwargs,
+):
+    if update:
+        handle_update(*args, **kwargs)
+
     log.info("Building IG")
 
     epatools_config = config.build.builtin.epatools
-    only_oapi = getattr(cli_args, "only_oapi", False)
 
     enable_igpub = not only_oapi
     enable_openapi = (
         (isinstance(epatools_config, bool) and epatools_config)
         or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
         or only_oapi
-        or cli_args.oapi
+        or oapi
     )
 
     if enable_igpub:
@@ -144,9 +169,12 @@ def build_openapi(*args, **kwargs):
     log.succ("OpenAPI updated successfully")
 
 
-def build_all(cli_args: Namespace, config: Config, *args, **kwargs):
-    build_defs(cli_args, config, *args, **kwargs)
-    build_ig(cli_args, config, *args, **kwargs)
+def build_all(config: Config, update: bool = False, *args, **kwargs):
+    if update:
+        handle_update(*args, **kwargs)
+
+    build_defs(config, *args, **kwargs)
+    build_ig(config, *args, **kwargs)
 
 
 def build_shell(c_args: str, *args, **kwargs):

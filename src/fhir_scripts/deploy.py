@@ -1,5 +1,5 @@
 import json
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from pathlib import Path
 
 from . import log
@@ -27,32 +27,42 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     )
 
 
-def handle(cli_args: Namespace, config: Config, *args, **kwargs) -> bool:
+def deploy(
+    config: Config,
+    environment: str,
+    ig_registry: bool = False,
+    all: bool = False,
+    only_ig: bool = False,
+    only_history: bool = False,
+    yes: bool = False,
+    *args,
+    **kwargs,
+) -> bool:
     deploy_config = config.deploy
     if deploy_config is None:
         raise Exception("deploy configuration missing")
 
-    if cli_args.ig_registry:
+    if ig_registry:
         # Build target URL
-        target = _target_path(deploy_config, cli_args.environment)
-        _deploy_ig_registry(target, confirm_yes=cli_args.yes)
+        target = _target_path(deploy_config, environment)
+        _deploy_ig_registry(target, confirm_yes=yes)
 
     else:
         # Build target URL
-        target = _target_path(deploy_config, cli_args.environment, needs_project=True)
+        target = _target_path(deploy_config, environment, needs_project=True)
 
-        if cli_args.all:
-            _deploy_ig(target, confirm_yes=cli_args.yes)
-            _deploy_history(target, confirm_yes=cli_args.yes)
+        if all:
+            _deploy_ig(target, confirm_yes=yes)
+            _deploy_history(target, confirm_yes=yes)
 
-        elif cli_args.only_ig:
-            _deploy_ig(target, confirm_yes=cli_args.yes)
+        elif only_ig:
+            _deploy_ig(target, confirm_yes=yes)
 
-        elif cli_args.only_history:
-            _deploy_history(target, confirm_yes=cli_args.yes)
+        elif only_history:
+            _deploy_history(target, confirm_yes=yes)
 
         else:
-            _deploy_ig(target, confirm_yes=cli_args.yes)
+            _deploy_ig(target, confirm_yes=yes)
 
     return True
 
@@ -158,5 +168,5 @@ def _project_name(needs_project: bool = True) -> str | None:
 
 
 __doc__ = "Deploy IG"
-__handler__ = handle
+__handler__ = deploy
 __setup_parser__ = setup_parser

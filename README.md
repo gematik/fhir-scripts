@@ -55,6 +55,16 @@ Get a list of available tools to install
 fhirscripts install --help
 ```
 
+#### From Config File
+
+Tools to be installed can also be defined in the config giving the name of the tool
+
+```yaml
+install:
+  --<tool>
+  --<tool2>
+```
+
 ### Update
 
 Update each installed tool
@@ -62,16 +72,6 @@ Update each installed tool
 ```bash
 fhirscripts update
 ```
-
-<!-- With the available parameters
-
-| Top Level | Sub Level | Lowest Level | Description                                                             |
-| :-------: | :-------: | :----------: | :---------------------------------------------------------------------- |
-|   `all`   |           |              | Update everything                                                       |
-|           |  `tools`  |              | Update tooling from the FHIR community, e.g. IG Publisher and FSH Sushi |
-|           |           |   `sushi`    | Update FSH Sushi                                                        |
-|           |           |   `igpub`    | Update IG Publisher                                                     |
-|           | `pytools` |              | Update gematik's Python tooling, e.g. epatools, igtools, publishtools   | --> |
 
 ### Cache
 
@@ -95,6 +95,21 @@ _Requirements:_
 * (optional epatools, either as component or using pipx)
 
 Building happens in two stages: FHIR definitions and FHIR IG.
+
+One can also update the tooling before building with `--update`.
+
+Optional steps for the following steps can be defined using the `builtin` section in the config.
+
+```yaml
+build:
+  builtin:
+    igtools: true
+    epatools:
+      cap_statements: true
+      openapi: true
+    # 'epatools' can also be defined to enable or disable all steps
+    # epatools: true
+```
 
 #### Definitions
 
@@ -139,8 +154,10 @@ fhirscripts build pipeline
 The pipeline is defined like
 
 ```yaml
-- <step>
-- <step>:<args>
+build:
+  pipeline:
+    - <step>
+    - <step>:<args>
 ```
 
 Available steps are:

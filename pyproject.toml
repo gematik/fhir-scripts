@@ -1,6 +1,6 @@
 [project]
 name = "fhir-scripts"
-version = "0.10.0"
+version = "0.11.0"
 description = ""
 authors = [
     { name = "Alexander Essenwanger", email = "alexander.essenwanger@gematik.de" },
@@ -25,9 +25,9 @@ fhirscripts = "fhir_scripts.main:main"
 [dependency-groups]
 dev = ["black (>=25.9.0,<26.0.0)"]
 
-[project.optional-dependencies]
+# [project.optional-dependencies]
 # igtools = ["igtools @ git+https://github.com/onyg/req-tooling"]
 # epatools = ["epatools @ git+https://github.com/onyg/epa-tools.git"]
-publishtools = [
-    "publish-tools @ git+https://github.com/gematik/publish-tools.git",
-]
+# publishtools = [
+#     "publish-tools @ git+https://github.com/gematik/publish-tools.git",
+# ]

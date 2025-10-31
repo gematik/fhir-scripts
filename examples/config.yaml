@@ -1,3 +1,10 @@
+install:
+  - firely_terminal
+  - sushi
+  - igpub
+  - epatools
+  - igtools
+  - publishtools
 deploy:
   env:
     dev: dev_bucket

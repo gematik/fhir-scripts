@@ -1,5 +1,5 @@
 import os
-from argparse import Namespace, _SubParsersAction
+from argparse import _SubParsersAction
 from pathlib import Path
 
 from . import log
@@ -34,17 +34,15 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     )
 
 
-def publish_project(cli_args: Namespace, *args, **kwargs):
-    log.info(
-        f"Publish project '{cli_args.project_dir}' using IG registry '{cli_args.ig_registry}'"
-    )
-    publishtools.publish(cli_args.project_dir, cli_args.ig_registry)
+def publish_project(project_dir: Path, ig_registry: Path, *args, **kwargs):
+    log.info(f"Publish project '{project_dir}' using IG registry '{ig_registry}'")
+    publishtools.publish(project_dir, ig_registry)
     log.succ("Project published")
 
 
-def publish_igregistry(cli_args: Namespace, *args, **kwargs):
-    log.info(f"Publish IG registry '{cli_args.ig_registry}'")
-    publishtools.render_list(cli_args.ig_registry)
+def publish_igregistry(ig_registry: Path, *args, **kwargs):
+    log.info(f"Publish IG registry '{ig_registry}'")
+    publishtools.render_list(ig_registry)
     log.succ("IG registry published")
 
 
