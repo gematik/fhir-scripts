@@ -51,7 +51,7 @@ def get_args(
 
         elif setup_subparser := getattr(module, "__setup_subparser__", None):
             sub_parser = _parser.add_subparsers(dest=cmd)
-            setup_subparser(subparser=sub_parser)
+            setup_subparser(parser=_parser, subparser=sub_parser)
 
         else:
             raise Exception(
