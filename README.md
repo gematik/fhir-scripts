@@ -61,8 +61,8 @@ Tools to be installed can also be defined in the config giving the name of the t
 
 ```yaml
 install:
-  --<tool>
-  --<tool2>
+  - <tool>
+  - <tool2>
 ```
 
 ### Update
