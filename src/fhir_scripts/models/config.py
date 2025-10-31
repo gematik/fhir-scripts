@@ -8,5 +8,6 @@ class DeployConfig(StrictBaseModel):
 
 
 class Config(StrictBaseModel):
-    deploy: DeployConfig | None = None
     build: BuildConfig = BuildConfig()
+    deploy: DeployConfig | None = None
+    install: list[str] = []
