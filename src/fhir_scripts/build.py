@@ -1,4 +1,4 @@
-from argparse import _SubParsersAction
+from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
 from . import log
@@ -6,6 +6,7 @@ from .exception import NoConfigException, NotInstalledException
 from .models.config import Config
 from .tools import epatools, igpub, igtools, sushi
 from .tools.basic import shell
+from .update import update as handle_update
 
 DEFS = "defs"
 IG = "ig"
@@ -13,7 +14,13 @@ ALL = "all"
 PIPELINE = "pipeline"
 
 
-def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
+def setup_subparser(
+    parser: ArgumentParser, subparser: _SubParsersAction, *args, **kwarsg
+):
+    parser.add_argument(
+        "--update", action="store_true", help="Update tooling before building"
+    )
+
     defs_parser = subparser.add_parser(DEFS, help="Build definitions")
     defs_parser.add_argument(
         "--req", action="store_true", help="Also process requirements"
@@ -52,9 +59,13 @@ def build_defs(
     only_req: bool = False,
     req: bool = False,
     cap: bool = False,
+    update: bool = False,
     *args,
     **kwargs,
 ):
+    if update:
+        handle_update(*args, **kwargs)
+
     log.info("Building definitions")
 
     epatools_config = config.build.builtin.epatools
@@ -115,9 +126,13 @@ def build_ig(
     config: Config,
     only_oapi: bool = False,
     oapi: bool = False,
+    update: bool = False,
     *args,
     **kwargs,
 ):
+    if update:
+        handle_update(*args, **kwargs)
+
     log.info("Building IG")
 
     epatools_config = config.build.builtin.epatools
@@ -154,7 +169,10 @@ def build_openapi(*args, **kwargs):
     log.succ("OpenAPI updated successfully")
 
 
-def build_all(config: Config, *args, **kwargs):
+def build_all(config: Config, update: bool = False, *args, **kwargs):
+    if update:
+        handle_update(*args, **kwargs)
+
     build_defs(config, *args, **kwargs)
     build_ig(config, *args, **kwargs)
 

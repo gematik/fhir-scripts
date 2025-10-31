@@ -96,6 +96,8 @@ _Requirements:_
 
 Building happens in two stages: FHIR definitions and FHIR IG.
 
+One can also update the tooling before building with `--update`.
+
 Optional steps for the following steps can be defined using the `builtin` section in the config.
 
 ```yaml
