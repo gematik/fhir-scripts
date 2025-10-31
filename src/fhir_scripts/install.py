@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 import fhir_scripts.tools
 
 from . import log
+from .config import Config
 
 TOOL_MODULES = {}
 
@@ -25,6 +26,12 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
         if (mod := importlib.import_module(mod_name)) and hasattr(mod, "update")
     }
 
+    parser.add_argument(
+        "--config-file",
+        action="store_true",
+        help="Install tools defined from config file",
+    )
+
     for name, mod in TOOL_MODULES.items():
         parser.add_argument(
             f"--{name.replace("_", "-")}",
@@ -33,16 +40,30 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
         )
 
 
-def handle(cli_args, *args, **kwargs):
+def handle(cli_args, config: Config, *args, **kwargs):
+    # If '--config-file' argument, get list of tools to install from the config file 'install' section
+    if cli_args.config_file:
+        install_tools = config.install
+
+    # Else get them from arguments
+    else:
     install_tools = [
-        mod
-        for k, v in cli_args.__dict__.items()
-        if isinstance(v, bool)
-        and v
-        and (mod := TOOL_MODULES.get(k, None))
-        and hasattr(mod, "update")
-    ]
-    for module in install_tools:
+            tool for tool, v in cli_args.__dict__.items() if isinstance(v, bool) and v
+        ]
+
+    # Get the module for each tool
+    modules = []
+    for tool in install_tools:
+        if (mod := TOOL_MODULES.get(tool, None)) and hasattr(mod, "update"):
+            modules.append(mod)
+
+        else:
+            log.warn(f"Tool '{tool}' does not exist")
+
+    if len(modules) == 0:
+        log.warn("Nothing to install")
+
+    for module in modules:
         log.info(f"Install {module.__tool_name__}")
         module.update(install=True)
         log.succ(f"Installed {module.__tool_name__} ({module.version(short=True)})")
