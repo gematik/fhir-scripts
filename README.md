@@ -59,6 +59,12 @@ fhirscripts install --help
 
 Tools to be installed can also be defined in the config giving the name of the tool
 
+```bash
+fhirscripts install --config-file
+```
+
+and the respective entry in the config file:
+
 ```yaml
 install:
   - <tool>
