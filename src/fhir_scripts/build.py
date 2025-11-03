@@ -18,7 +18,7 @@ def setup_subparser(
     parser: ArgumentParser, subparser: _SubParsersAction, *args, **kwarsg
 ):
     parser.add_argument(
-        "--update", action="store_true", help="Update tooling before building"
+        "-u", "--update", action="store_true", help="Update tooling before building"
     )
 
     defs_parser = subparser.add_parser(DEFS, help="Build definitions")
