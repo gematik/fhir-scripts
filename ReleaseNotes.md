@@ -1,0 +1,8 @@
+<img align="right" width="250" height="47" src="img/Gematik_Logo_Flag_With_Background.png" /><br />
+
+# Release Notes FHIR Scripts
+
+## Release 0.11.0
+
+* Add option to define the tools to install in the config using the `--config-file` argument
+* Skip already installed tools
