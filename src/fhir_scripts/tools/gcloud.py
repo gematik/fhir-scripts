@@ -92,11 +92,8 @@ def _rsync(source: Path, target: str):
         )
 
     else:
-        shell.run_progress(
-            CMD_CP.format(source.absolute(), target),
-            total=1,
-            prefixes=["Copying "],
-            desc="Copying",
+        shell.run(
+            CMD_CP.format(source.absolute(), target), check=True, capture_output=True
         )
 
 
