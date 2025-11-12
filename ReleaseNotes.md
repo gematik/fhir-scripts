@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.12.0
+
+* Respect mirgated publish structure and package list (used for comparison)
+
 ## Release 0.11.0
 
 * Add option to define the tools to install in the config using the `--config-file` argument

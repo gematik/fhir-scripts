@@ -17,11 +17,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     )
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument(
-        "--all", action="store_true", help="Deploy everything (IG and history)"
-    )
     group.add_argument("--only-ig", action="store_true", help="Deploy the IG")
-    group.add_argument("--only-history", action="store_true", help="Deploy IG history")
     group.add_argument(
         "--ig-registry", action="store_true", help="Deploy IG registry entries"
     )
@@ -51,18 +47,13 @@ def deploy(
         # Build target URL
         target = _target_path(deploy_config, environment, needs_project=True)
 
-        if all:
+        if only_ig:
             _deploy_ig(target, confirm_yes=yes)
-            _deploy_history(target, confirm_yes=yes)
-
-        elif only_ig:
-            _deploy_ig(target, confirm_yes=yes)
-
-        elif only_history:
-            _deploy_history(target, confirm_yes=yes)
 
         else:
             _deploy_ig(target, confirm_yes=yes)
+            _deploy_history(target, confirm_yes=yes)
+            _deploy_package_list(target, confirm_yes=yes)
 
     return True
 
@@ -132,13 +123,22 @@ def _deploy_ig(target: str, confirm_yes: bool = False):
     log.succ("Deployed IG")
 
 
-def _deploy_history(target, confirm_yes: bool = False):
-    publish_dir = Path("./publish") / _project_name(needs_project=True)
-
+def _deploy_history(target, *args, **kwargs):
     history_file_name = "index.html"
-    history_file = publish_dir / history_file_name
-    if not history_file.exists():
-        raise Exception(f"History does not exist: {history_file} not found")
+    publish_dir = Path("./publish")
+
+    if (file := publish_dir / history_file_name).exists():
+        history_file = file
+
+    # Old file location
+    elif (
+        file := publish_dir / _project_name(needs_project=True) / history_file_name
+    ).exists():
+        history_file = file
+
+    else:
+        log.warn("History file not found, skipping")
+        return
 
     # Copy history
     target_history = target + "/" + history_file_name
@@ -165,6 +165,25 @@ def _project_name(needs_project: bool = True) -> str | None:
 
     ig = json.loads(igs[0].read_text(encoding="utf-8"))
     return ig["url"].rsplit("/", 3)[1]
+
+
+def _deploy_package_list(target, *args, **kwargs):
+    package_list_file_name = "package-list.json"
+    publish_dir = Path("./publish")
+
+    if (file := publish_dir / package_list_file_name).exists():
+        package_list_file = file
+
+    else:
+        log.warn("History file not found, skipping")
+        return
+
+    # Copy history
+    target_file = target + "/" + package_list_file_name
+    log.info(f"Deploy package list file to {target_file}")
+    gcloud.copy(source=package_list_file, target=target_file, force=True)
+
+    log.succ("Deployed package list file")
 
 
 __doc__ = "Deploy IG"
