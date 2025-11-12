@@ -214,9 +214,9 @@ in the environment named `<env>`. This nneds to match an environment defined in 
 
 `-y`/`--yes` confirms all prompts with _yes_. Otherwise, the path to upload to and overwriting need to be confirmed.
 
-By default the FHIR IG is deployed. With `--all` the IG and the IG history are deployed and with `--only-ig` or `--only-history` only the respective part is deployed.
+By default the FHIR IG and other files like history and package list are deployed. With `--only-ig` only the IG is deployed.
 
-If not an IG but a a FHIR registry should be deployed use `--ig-registry`.
+If not an IG but a FHIR registry should be deployed use `--ig-registry`.
 
 ## Bash script (outdated)
 
