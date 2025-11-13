@@ -25,4 +25,4 @@ jobs:
         run: pip install .
 
       - name: Run tests
-        run: python -m unittest discover -v -s ./test -p "*_test.py"
+        run: python -m unittest discover -v -s ./test
