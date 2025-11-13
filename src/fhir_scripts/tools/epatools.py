@@ -1,7 +1,6 @@
 __tool_name__ = "epatools"
 
 import re
-from functools import wraps
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -20,19 +19,9 @@ EPATOOLS_PACKAGE_AVAILABLE = False
 config_file = Path("./epatools.yaml")
 
 
-def is_configured(func):
-    """
-    Checks if project is configured for tool"
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if not config_file.exists():
-            raise NoConfigException(f"{__tool_name__} not configured for project")
-
-        return func(*args, **kwargs)
-
-    return wrapper
+def check_configured():
+    if not config_file.exists():
+        raise NoConfigException(f"{__tool_name__} not configured for project")
 
 
 ###
@@ -99,28 +88,29 @@ if EPATOOLS_PACKAGE_AVAILABLE:
 # Use the command line
 ###
 else:
-    from ..helper import require_installed
+    from ..helper import check_installed
     from .basic import pipx, shell
 
     VERSION_REGEX = re.compile(r"EPATOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/onyg/epa-tools.git"
 
-    @is_configured
-    @require_installed("epatools", __tool_name__)
     def merge_capabilities():
         """
         Merge CapabilityStatements
         """
+
+        check_configured()
+        check_installed("epatools", __tool_name__)
         log.info("Merge CapabilityStatements")
         shell.run("epatools merge", capture_output=True)
         log.succ("CapabilityStatements merged successfully")
 
-    @is_configured
-    @require_installed("epatools", __tool_name__)
     def openapi(*args, **kwargs):
         """
         Build the Open APIs
         """
+        check_configured()
+        check_installed("epatools", __tool_name__)
 
         log.info("Build Open APIs")
         shell.run("epatools openapi", capture_output=True)
