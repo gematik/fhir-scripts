@@ -7,7 +7,7 @@ from fhir_scripts import config
 class TestConfig(unittest.TestCase):
 
     def test_load_config(self):
-        config_path = Path("examples/config.yaml")
+        config_path = Path("examples/fhirscripts.config.yaml")
         self.assertTrue(config_path.exists())
 
         cfg = config.load(config_path)
