@@ -2,7 +2,7 @@
 
 # Release Notes FHIR Scripts
 
-## Release TBD
+## Release 0.13.0
 
 * Rename default config name from `config.yaml` to `fhirscripts.config.yaml`
 
