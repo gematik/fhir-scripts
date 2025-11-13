@@ -5,9 +5,9 @@ from fhir_scripts import config
 from fhir_scripts.models.config import Config
 
 
-class TestConfig(unittest.TestCase):
+class TestConfigLoad(unittest.TestCase):
 
-    def test_load_config(self):
+    def test_exists(self):
         config_path = Path("examples/fhirscripts.config.yaml")
         self.assertTrue(config_path.exists())
 
@@ -16,7 +16,7 @@ class TestConfig(unittest.TestCase):
         self.assertIsNotNone(cfg)
         self.assertIsInstance(cfg, config.Config)
 
-    def test_load_config_not_exists(self):
+    def test_not_exists(self):
         config_path = Path("examples/foo.yaml")
         self.assertFalse(config_path.exists())
 
