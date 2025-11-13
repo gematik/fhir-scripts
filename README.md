@@ -1,6 +1,6 @@
 # FHIR
 
-[![Tests](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml/badge.svg)](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml)
+[![Unit Tests](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml/badge.svg)](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml)
 
 ## Python Script
 
