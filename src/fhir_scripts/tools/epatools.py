@@ -9,6 +9,7 @@ import yaml
 
 from .. import log
 from ..exception import NoConfigException
+from ..models.config import Config
 
 # try:
 #     importlib.metadata.version("epatools")
@@ -105,7 +106,7 @@ else:
         shell.run("epatools merge", capture_output=True)
         log.succ("CapabilityStatements merged successfully")
 
-    def openapi(*args, **kwargs):
+    def openapi(config: Config, *args, **kwargs):
         """
         Build the Open APIs
         """
@@ -126,7 +127,7 @@ else:
         ]
 
         # Archive the API files
-        update_archive(api_files)
+        update_archive(api_files + config.build.args.openapi.additional_archive)
 
     def update(*args, **kwargs):
         pipx.install(PACKAGE, as_global=True)
