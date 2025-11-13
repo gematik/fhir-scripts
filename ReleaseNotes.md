@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.14.0
+
+* Allow to define additional OpenAPI files to be added to the archive using the config file
+
 ## Release 0.13.0
 
 * Rename default config name from `config.yaml` to `fhirscripts.config.yaml`

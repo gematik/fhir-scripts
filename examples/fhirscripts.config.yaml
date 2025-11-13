@@ -15,6 +15,10 @@ build:
     epatools: # true would enable all steps
       cap_statements: true
       openapi: true
+  args:
+    openapi:
+      additional_archive:
+        - openapi.add.json
   pipeline:
     - requirements
     - sushi

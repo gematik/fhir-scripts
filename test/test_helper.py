@@ -5,9 +5,9 @@ from fhir_scripts.exception import CancelException
 from fhir_scripts.helper import confirm
 
 
-class TestHelper(unittest.TestCase):
+class TestHelperConfirm(unittest.TestCase):
 
-    def test_confirm_yes(self):
+    def test_force_yes(self):
         try:
             confirm("test", "test failed", confirm_yes=True)
 
@@ -15,7 +15,7 @@ class TestHelper(unittest.TestCase):
             self.fail("Should not raise exception when forced")
 
     @patch("builtins.input", return_value="y")
-    def test_confirm_input_y(self, mock_input):
+    def test_input_y(self, mock_input):
         try:
             confirm("test", "test failed")
 
@@ -23,7 +23,7 @@ class TestHelper(unittest.TestCase):
             self.fail("Should not raise exception when confirmed with 'y'")
 
     @patch("builtins.input", return_value="yes")
-    def test_confirm_input_yes(self, mock_input):
+    def test_input_yes(self, mock_input):
         try:
             confirm("test", "test failed")
 
@@ -31,7 +31,7 @@ class TestHelper(unittest.TestCase):
             self.fail("Should not raise exception when confirmed with 'yes'")
 
     @patch("builtins.input", return_value="n")
-    def test_confirm_input_n(self, mock_input):
+    def test_input_n(self, mock_input):
         try:
             confirm("test", "test failed")
 
@@ -42,7 +42,7 @@ class TestHelper(unittest.TestCase):
             self.fail("Did not raise CancelException when input 'n'")
 
     @patch("builtins.input", return_value="no")
-    def test_confirm_input_no(self, mock_input):
+    def test_input_no(self, mock_input):
         try:
             confirm("test", "test failed")
 
@@ -53,7 +53,7 @@ class TestHelper(unittest.TestCase):
             self.fail("Did not raise CancelException when input 'no'")
 
     @patch("builtins.input", return_value="")
-    def test_confirm_default_yes(self, mock_input):
+    def test_default_yes(self, mock_input):
         try:
             confirm("test", "test failed", default=True)
 
@@ -61,7 +61,7 @@ class TestHelper(unittest.TestCase):
             self.fail("Should not raise exception with default 'yes'")
 
     @patch("builtins.input", return_value="")
-    def test_confirm_default_no(self, mock_input):
+    def test_default_no(self, mock_input):
         try:
             confirm("test", "test failed")
 

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from .strict_base_model import StrictBaseModel
 
 
@@ -15,6 +17,15 @@ class BuildPipelineShellStep(StrictBaseModel):
     shell: str
 
 
+class BuildArgsOpenApi(StrictBaseModel):
+    additional_archive: list[Path] = []
+
+
+class BuildArgsConfig(StrictBaseModel):
+    openapi: BuildArgsOpenApi = BuildArgsOpenApi()
+
+
 class BuildConfig(StrictBaseModel):
     builtin: BuildBuiltinConfig = BuildBuiltinConfig()
     pipeline: list[str | BuildPipelineShellStep] = []
+    args: BuildArgsConfig = BuildArgsConfig()

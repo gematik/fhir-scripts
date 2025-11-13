@@ -32,6 +32,14 @@ def confirm(prompt: str, log_no: str, confirm_yes: bool = False, default: bool =
             raise CancelException(log_no)
 
 
+def check_installed(cmd: str, name: str):
+    try:
+        shell.run(f"which {cmd}", check=True, capture_output=True)
+
+    except shell.CalledProcessError:
+        raise NotInstalledException(f"{name} is needed but not installed")
+
+
 def require_installed(cmd: str, name: str):
     """
     Decorator that checks if `cmd` can be found
@@ -43,11 +51,7 @@ def require_installed(cmd: str, name: str):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            try:
-                shell.run(f"which {cmd}", check=True, capture_output=True)
-
-            except shell.CalledProcessError:
-                raise NotInstalledException(f"{name} is needed but not installed")
+            check_installed(cmd, name)
 
             return func(*args, **kwargs)
 
