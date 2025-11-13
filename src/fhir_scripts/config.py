@@ -13,7 +13,7 @@ def load(config_path: Path | None = None):
 
     If the file does not exists, the values are initialized with defaults.
     """
-    config_file = config_path or Path("./config.yaml")
+    config_file = config_path or Path("./fhirscripts.config.yaml")
 
     # Read an existing config
     config_file_contents = (

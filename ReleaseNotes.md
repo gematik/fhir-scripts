@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.13.0
+
+* Rename default config name from `config.yaml` to `fhirscripts.config.yaml`
+
 ## Release 0.12.0
 
 * Respect mirgated publish structure and package list (used for comparison)

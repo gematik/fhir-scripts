@@ -17,7 +17,7 @@ def get_args(
         "--config",
         type=Path,
         default=None,
-        help="Name and path of the config file; default `./config.yaml`",
+        help="Name and path of the config file; default `./fhirscripts.config.yaml`",
     )
     subparsers = parser.add_subparsers(dest="cmd")
 
