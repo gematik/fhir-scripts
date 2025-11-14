@@ -262,7 +262,7 @@ permissions:
 
 jobs:
   build-profiles:
-    uses: gematik/fhir-scripts/.github/workflows/build-profiles.yml
+    uses: gematik/fhir-scripts/.github/workflows/build-profiles.yml@main
 ```
 
 ### Process Requirements
@@ -296,7 +296,7 @@ permissions:
 
 jobs:
   build-profiles:
-    uses: gematik/fhir-scripts/.github/workflows/process-requirements.yml
+    uses: gematik/fhir-scripts/.github/workflows/process-requirements.yml@main
 ```
 
 ## License

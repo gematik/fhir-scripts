@@ -1,52 +1,60 @@
 name: Build Profiles
 
 on:
-    workflow_call:
+  workflow_call:
 
 permissions:
-    contents: write
+  contents: write
 
 jobs:
-    build-profiles:
-        name: Build Profiles
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+  build-profiles:
+    name: Build Profiles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Cache Firely Terminal install
-              id: cache-firely-terminal
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      /home/runner/.dotnet/tools/fhir
-                  key: ${{ runner.os }}-firely-terminal
+      - name: Cache Firely Terminal install
+        id: cache-firely-terminal
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/runner/.dotnet/tools/fhir
+          key: ${{ runner.os }}-firely-terminal
 
-            - name: Install fhirscripts
-              run: pipx install -f git+https://github.com/gematik/fhir-scripts.git
+      - name: Install fhirscripts
+        run: pipx install -f git+https://github.com/gematik/fhir-scripts.git
 
-            - name: Install Firely Terminal
-              if: steps.cache-firely-terminal.outputs.cache-hit != 'true'
-              run: fhirscripts install --firely-terminal
+      - name: Install Firely Terminal
+        if: steps.cache-firely-terminal.outputs.cache-hit != 'true'
+        run: fhirscripts install --firely-terminal
 
-            - name: Install FSH Sushi
-              run: fhirscripts install --sushi
+      - name: Install FSH Sushi
+        run: fhirscripts install --sushi
 
-            - name: Cache FHIR Cache
-              id: cache-fhir-cache
-              uses: actions/cache@v4
-              with:
-                  path: ~/.fhir/packages
-                  key: ${{ runner.os }}-fhir-cache-${{ hashFiles('**/package.json') }}
+      - name: Cache FHIR Cache
+        id: cache-fhir-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.fhir/packages
+          key: ${{ runner.os }}-fhir-cache-${{ hashFiles('**/package.json') }}
 
-            - name: Restore FHIR Cache
-              if: steps.cache-fhir-cache.outputs.cache-hit != 'true'
-              run: fhir restore
+      - name: Restore FHIR Cache
+        if: steps.cache-fhir-cache.outputs.cache-hit != 'true'
+        run: fhir restore
 
-            - name: Build profiles
-              run: fhirscripts build defs
+      - name: Build profiles
+        run: fhirscripts build defs
 
-            - name: Push changes
-              uses: ./.github/actions/push-changes
-              with:
-                  commit-message: "🍣 re-generate"
+      - name: Push changes
+        run: |
+          if [[ `git status --porcelain` ]]; then
+            git config user.name "${GITHUB_ACTOR}"
+            git config user.email "${GITHUB_ACTOR}@users.noreply.${INPUT_ORGANIZATION_DOMAIN}"
+            git add .
+            git commit -m "🍣 re-generate"
+            git fetch -p
+            git rebase origin/${GITHUB_REF}
+            git push origin ${GITHUB_REF}
+          fi
+        shell: bash
