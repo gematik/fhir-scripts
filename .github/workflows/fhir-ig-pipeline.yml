@@ -1,0 +1,38 @@
+name: FHIR IG Pipeline
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  build-profiles:
+    name: Build Profiles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install fhirscripts
+        run: pipx install -f git+https://github.com/gematik/fhir-scripts.git
+
+      - name: Install Tools
+        run: fhirscripts install --config-file
+
+      - name: Restore FHIR Cache
+        run: fhir restore
+
+      - name: Build
+        run: fhirscripts build pipeline
+
+      # - name: Publish
+      #   run: fhirscripts publish --ig-registry <fir-ig-registry-dir>
+
+      # - run: gcloud login
+
+      - name: Deploy IG
+        run: fhirscript deploy dev
+
+      # - name: Deploy Registry
+      #   run: fhirscripts deploy dev --ig-registry
