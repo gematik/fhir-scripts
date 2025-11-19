@@ -14,17 +14,15 @@ RUN curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cl
 RUN apk add --no-cache \
     # .NET SDK for Firely Terminal
     dotnet8-sdk \
-    icu-libs \
+    # icu-libs \
     # Node.js and NPM for FSH Sushi
     nodejs npm \
     # Java (OpenJDK) and Jeykll for IG Publisher
     openjdk17 jekyll \
-    # Python for Python tools
-    py-pip py3-yaml pipx \
     # Additional dependencies
-    jq findutils curl ca-certificates \
+    # jq findutils curl ca-certificates \
     # PlantUML
-    curl graphviz fontconfig
+    graphviz fontconfig
 
 # Setup for FHIR Validator
 RUN mkdir -p /home/vscode/.fhir/validators/
