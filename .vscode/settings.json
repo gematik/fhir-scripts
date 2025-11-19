@@ -2,9 +2,7 @@
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        "./test",
-        "-p",
-        "*_test.py"
+        "./test"
     ],
     "python.testing.pytestEnabled": false,
     "python.testing.unittestEnabled": true
