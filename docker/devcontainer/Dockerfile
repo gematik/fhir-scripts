@@ -30,21 +30,21 @@ RUN apk add --no-cache \
 RUN mkdir -p /home/vscode/.fhir/validators/
 RUN wget -q https://github.com/hapifhir/org.hl7.fhir.core/releases/download/$JAVA_VALIDATOR_VERSION/validator_cli.jar -O /home/vscode/.fhir/validators/validator_cli.jar
 
-# Install UV for Python environments
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
-
-RUN uv tool install git+https://github.com/gematik/fhir-scripts.git
-RUN uv tool install gsutil
-
-RUN fhirscripts install \
-    --sushi \
-    # --firely-terminal \
-    --igpub
-
 # Switch to the vscode user
 USER vscode
 
-# Install Firely Terminal
-RUN dotnet tool install --global Firely.Terminal --version $FIRELY_TERMINAL_VERSION
+# Add gcloud to user path
+ENV PATH="/google-cloud-sdk/bin:${PATH}"
+
+# Install UV for Python environments
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/home/vscode/.local/bin:${PATH}"
+
+RUN uv tool install git+https://github.com/gematik/fhir-scripts.git
+
+RUN fhirscripts install \
+    --sushi \
+    --firely-terminal
+
+# Add Firely Terminal to user path
 ENV PATH="/home/vscode/.dotnet/tools:${PATH}"
