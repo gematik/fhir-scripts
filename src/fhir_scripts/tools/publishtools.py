@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from .. import log
+from .basic import python
 
 # Check if igtools package is installed
 try:
@@ -48,7 +49,7 @@ if PUBLISHTOOLS_PACKAGE_AVAILABLE:
 ###
 else:
     from ..helper import require_installed
-    from .basic import pipx, shell
+    from .basic import shell
 
     VERSION_REGEX = re.compile(r"IGTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/gematik/publish-tools.git"
@@ -78,7 +79,7 @@ else:
         log.succ("IG overview rendered successfully")
 
     def update(*args, **kwargs):
-        pipx.install(PACKAGE, as_global=True)
+        python.install(PACKAGE, as_global=True)
 
     def version(short: bool = False, *args, **kwargs) -> str | None:
         """
@@ -92,10 +93,10 @@ else:
                 return version if version else None
 
             else:
-                return f"{version} ({pipx.version()})" if version else None
+                return f"{version} ({python.version()})" if version else None
 
         except shell.CalledProcessError:
             return None
 
     def latest_version(*args, **kwargs) -> str | None:
-        return pipx.latest_version_number(PACKAGE)
+        return python.latest_version_number(PACKAGE)

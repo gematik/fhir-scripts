@@ -10,6 +10,7 @@ import yaml
 from .. import log
 from ..exception import NoConfigException
 from ..models.config import Config
+from .basic import python
 
 # try:
 #     importlib.metadata.version("epatools")
@@ -90,7 +91,7 @@ if EPATOOLS_PACKAGE_AVAILABLE:
 ###
 else:
     from ..helper import check_installed
-    from .basic import pipx, shell
+    from .basic import shell
 
     VERSION_REGEX = re.compile(r"EPATOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
     PACKAGE = "git+https://github.com/onyg/epa-tools.git"
@@ -130,7 +131,7 @@ else:
         update_archive(api_files + config.build.args.openapi.additional_archive)
 
     def update(*args, **kwargs):
-        pipx.install(PACKAGE, as_global=True)
+        python.install(PACKAGE, as_global=True)
 
     def version(short: bool = False, *args, **kwargs) -> str | None:
         """
@@ -146,13 +147,13 @@ else:
                 return match[1] if match else None
 
             else:
-                return f"{match[1]} ({pipx.version()})" if match else None
+                return f"{match[1]} ({python.version()})" if match else None
 
         except shell.CalledProcessError:
             return None
 
     def latest_version(*args, **kwargs) -> str | None:
-        return pipx.latest_version_number(PACKAGE)
+        return python.latest_version_number(PACKAGE)
 
 
 def update_archive(archive_files: list[Path], output_dir: Path | None = None):
