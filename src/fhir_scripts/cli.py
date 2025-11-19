@@ -58,4 +58,10 @@ def get_args(
                 f"No setup function for parser or subparser defined for '{module.__name__}'"
             )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.cmd is None:
+        parser.print_help()
+        exit(0)
+
+    return args
