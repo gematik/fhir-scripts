@@ -42,7 +42,7 @@ def versions(outdated: bool = False, *args, **kwargs) -> bool:
         if latest is not None:
             log.info(f"{name}: {version} < {latest}")
 
-        else:
+        elif version is not None:
             log.info(f"{name}: {version}")
 
     return True
