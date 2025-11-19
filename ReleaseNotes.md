@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release TBD
+
+* Support _uv_ and _pipx_ to install in isolated Python environments (_uv_ is default)
+
 ## Release 0.14.0
 
 * Allow to define additional OpenAPI files to be added to the archive using the config file
