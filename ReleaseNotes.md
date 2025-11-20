@@ -4,7 +4,8 @@
 
 ## Release 0.15.1
 
-* Fixed not existing FHIR cache when calling `cache package`
+* Fix handling of not-existing FHIR cache when calling `cache package`
+* Fix permissions of users `.fhir` folder in devcontainer image
 
 ## Release 0.15.0
 

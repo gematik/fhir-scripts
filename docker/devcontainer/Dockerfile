@@ -24,12 +24,12 @@ RUN apk add --no-cache \
     # PlantUML
     graphviz fontconfig
 
+# Switch to the vscode user
+USER vscode
+
 # Setup for FHIR Validator
 RUN mkdir -p /home/vscode/.fhir/validators/
 RUN wget -q https://github.com/hapifhir/org.hl7.fhir.core/releases/download/$JAVA_VALIDATOR_VERSION/validator_cli.jar -O /home/vscode/.fhir/validators/validator_cli.jar
-
-# Switch to the vscode user
-USER vscode
 
 # Add gcloud to user path
 ENV PATH="/google-cloud-sdk/bin:${PATH}"
