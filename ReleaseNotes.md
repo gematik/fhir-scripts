@@ -2,9 +2,11 @@
 
 # Release Notes FHIR Scripts
 
-## Release TBD
+## Release 0.15.0
 
 * Support _uv_ and _pipx_ to install in isolated Python environments (_uv_ is default)
+* Dry-run (`--dry-run`) option to simulate deployment
+* Promote argument (`--promote-from`) to promote content from one environment to another
 
 ## Release 0.14.0
 
