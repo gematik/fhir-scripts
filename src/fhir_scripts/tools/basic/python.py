@@ -5,7 +5,7 @@ import tomllib
 
 import requests
 
-from ...helper import require_installed
+from ...helper import NotInstalledException, check_installed
 from . import shell
 
 VERSION_REGEX = re.compile(r"Python\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -13,17 +13,36 @@ VERSION_FILE_REGEX = re.compile(
     r"(?:Version\()?['\"]?([\d\.]+)['\"]?\)?", re.IGNORECASE
 )
 
+try:
+    check_installed("uv", __tool_name__)
+    UV_AVAILABLE = True
 
-@require_installed("pipx", __tool_name__)
+except NotInstalledException:
+    UV_AVAILABLE = False
+
+try:
+    check_installed("pipx", __tool_name__)
+    PIPX_AVAILABLE = True
+
+except NotInstalledException:
+    PIPX_AVAILABLE = False
+
+
 def install(pkg_name: str, as_global: bool = False):
+    if UV_AVAILABLE:
+        cmd = "uv tool install {}"
 
-    if as_global:
-        cmd = f"sudo pipx install -f --global {pkg_name}"
+    elif PIPX_AVAILABLE:
+        if as_global:
+            cmd = "sudo pipx install -f --global {}"
+
+        else:
+            cmd = "pipx install -f {}"
 
     else:
-        cmd = f"pipx install -f {pkg_name}"
+        raise Exception("No Python manager installed")
 
-    res = shell.run(cmd, capture_output=True)
+    res = shell.run(cmd.format(pkg_name), capture_output=True)
 
     if res.returncode != 0:
         raise shell.CalledProcessError(

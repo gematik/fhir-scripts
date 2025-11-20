@@ -2,6 +2,13 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.15.0
+
+* Support _uv_ and _pipx_ to install in isolated Python environments (_uv_ is default)
+* Dry-run (`--dry-run`) option to simulate deployment
+* Promote argument (`--promote-from`) to promote content from one environment to another
+* First version of a unified Docker image
+
 ## Release 0.14.0
 
 * Allow to define additional OpenAPI files to be added to the archive using the config file

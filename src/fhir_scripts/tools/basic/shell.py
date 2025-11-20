@@ -10,11 +10,11 @@ COLOR_FORMATTING = re.compile(r"(?:\x1b|\\e)\[\d+(?:;\d+)?m")
 
 
 class ShellResult:
-    def __init__(self, process):
-        self.stdout = _convert_std(process.stdout)
-        self.stderr = _convert_std(process.stderr)
-        self.returncode = process.returncode
-        self.args = process.args
+    def __init__(self, process=None):
+        self.stdout = _convert_std(process.stdout) if process else []
+        self.stderr = _convert_std(process.stderr) if process else []
+        self.returncode = process.returncode if process else 0
+        self.args = process.args if process else []
 
     @property
     def stdout_oneline(self) -> str:

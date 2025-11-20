@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .. import helper, log
 from ..helper import require_installed
+from ..types import Url
 from .basic import shell
 
 CMD_LIST = "gcloud projects list"
@@ -64,7 +65,7 @@ def version(*args, **kwargs) -> str | None:
 
 @require_installed("gcloud", __tool_name__)
 @logged_in
-def copy(source: Path, target: str, force=False):
+def copy(source: Path | Url, target: Url, force=False):
     # Check for overwrite
     existing = ls(target)
     if existing:
@@ -78,31 +79,33 @@ def copy(source: Path, target: str, force=False):
 
 @require_installed("gcloud", __tool_name__)
 @logged_in
-def _rsync(source: Path, target: str):
+def _rsync(source: Path | Url, target: Url):
 
     log.info(f"Copy {str(source)} to {target}")
 
+    source = source.absolute() if isinstance(source, Path) else source
+
     if source.is_dir():
-        total = len(list(source.glob("**/*")))
+        total = len(
+            list(source.glob("**/*") if isinstance(source, Path) else ls(source))
+        )
         shell.run_progress(
-            CMD_RSYNC.format(source.absolute(), target),
+            CMD_RSYNC.format(source, target),
             total=total,
             prefixes=["Copying "],
             desc="Syncing",
         )
 
     else:
-        shell.run(
-            CMD_CP.format(source.absolute(), target), check=True, capture_output=True
-        )
+        shell.run(CMD_CP.format(source, target), check=True, capture_output=True)
 
 
 @require_installed("gcloud", __tool_name__)
 @logged_in
-def ls(path: str) -> list[str]:
+def ls(path: Url) -> list[str]:
     # Try interpret `path` as directory
     try:
-        path_dir = path.rstrip("/") + "/**" if not path.endswith("/**") else path
+        path_dir = path / "**" if not path.endswith("/**") else path
         res = shell.run(CMD_LS.format(path_dir), check=False, capture_output=True)
         return res.stdout
 
