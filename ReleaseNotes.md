@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.15.1
+
+* Fixed not existing FHIR cache when calling `cache package`
+
 ## Release 0.15.0
 
 * Support _uv_ and _pipx_ to install in isolated Python environments (_uv_ is default)

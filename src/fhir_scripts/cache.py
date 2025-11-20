@@ -56,13 +56,15 @@ def cache_rebuild_fhir_cache(
     if not no_clear:
         # Remove all previous packages
         fhir_cache = Path.home() / ".fhir/packages"
-        log.info("Remove all previous packages")
-        for item in fhir_cache.iterdir():
-            if item.is_file():
-                item.unlink()
-            elif item.is_dir():
-                shutil.rmtree(item)
-        log.succ("Removed all packages")
+
+        if fhir_cache.exists():
+            log.info("Remove all previous packages")
+            for item in fhir_cache.iterdir():
+                if item.is_file():
+                    item.unlink()
+                elif item.is_dir():
+                    shutil.rmtree(item)
+            log.succ("Removed all packages")
 
     if package_dir is not None:
 
