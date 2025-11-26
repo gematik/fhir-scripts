@@ -12,7 +12,7 @@ class TestPythonInstall(unittest.TestCase):
         python.PIPX_AVAILABLE = False
 
         pkg = "test"
-        cmd_wanted = "uv tool install {}".format(pkg)
+        cmd_wanted = "uv tool install --force {}".format(pkg)
         called_cmd = []
 
         def shell_run(cmd, *args, **kwargs):
