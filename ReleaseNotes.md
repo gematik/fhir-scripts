@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.16.1
+
+* Fix update of Python tools installed using UV
+
 ## Release 0.16.0
 
 * Command to clear the build caches

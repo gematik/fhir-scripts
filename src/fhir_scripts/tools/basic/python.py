@@ -30,7 +30,7 @@ except NotInstalledException:
 
 def install(pkg_name: str, as_global: bool = False):
     if UV_AVAILABLE:
-        cmd = "uv tool install {}"
+        cmd = "uv tool install --force {}"
 
     elif PIPX_AVAILABLE:
         if as_global:
