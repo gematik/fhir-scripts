@@ -8,6 +8,7 @@ from .tools import firely_terminal
 from .tools.basic import npm
 
 PKG = "package"
+BUILD = "build"
 PKG_DIR = "--package-dir"
 NO_CLEAR = "--no-clear"
 
@@ -26,6 +27,8 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
         action="store_true",
         help="Do no clear the FHIR cache before restoring",
     )
+
+    subparser.add_parser(BUILD, help="Clear all build related cache directories")
 
 
 def cache_rebuild_fhir_cache(
@@ -134,6 +137,12 @@ def cache_rebuild_fhir_cache(
     log.succ("Restore successful")
 
 
+def clear_build_caches(*args, **kwargs):
+    for p in ["./input-cache/schemas", "./input-cache/txcache", "./temp", "./template"]:
+        if (path := Path(p)).exists():
+            shutil.rmtree(path)
+
+
 __doc__ = "Handle caches"
-__handlers__ = {PKG: cache_rebuild_fhir_cache}
+__handlers__ = {PKG: cache_rebuild_fhir_cache, BUILD: clear_build_caches}
 __setup_subparser__ = setup_subparser

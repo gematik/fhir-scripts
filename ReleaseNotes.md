@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.16.0
+
+* Command to clear the build caches
+
 ## Release 0.15.1
 
 * Fix handling of not-existing FHIR cache when calling `cache package`
