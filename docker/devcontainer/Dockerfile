@@ -1,15 +1,25 @@
 FROM mcr.microsoft.com/devcontainers/base:alpine-3.20
 
-# Setzen der Umgebungsvariablen
-ENV CLOUD_SDK_VERSION=464.0.0
-ENV FIRELY_TERMINAL_VERSION=3.3.2
-ENV JAVA_VALIDATOR_VERSION=6.3.25
+# ENV CLOUD_SDK_VERSION=464.0.0
+# ENV JAVA_VALIDATOR_VERSION=6.3.25
 
-# Google Cloud SDK herunterladen und installieren
-RUN curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-${CLOUD_SDK_VERSION}-linux-x86_64.tar.gz && \
-    tar -xf google-cloud-cli-${CLOUD_SDK_VERSION}-linux-x86_64.tar.gz && \
-    ./google-cloud-sdk/install.sh --quiet && \
-    rm google-cloud-cli-${CLOUD_SDK_VERSION}-linux-x86_64.tar.gz
+ARG TARGETPLATFORM
+
+# Backup if a specific version will be needed again
+# google-cloud-cli-${CLOUD_SDK_VERSION}-linux-x86_64.tar.gz
+
+# Download and install gCloud CLI
+# This tries to use the architecture specific version
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    curl -Lo google-cloud-cli-linux.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-arm.tar.gz; \
+    elif [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+    curl -Lo google-cloud-cli-linux.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86_64.tar.gz; \
+    else \
+    curl -Lo google-cloud-cli-linux.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86.tar.gz; \
+    fi \
+    && tar -xf google-cloud-cli-linux.tar.gz \
+    && ./google-cloud-sdk/install.sh --quiet \
+    && rm google-cloud-cli-linux.tar.gz
 
 RUN apk add --no-cache \
     # .NET SDK for Firely Terminal
@@ -28,8 +38,12 @@ RUN apk add --no-cache \
 USER vscode
 
 # Setup for FHIR Validator
-RUN mkdir -p /home/vscode/.fhir/validators/
-RUN wget -q https://github.com/hapifhir/org.hl7.fhir.core/releases/download/$JAVA_VALIDATOR_VERSION/validator_cli.jar -O /home/vscode/.fhir/validators/validator_cli.jar
+RUN mkdir -p /home/vscode/.fhir/validators
+RUN if [ -z ${JAVA_VALIDATOR_VERSION+x} ]; then \
+    curl -Lo /home/vscode/.fhir/validators/validator_cli.jar https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar; \
+    else \
+    curl -Lo /home/vscode/.fhir/validators/validator_cli.jar https://github.com/hapifhir/org.hl7.fhir.core/releases/download/$JAVA_VALIDATOR_VERSION/validator_cli.jar; \
+    fi
 
 # Add gcloud to user path
 ENV PATH="/google-cloud-sdk/bin:${PATH}"
