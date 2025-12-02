@@ -2,6 +2,11 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.17.0
+
+* Make Dockerfile flexible for specific tools versions or latest
+* Make `cache build` more verbose
+
 ## Release 0.16.1
 
 * Fix update of Python tools installed using UV
