@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.18.0
+
+* Option to update the script itself
+
 ## Release 0.17.0
 
 * Make Dockerfile flexible for specific tools versions or latest
