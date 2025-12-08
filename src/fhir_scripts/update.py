@@ -40,7 +40,15 @@ def _update(module, dry_run: bool = False, *args, **kwargs):
 
         if not latest or latest != prev_version:
             if dry_run:
-                log.info(f"Would update {name}")
+                if latest_func := getattr(module, "latest_version", None):
+                    log.info(
+                        "Would update {}: {} -> {}".format(
+                            name, prev_version, latest_func()
+                        )
+                    )
+
+                else:
+                    log.info("Would update {}: from {}".format(name, prev_version))
 
             else:
                 module.update()
