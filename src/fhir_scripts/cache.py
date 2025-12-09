@@ -112,8 +112,9 @@ def cache_rebuild_fhir_cache(
                 # Install
                 ###
 
-                # Backup old `package.json`
+                # Backup old `package.json` and remove original one
                 pkg_json_bak.write_bytes(pkg_json.read_bytes())
+                pkg_json.unlink()
 
                 # Install from package file
                 log.info(f"Install {pkg}@{version}")
