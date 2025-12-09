@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.19.0
+
+* Option to only deploy IG meta data
+
 ## Release 0.18.0
 
 * Option to update the script itself

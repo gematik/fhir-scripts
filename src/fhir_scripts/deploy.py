@@ -26,7 +26,10 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     )
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--only-ig", action="store_true", help="Deploy the IG")
+    group.add_argument("--only-ig", action="store_true", help="Deploy only the IG")
+    group.add_argument(
+        "--only-meta", action="store_true", help="Deploy only the IG meta data"
+    )
     group.add_argument(
         "--ig-registry", action="store_true", help="Deploy IG registry entries"
     )
@@ -37,6 +40,7 @@ def deploy(
     environment: str,
     ig_registry: bool = False,
     only_ig: bool = False,
+    only_meta: bool = False,
     yes: bool = False,
     dry_run: bool = False,
     promote_from: str | None = None,
@@ -59,6 +63,15 @@ def deploy(
     else:
         if only_ig:
             deploy_ig(
+                deploy_config,
+                environment,
+                promote_from_env=promote_from,
+                dry_run=dry_run,
+                confirm_yes=yes,
+            )
+
+        elif only_meta:
+            deploy_ig_meta(
                 deploy_config,
                 environment,
                 promote_from_env=promote_from,
