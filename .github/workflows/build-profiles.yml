@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Cache Firely Terminal install
         id: cache-firely-terminal
@@ -29,8 +31,8 @@ jobs:
         if: steps.cache-firely-terminal.outputs.cache-hit != 'true'
         run: fhirscripts install --firely-terminal
 
-      - name: Install FSH Sushi
-        run: fhirscripts install --sushi
+      - name: Install Tooling
+        run: fhirscripts install --config-file
 
       - name: Cache FHIR Cache
         id: cache-fhir-cache
@@ -44,17 +46,23 @@ jobs:
         run: fhir restore
 
       - name: Build profiles
-        run: fhirscripts build defs
+        run: fhirscripts build defs --cap
+
+      # - name: Push changes
+      #   run: |
+      #     if [[ `git status --porcelain` ]]; then
+      #       git config user.name "${GITHUB_ACTOR}"
+      #       git config user.email "${GITHUB_ACTOR}@users.noreply.${INPUT_ORGANIZATION_DOMAIN}"
+      #       git add .
+      #       git commit -m "🍣 re-generate"
+      #       git fetch -p
+      #       git rebase origin/${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+      #       git push origin ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+      #     fi
+      #   shell: bash
 
       - name: Push changes
-        run: |
-          if [[ `git status --porcelain` ]]; then
-            git config user.name "${GITHUB_ACTOR}"
-            git config user.email "${GITHUB_ACTOR}@users.noreply.${INPUT_ORGANIZATION_DOMAIN}"
-            git add .
-            git commit -m "🍣 re-generate"
-            git fetch -p
-            git rebase origin/${GITHUB_REF}
-            git push origin ${GITHUB_REF}
-          fi
-        shell: bash
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "🍣 re-generate"
+          add_options: "-A"

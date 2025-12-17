@@ -20,10 +20,10 @@ build:
       additional_archive:
         - openapi.add.json
   pipeline:
-    - requirements
-    - sushi
-    - cap_statements
-    - shell: touch test.txt
-    - igpub
+    # - requirements
+    # - sushi
+    # - cap_statements
+    # - shell: touch test.txt
+    # - igpub
     - openapi
-    - igpub_qa
+    # - igpub_qa
