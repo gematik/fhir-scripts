@@ -24,7 +24,7 @@ def install(
     else:
         raise Exception("For install provide a package name AND a version or a file.")
 
-    res = shell.run(cmd, capture_output=True)
+    res = shell.run(cmd)
 
     if res.returncode != 0:
         raise shell.CalledProcessError(
@@ -47,7 +47,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     Get the installed version, returns None if not installed
     """
     try:
-        res = shell.run("fhir -v", check=True, capture_output=True)
+        res = shell.run("fhir -v", check=True, log_output=False)
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)

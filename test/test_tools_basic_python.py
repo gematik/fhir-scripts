@@ -69,7 +69,7 @@ class TestPythonVersion(unittest.TestCase):
 
         def shell_run(*args, **kwargs):
             res = ShellResult()
-            res.stdout = ["Python {}".format(version)]
+            res.stdout = "Python {}".format(version)
             return res
 
         with patch("fhir_scripts.tools.epatools.shell.run", side_effect=shell_run):

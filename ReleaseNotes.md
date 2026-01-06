@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.20.0
+
+* Print output of commands
+
 ## Release 0.19.1
 
 * Fix handling of `package.json` when using a local cache

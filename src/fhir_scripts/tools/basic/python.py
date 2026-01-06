@@ -42,7 +42,7 @@ def install(pkg_name: str, as_global: bool = False):
     else:
         raise Exception("No Python manager installed")
 
-    res = shell.run(cmd.format(pkg_name), capture_output=True)
+    res = shell.run(cmd.format(pkg_name))
 
     if res.returncode != 0:
         raise shell.CalledProcessError(
@@ -100,7 +100,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     Get the installed version of FSH Sushi, returns None if sushi is not installed
     """
     try:
-        res = shell.run("python3 --version", check=True, capture_output=True)
+        res = shell.run("python3 --version", check=True, log_output=False)
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)

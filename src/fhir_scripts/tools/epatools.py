@@ -9,14 +9,12 @@ import yaml
 
 from .. import log
 from ..exception import NoConfigException
+from ..helper import check_installed
 from ..models.config import Config
-from .basic import python
+from .basic import python, shell
 
-# try:
-#     importlib.metadata.version("epatools")
-#     EPATOOLS_PACKAGE_AVAILABLE = True
-# except importlib.metadata.PackageNotFoundError:
-EPATOOLS_PACKAGE_AVAILABLE = False
+VERSION_REGEX = re.compile(r"EPATOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
+PACKAGE = "git+https://github.com/onyg/epa-tools.git"
 
 config_file = Path("./epatools.yaml")
 
@@ -26,134 +24,68 @@ def check_configured():
         raise NoConfigException(f"{__tool_name__} not configured for project")
 
 
-###
-# Use the module
-###
-if EPATOOLS_PACKAGE_AVAILABLE:
-    # Disable for now as the module does not provide a stable interface
-    pass
+def merge_capabilities():
+    """
+    Merge CapabilityStatements
+    """
 
-    # from epatools.common import DEFAULT_CONFIG
-    # from epatools.merger import Merger
-    # from epatools.oaconverter import OpenApiConverter
-
-    # @is_configured
-    # def merge_capabilities():
-    #     """
-    #     Merge CapabilityStatements
-    #     """
-    #     log.info("Merge CapabilityStatements")
-
-    #     try:
-    #         merger = Merger(config_file=DEFAULT_CONFIG).load()
-    #         merger.merge()
-
-    #     except Exception as e:
-    #         raise Exception("Failed to merge CapabilityStatements: " + str(e))
-
-    #     log.succ("CapabilityStatements merged successfully")
-
-    # @is_configured
-    # def openapi(config: EpaToolsConfig | bool | None):
-    #     """
-    #     Build the Open APIs
-    #     """
-    #     if config is None:
-    #         raise Exception("Missing config for epatools")
-
-    #     log.info("Build Open APIs")
-
-    #     try:
-    #         converter = OpenApiConverter(config_file=DEFAULT_CONFIG).load()
-    #         converter.convert()
-
-    #     # Get the generated API files from the tool config
-    #     tool_config = yaml.safe_load(config_file.read_text("utf-8"))
-    #     output_dir = Path("./output")
-    #     api_files = [
-    #         file
-    #         for item in tool_config["openapi"]["capability-statement"]
-    #         if (file := Path(item["output"])) and (output_dir / file).exists()
-    #     ]
-
-    #     # Archive the API files
-    #     update_archive(api_files)
-
-    # def version(short: bool = False, *args, **kwargs) -> str | None:
-    #     """
-    #     Get the installed version
-    #     """
-    #     return importlib.metadata.version("epatools")
+    check_configured()
+    check_installed("epatools", __tool_name__)
+    log.info("Merge CapabilityStatements")
+    shell.run("epatools merge", check=True)
+    log.succ("CapabilityStatements merged successfully")
 
 
-###
-# Use the command line
-###
-else:
-    from ..helper import check_installed
-    from .basic import shell
+def openapi(config: Config, *args, **kwargs):
+    """
+    Build the Open APIs
+    """
+    check_configured()
+    check_installed("epatools", __tool_name__)
 
-    VERSION_REGEX = re.compile(r"EPATOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
-    PACKAGE = "git+https://github.com/onyg/epa-tools.git"
+    log.info("Build Open APIs")
+    shell.run("epatools openapi", check=True)
+    log.succ("Open APIs built successfully")
 
-    def merge_capabilities():
-        """
-        Merge CapabilityStatements
-        """
+    # Get the generated API files from the tool config
+    tool_config = yaml.safe_load(config_file.read_text("utf-8"))
+    output_dir = Path("./output")
+    api_files = [
+        file
+        for item in tool_config["openapi"]["capability-statement"]
+        if (file := Path(item["output"])) and (output_dir / file).exists()
+    ]
 
-        check_configured()
-        check_installed("epatools", __tool_name__)
-        log.info("Merge CapabilityStatements")
-        shell.run("epatools merge", capture_output=True)
-        log.succ("CapabilityStatements merged successfully")
+    # Archive the API files
+    update_archive(api_files + config.build.args.openapi.additional_archive)
 
-    def openapi(config: Config, *args, **kwargs):
-        """
-        Build the Open APIs
-        """
-        check_configured()
-        check_installed("epatools", __tool_name__)
 
-        log.info("Build Open APIs")
-        shell.run("epatools openapi", capture_output=True)
-        log.succ("Open APIs built successfully")
+def update(*args, **kwargs):
+    python.install(PACKAGE, as_global=True)
 
-        # Get the generated API files from the tool config
-        tool_config = yaml.safe_load(config_file.read_text("utf-8"))
-        output_dir = Path("./output")
-        api_files = [
-            file
-            for item in tool_config["openapi"]["capability-statement"]
-            if (file := Path(item["output"])) and (output_dir / file).exists()
-        ]
 
-        # Archive the API files
-        update_archive(api_files + config.build.args.openapi.additional_archive)
+def version(short: bool = False, *args, **kwargs) -> str | None:
+    """
+    Get the installed version of epatools, returns None if not installed
+    """
+    try:
+        res = shell.run("epatools -v", check=True, log_output=False)
 
-    def update(*args, **kwargs):
-        python.install(PACKAGE, as_global=True)
+        # Extract the version string from output
+        match = VERSION_REGEX.match(res.stdout_oneline)
 
-    def version(short: bool = False, *args, **kwargs) -> str | None:
-        """
-        Get the installed version of epatools, returns None if not installed
-        """
-        try:
-            res = shell.run("epatools -v", check=True, capture_output=True)
+        if short:
+            return match[1] if match else None
 
-            # Extract the version string from output
-            match = VERSION_REGEX.match(res.stdout_oneline)
+        else:
+            return f"{match[1]} ({python.version()})" if match else None
 
-            if short:
-                return match[1] if match else None
+    except shell.CalledProcessError:
+        return None
 
-            else:
-                return f"{match[1]} ({python.version()})" if match else None
 
-        except shell.CalledProcessError:
-            return None
-
-    def latest_version(*args, **kwargs) -> str | None:
-        return python.latest_version_number(PACKAGE)
+def latest_version(*args, **kwargs) -> str | None:
+    return python.latest_version_number(PACKAGE)
 
 
 def update_archive(archive_files: list[Path], output_dir: Path | None = None):

@@ -10,18 +10,11 @@ VERSION_REGEX = re.compile(r"\w*jdk\w*\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
 
 @require_installed("java", __tool_name__)
-def run_jar(jar: Path, *args, capture_output: bool = False):
+def run_jar(jar: Path, *args, log_output: bool = False):
 
     cmd = f"java -jar {str(jar)} {' '.join(args)}"
 
-    res = shell.run(cmd, capture_output=capture_output)
-
-    if capture_output:
-        if res.returncode != 0:
-            raise shell.CalledProcessError(
-                res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
-            )
-
+    res = shell.run(cmd, log_output=log_output)
     return res
 
 
@@ -30,7 +23,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     Get the installed version, returns None if not installed
     """
     try:
-        res = shell.run("java --version", check=True, capture_output=True)
+        res = shell.run("java --version", check=True, log_output=False)
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)

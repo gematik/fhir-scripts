@@ -4,6 +4,8 @@ from subprocess import CalledProcessError
 
 from tqdm import tqdm
 
+from ... import helper, log
+
 CalledProcessError = CalledProcessError
 
 COLOR_FORMATTING = re.compile(r"(?:\x1b|\\e)\[\d+(?:;\d+)?m")
@@ -11,14 +13,35 @@ COLOR_FORMATTING = re.compile(r"(?:\x1b|\\e)\[\d+(?:;\d+)?m")
 
 class ShellResult:
     def __init__(self, process=None):
-        self.stdout = _convert_std(process.stdout) if process else []
-        self.stderr = _convert_std(process.stderr) if process else []
+        self._stdout: list[str] = []
+        self._stderr: list[str] = []
+
+        if process is not None:
+            self.stdout = process.stdout
+            self.stderr = process.stderr
+
         self.returncode = process.returncode if process else 0
         self.args = process.args if process else []
 
     @property
+    def stdout(self) -> list[str]:
+        return self._stdout
+
+    @stdout.setter
+    def stdout(self, value):
+        self._stdout = _convert_std(value) if value else []
+
+    @property
     def stdout_oneline(self) -> str:
         return _oneline(self.stdout)
+
+    @property
+    def stderr(self) -> list[str]:
+        return self._stderr
+
+    @stderr.setter
+    def stderr(self, value):
+        self._stderr = _convert_std(value) if value else []
 
     @property
     def stderr_oneline(self) -> str:
@@ -43,28 +66,40 @@ def _oneline(list_: list[str]) -> str:
     return ", ".join(list_)
 
 
-def run(cmd, check: bool | None = None, capture_output: bool = False):
+def run(cmd, check: bool = False, log_output: bool = True):
     """
     Execute a command on the shell
 
-    By default the output is not captured (`capture_output = False`), but if the status code is not equal to 0 an
-    `CalledProcessError` is raised (`check = True`). If `capture_output` is set to `True`, `check` is automatically set
-    to `False` except if stated otherwise.
+    By default the return code is not check (`check = False`), but if set to true and the return code is not equal to 0 an
+    `CalledProcessError` is raised. If `log_output` is set to `True` (default), the output of the command is printed on the command line.
     """
-    res = subprocess.run(
+
+    res = ShellResult()
+    with subprocess.Popen(
         cmd,
         shell=True,
-        check=check or not capture_output,
-        capture_output=capture_output,
-    )
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    ) as proc:
+        for line in proc.stdout:
+            line = helper.clean_string(line)
+            res.stdout.append(line)
 
-    res = ShellResult(res)
+            if log_output:
+                log.debug(line)
 
-    if not check and capture_output:
-        if res.returncode != 0:
-            raise CalledProcessError(
-                res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
-            )
+        proc.wait()
+
+        res.stderr = proc.stderr
+        res.args = proc.args
+        res.returncode = proc.returncode
+
+    if check and res.returncode != 0:
+        raise CalledProcessError(
+            res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
+        )
 
     return res
 

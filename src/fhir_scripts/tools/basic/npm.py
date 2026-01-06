@@ -15,7 +15,7 @@ def install(pkg_name: str, as_global: bool = False):
     else:
         cmd = f"npm install {pkg_name}"
 
-    res = shell.run(cmd, capture_output=True)
+    res = shell.run(cmd)
 
     if res.returncode != 0:
         raise shell.CalledProcessError(
@@ -28,10 +28,10 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     Get the installed version, returns None if not installed
     """
     try:
-        res = shell.run("npm -v", check=True, capture_output=True)
+        res = shell.run("npm -v", check=True, log_output=False)
         version = res.stdout_oneline
 
-        res = shell.run("node -v", check=True, capture_output=True)
+        res = shell.run("node -v", check=True, log_output=False)
         sdk_version = res.stdout_oneline.lstrip("v")
 
         return f"{version} [{sdk_version}]"
@@ -59,7 +59,7 @@ def download(
     else:
         cmd = f"npm pack --pack-destination {target_dir} {pkg_name}@{version}"
 
-    res = shell.run(cmd, capture_output=True)
+    res = shell.run(cmd)
 
     if res.returncode != 0:
         raise shell.CalledProcessError(
