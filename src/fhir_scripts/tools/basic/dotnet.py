@@ -8,7 +8,7 @@ from . import shell
 def install(pkg_name: str):
 
     cmd = f"dotnet tool install -g {pkg_name}"
-    res = shell.run(cmd, capture_output=True)
+    res = shell.run(cmd)
 
     if res.returncode != 0:
         raise shell.CalledProcessError(
@@ -20,7 +20,7 @@ def install(pkg_name: str):
 def update(pkg_name: str):
 
     cmd = f"dotnet tool update -g {pkg_name}"
-    res = shell.run(cmd, capture_output=True)
+    res = shell.run(cmd)
 
     if res.returncode != 0:
         raise shell.CalledProcessError(
@@ -33,7 +33,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     Get the installed version, returns None if not installed
     """
     try:
-        res = shell.run("dotnet --version", check=True, capture_output=True)
+        res = shell.run("dotnet --version", check=True, log_output=False)
         return res.stdout_oneline
 
     except shell.CalledProcessError:

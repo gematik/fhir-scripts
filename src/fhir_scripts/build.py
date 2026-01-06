@@ -179,7 +179,7 @@ def build_all(config: Config, update: bool = False, *args, **kwargs):
 
 def build_shell(c_args: str, *args, **kwargs):
     log.info(f"Processing shell command '{c_args}'")
-    shell.run(c_args, capture_output=True)
+    shell.run(c_args, check=True)
     log.succ("Processed shell command successfully")
 
 

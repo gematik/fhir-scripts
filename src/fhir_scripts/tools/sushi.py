@@ -30,7 +30,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     Get the installed version of FSH Sushi, returns None if sushi is not installed
     """
     try:
-        res = shell.run("sushi -v", check=True, capture_output=True)
+        res = shell.run("sushi -v", check=True, log_output=False)
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)

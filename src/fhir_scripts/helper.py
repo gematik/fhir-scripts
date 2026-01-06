@@ -1,7 +1,10 @@
+import re
 from functools import wraps
 
 from .exception import CancelException, NotInstalledException
 from .tools.basic import shell
+
+COLOR_REGEX = re.compile(r"(?:\x1b|\033)\[(?:\d+;){,2}\d+m", re.IGNORECASE)
 
 
 def confirm(prompt: str, log_no: str, confirm_yes: bool = False, default: bool = False):
@@ -34,7 +37,7 @@ def confirm(prompt: str, log_no: str, confirm_yes: bool = False, default: bool =
 
 def check_installed(cmd: str, name: str):
     try:
-        shell.run(f"which {cmd}", check=True, capture_output=True)
+        shell.run(f"which {cmd}", check=True, log_output=False)
 
     except shell.CalledProcessError:
         raise NotInstalledException(f"{name} is needed but not installed")
@@ -58,3 +61,7 @@ def require_installed(cmd: str, name: str):
         return wrapper
 
     return decorator
+
+
+def clean_string(text: str) -> str:
+    return COLOR_REGEX.sub("", text.strip())

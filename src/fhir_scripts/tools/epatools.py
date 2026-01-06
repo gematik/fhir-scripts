@@ -9,6 +9,7 @@ import yaml
 
 from .. import log
 from ..exception import NoConfigException
+from ..helper import check_installed
 from ..models.config import Config
 from .basic import python, shell
 
@@ -31,7 +32,7 @@ def merge_capabilities():
     check_configured()
     check_installed("epatools", __tool_name__)
     log.info("Merge CapabilityStatements")
-        shell.run("epatools merge", capture_output=True)
+    shell.run("epatools merge", check=True)
     log.succ("CapabilityStatements merged successfully")
 
 
@@ -43,7 +44,7 @@ def openapi(config: Config, *args, **kwargs):
     check_installed("epatools", __tool_name__)
 
     log.info("Build Open APIs")
-        shell.run("epatools openapi", capture_output=True)
+    shell.run("epatools openapi", check=True)
     log.succ("Open APIs built successfully")
 
     # Get the generated API files from the tool config

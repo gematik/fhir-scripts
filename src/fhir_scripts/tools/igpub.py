@@ -64,11 +64,7 @@ def update(*args, **kwargs):
     if not INPUT_CACHE_DIR.exists():
         INPUT_CACHE_DIR.mkdir(parents=True)
 
-    shell.run(
-        f'curl -L "{DOWNLOAD_URL}" -o "{PUBLISHER_JAR}"',
-        check=True,
-        capture_output=True,
-    )
+    shell.run(f'curl -L "{DOWNLOAD_URL}" -o "{PUBLISHER_JAR}"', check=True)
 
 
 def version(short: bool = False, *args, **kwargs) -> str | None:

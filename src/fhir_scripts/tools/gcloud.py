@@ -29,7 +29,7 @@ def logged_in(func):
         if not _logged_in:
             log.info("Check gcloud login")
             try:
-                shell.run(CMD_LIST, check=True, capture_output=True)
+                shell.run(CMD_LIST, check=True, log_output=False)
                 log.succ("Already logged in")
 
             except shell.CalledProcessError:
@@ -52,7 +52,7 @@ def version(*args, **kwargs) -> str | None:
     Get the installed version, returns None if not installed
     """
     try:
-        res = shell.run("gcloud -v", check=True, capture_output=True)
+        res = shell.run("gcloud -v", check=True, log_output=False)
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
@@ -97,7 +97,7 @@ def _rsync(source: Path | Url, target: Url):
         )
 
     else:
-        shell.run(CMD_CP.format(source, target), check=True, capture_output=True)
+        shell.run(CMD_CP.format(source, target), check=True, log_output=False)
 
 
 @require_installed("gcloud", __tool_name__)
@@ -106,13 +106,13 @@ def ls(path: Url) -> list[str]:
     # Try interpret `path` as directory
     try:
         path_dir = path / "**" if not path.endswith("/**") else path
-        res = shell.run(CMD_LS.format(path_dir), check=False, capture_output=True)
+        res = shell.run(CMD_LS.format(path_dir), check=False, log_output=False)
         return res.stdout
 
     except shell.CalledProcessError:
         # If this fails it might be a single file
         try:
-            res = shell.run(CMD_LS.format(path), check=False, capture_output=True)
+            res = shell.run(CMD_LS.format(path), check=False, log_output=False)
             return res.stdout
 
         except shell.CalledProcessError:
