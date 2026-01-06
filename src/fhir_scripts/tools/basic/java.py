@@ -10,11 +10,11 @@ VERSION_REGEX = re.compile(r"\w*jdk\w*\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
 
 
 @require_installed("java", __tool_name__)
-def run_jar(jar: Path, *args, capture_output: bool = False):
+def run_jar(jar: Path, *args, log_output: bool = False):
 
     cmd = f"java -jar {str(jar)} {' '.join(args)}"
 
-    res = shell.run(cmd)
+    res = shell.run(cmd, log_output=log_output)
     return res
 
 

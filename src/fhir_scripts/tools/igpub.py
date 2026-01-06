@@ -73,7 +73,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     """
 
     try:
-        res = java.run_jar(PUBLISHER_JAR, "-v", capture_output=True)
+        res = java.run_jar(PUBLISHER_JAR, "-v", log_output=False)
 
         version = res.stdout_oneline
 
