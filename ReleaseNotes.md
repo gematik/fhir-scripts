@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.20.1
+
+* Print IG Publisher output again
+
 ## Release 0.20.0
 
 * Print output of commands
