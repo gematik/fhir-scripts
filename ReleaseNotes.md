@@ -2,6 +2,11 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.21.0
+
+* Switch to [_FHIR Package Snapshot Tool_](https://github.com/Gefyra/fhir-pkg-tool) to restore the FHIR package cache
+* _Firely Terminal_ can be used using the `--legacy` flag
+
 ## Release 0.20.1
 
 * Print IG Publisher output again
