@@ -51,7 +51,7 @@ def install(pkg_name: str, as_global: bool = False):
         )
 
 
-def latest_version_number(url: str) -> Version | None:
+def latest_version_number(url: str) -> Version:
     url_raw = url.removeprefix("git+").removesuffix(".git") + "/raw/main/"
 
     pyproject_url = url_raw + "pyproject.toml"
@@ -93,10 +93,10 @@ def latest_version_number(url: str) -> Version | None:
                 return Version(match[1]) if match else Version(version)
 
     # Else nothing was found
-    return None
+    return Version()
 
 
-def version(*args, **kwargs) -> Version | None:
+def version(*args, **kwargs) -> Version:
     """
     Get the installed version of FSH Sushi, returns None if sushi is not installed
     """
@@ -106,7 +106,7 @@ def version(*args, **kwargs) -> Version | None:
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
 
-        return Version(match[1]) if match else None
+        return Version(match[1] if match else None)
 
     except shell.CalledProcessError:
-        return None
+        return Version()

@@ -9,9 +9,13 @@ class Version:
         self.add_version: Version | None = None
 
     def __str__(self) -> str:
-        return ".".join(
-            [p for p in [self.major, self.minor, self.patch] if p is not None]
-        )
+        if self.unknown:
+            return "unknown"
+
+        else:
+            return ".".join(
+                [p for p in [self.major, self.minor, self.patch] if p is not None]
+            )
 
     @property
     def long(self):
@@ -21,14 +25,21 @@ class Version:
             else str(self)
         )
 
+    @property
+    def unknown(self):
+        return self.major is None and self.minor is None and self.patch is None
+
     def __eq__(self, other) -> bool:
-        return (
+        return (self.unknown and other.unknown) or (
             self.major == other.major
             and self.minor == other.minor
             and self.patch == other.patch
         )
 
     def __gt__(self, other) -> bool:
+        if self.unknown or other.unknown:
+            return False
+
         # Major
         if self.major < other.major:
             return False

@@ -24,7 +24,7 @@ def install(pkg_name: str, as_global: bool = False):
         )
 
 
-def version(*args, **kwargs) -> Version | None:
+def version(*args, **kwargs) -> Version:
     """
     Get the installed version, returns None if not installed
     """
@@ -38,7 +38,7 @@ def version(*args, **kwargs) -> Version | None:
         return version
 
     except shell.CalledProcessError:
-        return None
+        return Version()
 
 
 @require_installed("npm", __tool_name__)

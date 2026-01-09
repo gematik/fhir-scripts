@@ -29,7 +29,7 @@ def update(pkg_name: str):
         )
 
 
-def version(*args, **kwargs) -> Version | None:
+def version(*args, **kwargs) -> Version:
     """
     Get the installed version, returns None if not installed
     """
@@ -38,4 +38,4 @@ def version(*args, **kwargs) -> Version | None:
         return Version(res.stdout_oneline)
 
     except shell.CalledProcessError:
-        return None
+        return Version()

@@ -68,7 +68,7 @@ def update(*args, **kwargs):
     python.install(PACKAGE, as_global=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> Version | None:
+def version(short: bool = False, *args, **kwargs) -> Version:
     """
     Get the installed version of igtools, returns None if not installed
     """
@@ -78,16 +78,14 @@ def version(short: bool = False, *args, **kwargs) -> Version | None:
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
 
-        version = Version(match[1]) if match else None
-
-        if version:
-            version.add_version = python.version()
+        version = Version(match[1] if match else None)
+        version.add_version = python.version()
 
         return version
 
     except shell.CalledProcessError:
-        return None
+        return Version()
 
 
-def latest_version(*args, **kwargs) -> Version | None:
+def latest_version(*args, **kwargs) -> Version:
     return python.latest_version_number(PACKAGE)

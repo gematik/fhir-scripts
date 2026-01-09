@@ -68,7 +68,7 @@ def update(*args, **kwargs):
     shell.run(f'curl -L "{DOWNLOAD_URL}" -o "{PUBLISHER_JAR}"', check=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> Version | None:
+def version(short: bool = False, *args, **kwargs) -> Version:
     """
     Get the installed version of IG Publisher, returns None if not installed
     """
@@ -76,18 +76,16 @@ def version(short: bool = False, *args, **kwargs) -> Version | None:
     try:
         res = java.run_jar(PUBLISHER_JAR, "-v", log_output=False)
 
-        version = Version(res.stdout_oneline) if res.stdout_oneline else None
-
-        if version:
-            version.add_version = java.version()
+        version = Version(res.stdout_oneline)
+        version.add_version = java.version()
 
         return version
 
     except shell.CalledProcessError:
-        return None
+        return Version()
 
 
-def latest_version(*args, **kwargs) -> Version | None:
+def latest_version(*args, **kwargs) -> Version:
     return github.latest_version_number(REPO_URL)
 
 

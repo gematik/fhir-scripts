@@ -45,16 +45,16 @@ def update(*args, **kwargs):
     shell.run(f'curl -L "{DOWNLOAD_URL}" -o "{JAR}"', check=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> Version | None:
+def version(short: bool = False, *args, **kwargs) -> Version:
     """
     Get the installed version, returns None if not installed
     """
 
     # Currently there is no way to detect the version
-    return None
+    return Version()
 
 
-def latest_version(*args, **kwargs) -> Version | None:
+def latest_version(*args, **kwargs) -> Version:
     return github.latest_version_number(REPO_URL)
 
 

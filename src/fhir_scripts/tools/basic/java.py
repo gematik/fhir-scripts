@@ -19,7 +19,7 @@ def run_jar(jar: Path, *args, log_output: bool = True):
     return res
 
 
-def version(*args, **kwargs) -> Version | None:
+def version(*args, **kwargs) -> Version:
     """
     Get the installed version, returns None if not installed
     """
@@ -28,7 +28,7 @@ def version(*args, **kwargs) -> Version | None:
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
-        return Version(match[1]) if match else None
+        return Version(match[1] if match else None)
 
     except shell.CalledProcessError:
-        return None
+        return Version()
