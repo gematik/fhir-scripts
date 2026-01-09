@@ -3,6 +3,7 @@ __tool_name__ = "Java"
 import re
 from pathlib import Path
 
+from ...exception import PrerequisiteFailed
 from ...helper import require_installed
 from ...version import Version
 from . import shell
@@ -17,6 +18,19 @@ def run_jar(jar: Path, *args, log_output: bool = True):
 
     res = shell.run(cmd, log_output=log_output)
     return res
+
+
+def require_min_version(min: Version):
+    if not has_min_version(min):
+        raise PrerequisiteFailed(
+            "{} version {} required, but only {} installed".format(
+                __tool_name__, min, version()
+            )
+        )
+
+
+def has_min_version(min: Version):
+    return (v := version()) and min >= v
 
 
 def version(*args, **kwargs) -> Version | None:

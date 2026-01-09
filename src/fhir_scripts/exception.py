@@ -8,3 +8,7 @@ class NotInstalledException(Exception):
 
 class NoConfigException(Exception):
     pass
+
+
+class PrerequisiteFailed(Exception):
+    pass

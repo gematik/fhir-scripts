@@ -6,6 +6,7 @@
 
 * Switch to [_FHIR Package Snapshot Tool_](https://github.com/Gefyra/fhir-pkg-tool) to restore the FHIR package cache
 * _Firely Terminal_ can be used using the `--legacy` flag
+* Check Java version for for dependend tooling
 
 ## Release 0.20.1
 
