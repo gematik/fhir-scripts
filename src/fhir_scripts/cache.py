@@ -4,13 +4,14 @@ from argparse import _SubParsersAction
 from pathlib import Path
 
 from . import log
-from .tools import firely_terminal
+from .tools import fhir_pkg_tool, firely_terminal
 from .tools.basic import npm
 
 PKG = "package"
 BUILD = "build"
 PKG_DIR = "--package-dir"
 NO_CLEAR = "--no-clear"
+LEGACY = "--legacy"
 
 FHIR_REGISTRY = "https://packages.simplifier.net"
 
@@ -27,115 +28,144 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
         action="store_true",
         help="Do no clear the FHIR cache before restoring",
     )
+    pkg_parser.add_argument(
+        LEGACY, action="store_true", help="Old implementation using Firely Terminal"
+    )
 
     subparser.add_parser(BUILD, help="Clear all build related cache directories")
 
 
 def cache_rebuild_fhir_cache(
-    package_dir: Path | None = None, no_clear: bool = False, *args, **kwargs
+    package_dir: Path | None = None,
+    no_clear: bool = False,
+    legacy: bool = False,
+    *args,
+    **kwargs,
 ):
-    # TODO: Get dependencies from sushi config
-    # Can include some "meta" packages that cannot be downloaded from the registry
-    # sushi_config = Path("./sushi-config.yaml")
 
-    # if not sushi_config.exists():
-    #     raise Exception("Not in project root; no `sushi-config.yaml` found")
+    if legacy:
+        # TODO: Get dependencies from sushi config
+        # Can include some "meta" packages that cannot be downloaded from the registry
+        # sushi_config = Path("./sushi-config.yaml")
 
-    # sushi_config_def = yaml.safe_load(sushi_config.read_text(encoding="utf-8"))
-    # dependencies = sushi_config_def.get("dependencies", {})
+        # if not sushi_config.exists():
+        #     raise Exception("Not in project root; no `sushi-config.yaml` found")
 
-    # Get dependencies from package.json
-    package_json = Path("./package.json")
+        # sushi_config_def = yaml.safe_load(sushi_config.read_text(encoding="utf-8"))
+        # dependencies = sushi_config_def.get("dependencies", {})
 
-    if not package_json.exists():
-        raise Exception("Not in project root; no `package.json` found")
+        # Get dependencies from package.json
+        package_json = Path("./package.json")
 
-    packge_json_def = json.loads(package_json.read_text(encoding="utf-8"))
-    dependencies = packge_json_def.get("dependencies", {})
+        if not package_json.exists():
+            raise Exception("Not in project root; no `package.json` found")
 
-    pkg_json = Path("./package.json")
-    pkg_json_bak = Path("./package.bak.json")
+        packge_json_def = json.loads(package_json.read_text(encoding="utf-8"))
+        dependencies = packge_json_def.get("dependencies", {})
 
-    if not no_clear:
-        # Remove all previous packages
-        fhir_cache = Path.home() / ".fhir/packages"
+        pkg_json = Path("./package.json")
+        pkg_json_bak = Path("./package.bak.json")
 
-        if fhir_cache.exists():
-            log.info("Remove all previous packages")
-            for item in fhir_cache.iterdir():
-                if item.is_file():
-                    item.unlink()
-                elif item.is_dir():
-                    shutil.rmtree(item)
-            log.succ("Removed all packages")
+        if not no_clear:
+            # Remove all previous packages
+            fhir_cache = Path.home() / ".fhir/packages"
 
-    if package_dir is not None:
+            if fhir_cache.exists():
+                log.info("Remove all previous packages")
+                for item in fhir_cache.iterdir():
+                    if item.is_file():
+                        item.unlink()
+                    elif item.is_dir():
+                        shutil.rmtree(item)
+                log.succ("Removed all packages")
 
-        # Create package dir if it does not exist
-        if not package_dir.exists():
-            package_dir.mkdir(parents=True)
+        if package_dir is not None:
 
-        log.info(f"Using package directory '{package_dir}' to restore package cache")
+            # Create package dir if it does not exist
+            if not package_dir.exists():
+                package_dir.mkdir(parents=True)
 
-        try:
-            # Handle each dependency
-            for pkg, version in dependencies.items():
-                ###
-                # Get local file
-                ###
+            log.info(
+                f"Using package directory '{package_dir}' to restore package cache"
+            )
 
-                # Check if any of the possible namings of the package file already exists
-                found = False
+            try:
+                # Handle each dependency
+                for pkg, version in dependencies.items():
+                    ###
+                    # Get local file
+                    ###
 
-                # Check the naming for official packages
-                pkg_file = package_dir / f"{pkg}-{version}.tgz"
-                if pkg_file.exists():
-                    found = True
-                    log.info(f"Cache hit for {pkg}@{version}")
+                    # Check if any of the possible namings of the package file already exists
+                    found = False
 
-                else:
-                    pkg_file = package_dir / f"{pkg}_{version}.tgz"
-
-                    # Check naming for own build packages
+                    # Check the naming for official packages
+                    pkg_file = package_dir / f"{pkg}-{version}.tgz"
                     if pkg_file.exists():
                         found = True
                         log.info(f"Cache hit for {pkg}@{version}")
 
-                    # No file was found, so it needs to be downloaded
-                    if not found:
-                        log.info(f"Cache miss for {pkg}@{version}")
-                        npm.download(pkg, version, package_dir, FHIR_REGISTRY)
-                        log.succ(f"Downloaded {pkg}@{version}")
-                        pkg_file = package_dir / f"{pkg}-{version}.tgz"
+                    else:
+                        pkg_file = package_dir / f"{pkg}_{version}.tgz"
 
-                ###
-                # Install
-                ###
+                        # Check naming for own build packages
+                        if pkg_file.exists():
+                            found = True
+                            log.info(f"Cache hit for {pkg}@{version}")
 
-                # Backup old `package.json` and remove original one
-                pkg_json_bak.write_bytes(pkg_json.read_bytes())
-                pkg_json.write_text("{}", "utf-8")
+                        # No file was found, so it needs to be downloaded
+                        if not found:
+                            log.info(f"Cache miss for {pkg}@{version}")
+                            npm.download(pkg, version, package_dir, FHIR_REGISTRY)
+                            log.succ(f"Downloaded {pkg}@{version}")
+                            pkg_file = package_dir / f"{pkg}-{version}.tgz"
 
-                # Install from package file
-                log.info(f"Install {pkg}@{version}")
-                firely_terminal.install(file=pkg_file)
-                log.succ(f"Installed {pkg}@{version} successfully")
+                    ###
+                    # Install
+                    ###
 
-                # Restore `package.json`
-                pkg_json.write_bytes(pkg_json_bak.read_bytes())
-                pkg_json_bak.unlink()
+                    # Backup old `package.json` and remove original one
+                    pkg_json_bak.write_bytes(pkg_json.read_bytes())
+                    pkg_json.write_text("{}", "utf-8")
 
-        except Exception as e:
-            # Restore backup of `package.json` if it exists before rethrowing the exception
-            if pkg_json_bak.exists():
-                pkg_json.write_bytes(pkg_json_bak.read_bytes())
-                pkg_json_bak.unlink()
+                    # Install from package file
+                    log.info(f"Install {pkg}@{version}")
+                    firely_terminal.install(file=pkg_file)
+                    log.succ(f"Installed {pkg}@{version} successfully")
 
-            raise e
+                    # Restore `package.json`
+                    pkg_json.write_bytes(pkg_json_bak.read_bytes())
+                    pkg_json_bak.unlink()
 
-    log.info("Restore cache")
-    firely_terminal.restore()
-    log.succ("Restore successful")
+            except Exception as e:
+                # Restore backup of `package.json` if it exists before rethrowing the exception
+                if pkg_json_bak.exists():
+                    pkg_json.write_bytes(pkg_json_bak.read_bytes())
+                    pkg_json_bak.unlink()
+
+                raise e
+
+        log.info("Restore cache")
+        firely_terminal.restore()
+        log.succ("Restore successful")
+
+    else:
+        if not no_clear:
+            # Remove all previous packages
+            fhir_cache = Path.home() / ".fhir/packages"
+
+            if fhir_cache.exists():
+                log.info("Remove all previous packages")
+                for item in fhir_cache.iterdir():
+                    if item.is_file():
+                        item.unlink()
+                    elif item.is_dir():
+                        shutil.rmtree(item)
+                log.succ("Removed all packages")
+
+        log.info("Restore cache")
+        fhir_pkg_tool.install_deps()
+        log.succ("Restore successful")
 
 
 def clear_build_caches(*args, **kwargs):
