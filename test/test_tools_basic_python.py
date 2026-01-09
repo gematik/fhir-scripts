@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from fhir_scripts.tools.basic import python
 from fhir_scripts.tools.basic.shell import CalledProcessError, ShellResult
+from fhir_scripts.version import Version
 
 
 class TestPythonInstall(unittest.TestCase):
@@ -65,7 +66,7 @@ class TestPythonInstall(unittest.TestCase):
 
 class TestPythonVersion(unittest.TestCase):
     def test_version(self):
-        version = "3.1.2"
+        version = Version("3.1.2")
 
         def shell_run(*args, **kwargs):
             res = ShellResult()

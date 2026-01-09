@@ -4,10 +4,12 @@ from datetime import datetime
 
 import requests
 
+from ...version import Version
+
 REPO_REGEX = re.compile(r"https://github\.com/([^/]+/[^/]+)")
 
 
-def latest_version_number(repo_url: str):
+def latest_version_number(repo_url: str) -> Version | None:
     match = REPO_REGEX.match(repo_url.removeprefix(".git"))
 
     if match is None:
@@ -26,4 +28,4 @@ def latest_version_number(repo_url: str):
         )
     ]
 
-    return versions[-1]
+    return Version(versions[-1])

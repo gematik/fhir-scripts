@@ -13,37 +13,39 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
 
 
 def versions(outdated: bool = False, *args, **kwargs) -> bool:
-    versions = {}
+    up_to_date = True
     for name, module in tools.__dict__.items():
         if not name.startswith("__") and (
             version_func := getattr(module, "version", None)
         ):
-            tool_name = getattr(module, "__tool_name__", None) or name
+            try:
+                tool_name = getattr(module, "__tool_name__", None) or name
+                version = version_func()
 
-            if outdated:
-                latest_func = getattr(module, "latest_version", None)
-                latest = latest_func() if latest_func else None
+                if outdated:
+                    if latest_func := getattr(module, "latest_version", None):
+                        latest = latest_func() if latest_func else None
 
-                if (
-                    latest is not None
-                    and (version := version_func(short=True))
-                    and latest != version
-                ):
-                    versions[tool_name] = (version, latest)
+                        if latest is not None and latest != version:
+                            log.info("{}: {} < {}".format(tool_name, version, latest))
+                            up_to_date = False
 
-            else:
-                versions[tool_name] = version_func(), None
+                    else:
+                        log.warn(
+                            "{} is missing latest version information".format(tool_name)
+                        )
 
-    if outdated and len(versions) == 0:
+                elif version is not None:
+                    log.info("{}: {}".format(tool_name, version.long))
+
+            except Exception as e:
+                raise Exception(
+                    "Error occured during processing version of {}".format(tool_name), e
+                )
+
+    if outdated and up_to_date:
         log.succ("Everything up-to-date")
         return True
-
-    for name, (version, latest) in sorted(versions.items(), key=lambda x: x[0].lower()):
-        if latest is not None:
-            log.info(f"{name}: {version} < {latest}")
-
-        elif version is not None:
-            log.info(f"{name}: {version}")
 
     return True
 

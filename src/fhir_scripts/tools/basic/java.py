@@ -3,7 +3,9 @@ __tool_name__ = "Java"
 import re
 from pathlib import Path
 
+from ...exception import PrerequisiteFailed
 from ...helper import require_installed
+from ...version import Version
 from . import shell
 
 VERSION_REGEX = re.compile(r"\w*jdk\w*\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -18,7 +20,20 @@ def run_jar(jar: Path, *args, log_output: bool = True):
     return res
 
 
-def version(short: bool = False, *args, **kwargs) -> str | None:
+def require_min_version(min: Version):
+    if not has_min_version(min):
+        raise PrerequisiteFailed(
+            "{} version {} required, but only {} installed".format(
+                __tool_name__, min, version()
+            )
+        )
+
+
+def has_min_version(min: Version):
+    return (v := version()) and min >= v
+
+
+def version(*args, **kwargs) -> Version | None:
     """
     Get the installed version, returns None if not installed
     """
@@ -27,7 +42,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
-        return match[1] if match else None
+        return Version(match[1] if match else None)
 
     except shell.CalledProcessError:
         return None

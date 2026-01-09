@@ -31,7 +31,7 @@ def update(*args, **kwargs):
 
 def _update(module, dry_run: bool = False, *args, **kwargs):
     name = getattr(module, "__tool_name__", None) or module.__name__
-    prev_version = module.version(short=True)
+    prev_version = module.version()
 
     # Only update if was previously installed
     if prev_version:
@@ -52,9 +52,7 @@ def _update(module, dry_run: bool = False, *args, **kwargs):
 
             else:
                 module.update()
-                log.succ(
-                    f"Updated {name}: {str(prev_version)} → {module.version(short=True)}"
-                )
+                log.succ(f"Updated {name}: {str(prev_version)} → {module.version()}")
 
 
 __doc__ = "Update tools"

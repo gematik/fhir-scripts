@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .. import log
 from ..helper import require_installed
+from ..version import Version
 from .basic import python, shell
 
 VERSION_REGEX = re.compile(r"IGTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -37,23 +38,21 @@ def update(*args, **kwargs):
     python.install(PACKAGE, as_global=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> str | None:
+def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
     Get the installed version of igtools, returns None if not installed
     """
     try:
         res = shell.run("publishtools version", check=True, log_output=False)
-        version = res.stdout_oneline
 
-        if short:
-            return version if version else None
+        version = Version(res.stdout_oneline)
+        version.add_version = python.version()
 
-        else:
-            return f"{version} ({python.version()})" if version else None
+        return version
 
     except shell.CalledProcessError:
         return None
 
 
-def latest_version(*args, **kwargs) -> str | None:
+def latest_version(*args, **kwargs) -> Version | None:
     return python.latest_version_number(PACKAGE)

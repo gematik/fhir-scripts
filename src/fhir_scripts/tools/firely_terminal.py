@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from ..helper import require_installed
+from ..version import Version
 from .basic import dotnet, shell
 
 VERSION_REGEX = re.compile(r"Firely Terminal\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -42,7 +43,7 @@ def update(install: bool = False, *args, **kwargs):
         pass
 
 
-def version(short: bool = False, *args, **kwargs) -> str | None:
+def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
     Get the installed version, returns None if not installed
     """
@@ -52,14 +53,17 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
 
-        if short:
-            return match[1] if match else None
+        version = Version(match[1] if match else None)
+        version.add_version = dotnet.version()
 
-        else:
-            return f"{match[1]} ({dotnet.version()})" if match else None
+        return version
 
     except shell.CalledProcessError:
         return None
+
+
+def latest_version(*args, **kwargs) -> Version | None:
+    return Version()
 
 
 @require_installed("fhir", __tool_name__)

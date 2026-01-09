@@ -6,6 +6,7 @@ import tomllib
 import requests
 
 from ...helper import NotInstalledException, check_installed
+from ...version import Version
 from . import shell
 
 VERSION_REGEX = re.compile(r"Python\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
@@ -50,20 +51,24 @@ def install(pkg_name: str, as_global: bool = False):
         )
 
 
-def latest_version_number(url: str) -> str | None:
+def latest_version_number(url: str) -> Version | None:
     url_raw = url.removeprefix("git+").removesuffix(".git") + "/raw/main/"
 
     pyproject_url = url_raw + "pyproject.toml"
     content = requests.get(pyproject_url)
+
+    if content.status_code != 200:
+        return None
+
     pyproject = tomllib.loads(content.text)
 
     # Try to get the information from the pyproject file
     if version := pyproject.get("project", {}).get("version"):
-        return version
+        return Version(version)
 
     # Try for poetry
     if version := pyproject.get("tool", {}).get("poetry", {}).get("version"):
-        return version
+        return Version(version)
 
     # Try dynamic version for setuptools
     if "version" in pyproject.get("project", {}).get("dynamic", []) and (
@@ -89,13 +94,13 @@ def latest_version_number(url: str) -> str | None:
 
             if version is not None:
                 match = VERSION_FILE_REGEX.match(version)
-                return match[1] if match else version
+                return Version(match[1]) if match else Version(version)
 
     # Else nothing was found
-    return None
+    return Version()
 
 
-def version(short: bool = False, *args, **kwargs) -> str | None:
+def version(*args, **kwargs) -> Version | None:
     """
     Get the installed version of FSH Sushi, returns None if sushi is not installed
     """
@@ -105,7 +110,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
 
-        return match[1] if match else None
+        return Version(match[1] if match else None)
 
     except shell.CalledProcessError:
         return None

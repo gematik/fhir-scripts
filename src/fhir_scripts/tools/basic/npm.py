@@ -3,6 +3,7 @@ __tool_name__ = "npm"
 from pathlib import Path
 
 from ...helper import require_installed
+from ...version import Version
 from . import shell
 
 
@@ -23,18 +24,18 @@ def install(pkg_name: str, as_global: bool = False):
         )
 
 
-def version(short: bool = False, *args, **kwargs) -> str | None:
+def version(*args, **kwargs) -> Version | None:
     """
     Get the installed version, returns None if not installed
     """
     try:
         res = shell.run("npm -v", check=True, log_output=False)
-        version = res.stdout_oneline
+        version = Version(res.stdout_oneline)
 
         res = shell.run("node -v", check=True, log_output=False)
-        sdk_version = res.stdout_oneline.lstrip("v")
+        version.add_version = Version(res.stdout_oneline.lstrip("v"))
 
-        return f"{version} [{sdk_version}]"
+        return version
 
     except shell.CalledProcessError:
         return None
