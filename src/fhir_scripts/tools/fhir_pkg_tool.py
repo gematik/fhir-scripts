@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .. import log
 from ..exception import NotInstalledException
+from ..version import Version
 from .basic import github, java, shell
 
 JAR_NAME = "fhir-pkg-tool.jar"
@@ -44,7 +45,7 @@ def update(*args, **kwargs):
     shell.run(f'curl -L "{DOWNLOAD_URL}" -o "{JAR}"', check=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> str | None:
+def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
     Get the installed version, returns None if not installed
     """
@@ -53,7 +54,7 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     return None
 
 
-def latest_version(*args, **kwargs) -> str | None:
+def latest_version(*args, **kwargs) -> Version | None:
     return github.latest_version_number(REPO_URL)
 
 

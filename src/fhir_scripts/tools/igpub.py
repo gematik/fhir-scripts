@@ -5,6 +5,7 @@ import yaml
 
 from .. import log
 from ..exception import NotInstalledException
+from ..version import Version
 from .basic import github, java, shell
 
 REPO_URL = "https://github.com/HL7/fhir-ig-publisher"
@@ -67,7 +68,7 @@ def update(*args, **kwargs):
     shell.run(f'curl -L "{DOWNLOAD_URL}" -o "{PUBLISHER_JAR}"', check=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> str | None:
+def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
     Get the installed version of IG Publisher, returns None if not installed
     """
@@ -75,19 +76,18 @@ def version(short: bool = False, *args, **kwargs) -> str | None:
     try:
         res = java.run_jar(PUBLISHER_JAR, "-v", log_output=False)
 
-        version = res.stdout_oneline
+        version = Version(res.stdout_oneline) if res.stdout_oneline else None
 
-        if short:
-            return version if version else None
+        if version:
+            version.add_version = java.version()
 
-        else:
-            return f"{version} ({java.version()})" if version else None
+        return version
 
     except shell.CalledProcessError:
         return None
 
 
-def latest_version(*args, **kwargs) -> str | None:
+def latest_version(*args, **kwargs) -> Version | None:
     return github.latest_version_number(REPO_URL)
 
 

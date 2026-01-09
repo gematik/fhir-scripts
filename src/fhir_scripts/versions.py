@@ -26,7 +26,7 @@ def versions(outdated: bool = False, *args, **kwargs) -> bool:
 
                 if (
                     latest is not None
-                    and (version := version_func(short=True))
+                    and (version := version_func())
                     and latest != version
                 ):
                     versions[tool_name] = (version, latest)
@@ -40,10 +40,10 @@ def versions(outdated: bool = False, *args, **kwargs) -> bool:
 
     for name, (version, latest) in sorted(versions.items(), key=lambda x: x[0].lower()):
         if latest is not None:
-            log.info(f"{name}: {version} < {latest}")
+            log.info("{}: {} < {}".format(name, version, latest))
 
         elif version is not None:
-            log.info(f"{name}: {version}")
+            log.info("{}: {}".format(name, version.long))
 
     return True
 

@@ -1,6 +1,7 @@
 __tool_name__ = ".NET"
 
 from ...helper import require_installed
+from ...version import Version
 from . import shell
 
 
@@ -28,13 +29,13 @@ def update(pkg_name: str):
         )
 
 
-def version(short: bool = False, *args, **kwargs) -> str | None:
+def version(*args, **kwargs) -> Version | None:
     """
     Get the installed version, returns None if not installed
     """
     try:
         res = shell.run("dotnet --version", check=True, log_output=False)
-        return res.stdout_oneline
+        return Version(res.stdout_oneline)
 
     except shell.CalledProcessError:
         return None
