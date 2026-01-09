@@ -48,17 +48,32 @@ class Version:
             return True
 
         # Minor
-        if self.minor is None or self.minor < other.minor:
+        if other.minor is None:
             return False
 
-        if other.minor is None or self.minor > other.minor:
+        if self.minor is None:
+            return True
+
+        if self.minor < other.minor:
+            return False
+
+        if self.minor > other.minor:
             return True
 
         # Patch
-        if self.patch is None or self.patch < other.patch:
+        if other.patch is None:
             return False
 
-        if other.patch is None or self.patch > other.patch:
+        if self.patch is None:
+            return True
+
+        if self.patch < other.patch:
+            return False
+
+        if self.patch > other.patch:
             return True
 
         return False
+
+    def __ge__(self, other):
+        return self == other or self > other
