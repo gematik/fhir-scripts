@@ -60,7 +60,7 @@ def latest_version_number(url: str) -> Version | None:
 
     # Try to get the information from the pyproject file
     if version := pyproject.get("project", {}).get("version"):
-        return version
+        return Version(version)
 
     # Try for poetry
     if version := pyproject.get("tool", {}).get("poetry", {}).get("version"):
