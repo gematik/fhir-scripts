@@ -14,7 +14,9 @@ JAR = JAR_DIR / JAR_NAME
 
 
 def install_deps():
+    java.require_min_version(Version("21"))
     ensure_installed()
+
     log.info("Run {}".format(__tool_name__))
 
     sushi_config = Path("./sushi-config.yaml")
@@ -43,6 +45,8 @@ def ensure_installed():
 
 
 def update(*args, **kwargs):
+    java.require_min_version(Version("21"))
+
     if not JAR_DIR.exists():
         JAR_DIR.mkdir(parents=True)
 

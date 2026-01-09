@@ -16,6 +16,8 @@ PUBLISHER_JAR = INPUT_CACHE_DIR / "publisher.jar"
 
 def run():
     is_installed()
+    java.require_min_version(Version("17"))
+
     log.info("Run IG Publisher")
 
     sushi_config = yaml.safe_load(Path("./sushi-config.yaml").read_text("utf-8"))
