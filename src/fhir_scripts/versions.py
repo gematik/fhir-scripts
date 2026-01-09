@@ -15,10 +15,8 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
 def versions(outdated: bool = False, *args, **kwargs) -> bool:
     up_to_date = True
     for name, module in tools.__dict__.items():
-        if (
-            not name.startswith("__")
-            and (version_func := getattr(module, "version", None))
-            and getattr(module, "is_installed")()
+        if not name.startswith("__") and (
+            version_func := getattr(module, "version", None)
         ):
             try:
                 tool_name = getattr(module, "__tool_name__", None) or name
@@ -37,7 +35,7 @@ def versions(outdated: bool = False, *args, **kwargs) -> bool:
                             "{} is missing latest version information".format(tool_name)
                         )
 
-                else:
+                elif version is not None:
                     log.info("{}: {}".format(tool_name, version.long))
 
             except Exception as e:
@@ -45,7 +43,7 @@ def versions(outdated: bool = False, *args, **kwargs) -> bool:
                     "Error occured during processing version of {}".format(tool_name), e
                 )
 
-    if outdated and not up_to_date:
+    if outdated and up_to_date:
         log.succ("Everything up-to-date")
         return True
 

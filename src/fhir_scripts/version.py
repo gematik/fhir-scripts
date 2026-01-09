@@ -10,7 +10,7 @@ class Version:
 
     def __str__(self) -> str:
         if self.unknown:
-            return "unknown"
+            return "n/a"
 
         else:
             return ".".join(
