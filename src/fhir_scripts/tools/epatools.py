@@ -65,7 +65,7 @@ def update(*args, **kwargs):
     python.install(PACKAGE, as_global=True)
 
 
-def version(*args, **kwargs) -> Version:
+def version(*args, **kwargs) -> Version | None:
     """
     Get the installed version of epatools, returns None if not installed
     """
@@ -81,10 +81,10 @@ def version(*args, **kwargs) -> Version:
         return version
 
     except shell.CalledProcessError:
-        return Version()
+        return None
 
 
-def latest_version(*args, **kwargs) -> Version:
+def latest_version(*args, **kwargs) -> Version | None:
     return python.latest_version_number(PACKAGE)
 
 

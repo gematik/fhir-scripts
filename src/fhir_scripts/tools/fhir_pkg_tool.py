@@ -14,7 +14,7 @@ JAR = JAR_DIR / JAR_NAME
 
 
 def install_deps():
-    is_installed()
+    ensure_installed()
     log.info("Run {}".format(__tool_name__))
 
     sushi_config = Path("./sushi-config.yaml")
@@ -30,11 +30,15 @@ def install_deps():
         raise Exception("{} run failed".format(__tool_name__))
 
 
-def is_installed() -> None:
+def is_installed():
     """
     Checks if installed
     """
-    if not JAR.exists():
+    return JAR.exists()
+
+
+def ensure_installed():
+    if not is_installed():
         raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
@@ -45,16 +49,20 @@ def update(*args, **kwargs):
     shell.run(f'curl -L "{DOWNLOAD_URL}" -o "{JAR}"', check=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> Version:
+def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
     Get the installed version, returns None if not installed
     """
 
     # Currently there is no way to detect the version
-    return Version()
+    if is_installed():
+        return Version()
+
+    else:
+        return None
 
 
-def latest_version(*args, **kwargs) -> Version:
+def latest_version(*args, **kwargs) -> Version | None:
     return github.latest_version_number(REPO_URL)
 
 

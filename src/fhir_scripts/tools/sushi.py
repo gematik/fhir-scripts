@@ -26,7 +26,7 @@ def update(*args, **kwargs):
     npm.install("fsh-sushi", as_global=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> Version:
+def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
     Get the installed version of FSH Sushi, returns None if sushi is not installed
     """
@@ -42,8 +42,8 @@ def version(short: bool = False, *args, **kwargs) -> Version:
         return version
 
     except shell.CalledProcessError:
-        return Version()
+        return None
 
 
-def latest_version(*args, **kwargs) -> Version:
+def latest_version(*args, **kwargs) -> Version | None:
     return github.latest_version_number(REPO_URL)

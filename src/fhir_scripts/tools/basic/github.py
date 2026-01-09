@@ -9,16 +9,16 @@ from ...version import Version
 REPO_REGEX = re.compile(r"https://github\.com/([^/]+/[^/]+)")
 
 
-def latest_version_number(repo_url: str) -> Version:
+def latest_version_number(repo_url: str) -> Version | None:
     match = REPO_REGEX.match(repo_url.removeprefix(".git"))
 
     if match is None:
-        return Version()
+        return None
 
     url = f"https://api.github.com/repos/{match[1]}/releases"
     response = requests.get(url)
     if response.status_code != 200:
-        return Version()
+        return None
 
     releases = json.loads(response.text)
     versions = [

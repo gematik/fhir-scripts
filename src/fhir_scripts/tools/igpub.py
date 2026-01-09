@@ -68,7 +68,7 @@ def update(*args, **kwargs):
     shell.run(f'curl -L "{DOWNLOAD_URL}" -o "{PUBLISHER_JAR}"', check=True)
 
 
-def version(short: bool = False, *args, **kwargs) -> Version:
+def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
     Get the installed version of IG Publisher, returns None if not installed
     """
@@ -82,10 +82,10 @@ def version(short: bool = False, *args, **kwargs) -> Version:
         return version
 
     except shell.CalledProcessError:
-        return Version()
+        return None
 
 
-def latest_version(*args, **kwargs) -> Version:
+def latest_version(*args, **kwargs) -> Version | None:
     return github.latest_version_number(REPO_URL)
 
 

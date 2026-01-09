@@ -51,11 +51,15 @@ def install(pkg_name: str, as_global: bool = False):
         )
 
 
-def latest_version_number(url: str) -> Version:
+def latest_version_number(url: str) -> Version | None:
     url_raw = url.removeprefix("git+").removesuffix(".git") + "/raw/main/"
 
     pyproject_url = url_raw + "pyproject.toml"
     content = requests.get(pyproject_url)
+
+    if content.status_code != 200:
+        return None
+
     pyproject = tomllib.loads(content.text)
 
     # Try to get the information from the pyproject file
@@ -96,7 +100,7 @@ def latest_version_number(url: str) -> Version:
     return Version()
 
 
-def version(*args, **kwargs) -> Version:
+def version(*args, **kwargs) -> Version | None:
     """
     Get the installed version of FSH Sushi, returns None if sushi is not installed
     """
@@ -109,4 +113,4 @@ def version(*args, **kwargs) -> Version:
         return Version(match[1] if match else None)
 
     except shell.CalledProcessError:
-        return Version()
+        return None

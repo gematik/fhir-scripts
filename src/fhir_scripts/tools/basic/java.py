@@ -19,7 +19,7 @@ def run_jar(jar: Path, *args, log_output: bool = True):
     return res
 
 
-def version(*args, **kwargs) -> Version:
+def version(*args, **kwargs) -> Version | None:
     """
     Get the installed version, returns None if not installed
     """
@@ -31,4 +31,4 @@ def version(*args, **kwargs) -> Version:
         return Version(match[1] if match else None)
 
     except shell.CalledProcessError:
-        return Version()
+        return None

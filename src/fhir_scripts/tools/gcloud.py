@@ -48,7 +48,7 @@ def logged_in(func):
     return wrapper
 
 
-def version(*args, **kwargs) -> Version:
+def version(*args, **kwargs) -> Version | None:
     """
     Get the installed version, returns None if not installed
     """
@@ -61,7 +61,11 @@ def version(*args, **kwargs) -> Version:
         return Version(match[1] if match else None)
 
     except shell.CalledProcessError:
-        return Version()
+        return None
+
+
+def latest_version(*args, **kwargs) -> Version | None:
+    return Version()
 
 
 @require_installed("gcloud", __tool_name__)
