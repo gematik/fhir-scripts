@@ -17,6 +17,9 @@ class Version:
                 [p for p in [self.major, self.minor, self.patch] if p is not None]
             )
 
+    def __repr__(self) -> str:
+        return str(self)
+
     @property
     def long(self):
         return (
@@ -40,40 +43,32 @@ class Version:
         if self.unknown or other.unknown:
             return False
 
-        # Major
-        if self.major < other.major:
-            return False
+        if res := _gt_helper(self.major, other.major) is not None:
+            return res
 
-        if self.major > other.major:
-            return True
+        if res := _gt_helper(self.minor, other.minor) is not None:
+            return res
 
-        # Minor
-        if other.minor is None:
-            return False
-
-        if self.minor is None:
-            return True
-
-        if self.minor < other.minor:
-            return False
-
-        if self.minor > other.minor:
-            return True
-
-        # Patch
-        if other.patch is None:
-            return False
-
-        if self.patch is None:
-            return True
-
-        if self.patch < other.patch:
-            return False
-
-        if self.patch > other.patch:
-            return True
+        if res := _gt_helper(self.patch, other.patch) is not None:
+            return res
 
         return False
 
     def __ge__(self, other):
         return self == other or self > other
+
+
+def _gt_helper(one, two) -> bool | None:
+    if one is None:
+        return False
+
+    if two is None:
+        return True
+
+    if one < two:
+        return False
+
+    if one > two:
+        return True
+
+    return None
