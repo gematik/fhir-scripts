@@ -63,7 +63,7 @@ def _convert_std(input) -> list[str]:
 
 
 def _oneline(list_: list[str]) -> str:
-    return ", ".join(list_)
+    return " ".join(list_)
 
 
 def run(cmd, check: bool = False, log_output: bool = True):

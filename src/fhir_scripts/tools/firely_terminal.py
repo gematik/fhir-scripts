@@ -51,7 +51,7 @@ def version(short: bool = False, *args, **kwargs) -> Version | None:
         res = shell.run("fhir -v", check=True, log_output=False)
 
         # Extract the version string from output
-        match = VERSION_REGEX.match(res.stdout_oneline)
+        match = VERSION_REGEX.search(res.stdout_oneline)
 
         version = Version(match[1] if match else None)
         version.add_version = dotnet.version()
