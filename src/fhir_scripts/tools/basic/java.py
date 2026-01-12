@@ -8,7 +8,9 @@ from ...helper import require_installed
 from ...version import Version
 from . import shell
 
-VERSION_REGEX = re.compile(r"\w*jdk\w*\s+(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
+VERSION_REGEX = re.compile(
+    r"\w*jdk\w*\s+version\s+\"(\d+(?:\.\d+){,2})\"", re.IGNORECASE
+)
 
 
 @require_installed("java", __tool_name__)
@@ -38,7 +40,7 @@ def version(*args, **kwargs) -> Version | None:
     Get the installed version, returns None if not installed
     """
     try:
-        res = shell.run("java --version", check=True, log_output=False)
+        res = shell.run("java -version", check=True, log_output=False)
 
         # Extract the version string from output
         match = VERSION_REGEX.match(res.stdout_oneline)
