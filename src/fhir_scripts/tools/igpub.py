@@ -76,7 +76,7 @@ def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
 
     try:
-        res = java.run_jar(PUBLISHER_JAR, "-v", log_output=False)
+        res = java.run_jar(PUBLISHER_JAR, "-v", check=True, log_output=False)
 
         version = Version(res.stdout_oneline)
         version.add_version = java.version()
