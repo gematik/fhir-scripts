@@ -25,7 +25,7 @@ def run():
     publish_url = sushi_config["canonical"] + "/" + sushi_config["version"]
     try:
         args = ["-no-sushi", "-ig .", f"-publish {publish_url}"]
-        java.run_jar(PUBLISHER_JAR, *args)
+        java.run_jar(PUBLISHER_JAR, check=True, *args)
         log.succ("IG Publisher run successful")
 
     except shell.CalledProcessError:

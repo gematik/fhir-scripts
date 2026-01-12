@@ -25,7 +25,7 @@ def install_deps():
 
     try:
         args = ["--sushi-deps-file {}".format(sushi_config)]
-        java.run_jar(JAR, *args)
+        java.run_jar(JAR, check=True, *args)
         log.succ("{} run successful".format(__tool_name__))
 
     except shell.CalledProcessError:
