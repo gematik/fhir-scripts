@@ -43,6 +43,14 @@ def cache_rebuild_fhir_cache(
     **kwargs,
 ):
 
+    if not fhir_pkg_tool.is_installed() and not legacy:
+        legacy = True
+        log.warn(
+            "{} not installed, fall back to {}".format(
+                fhir_pkg_tool.__tool_name__, firely_terminal.__tool_name__
+            )
+        )
+
     if legacy:
         # TODO: Get dependencies from sushi config
         # Can include some "meta" packages that cannot be downloaded from the registry

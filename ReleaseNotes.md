@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.21.1
+
+* If _FHIR Package Snaphot Tool_ is not installed fall back to Firely Terminal for rebuilding the FHIR package cache
+
 ## Release 0.21.0
 
 * Switch to [_FHIR Package Snapshot Tool_](https://github.com/Gefyra/fhir-pkg-tool) to restore the FHIR package cache
