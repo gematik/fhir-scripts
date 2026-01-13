@@ -24,6 +24,12 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument(
         "--dry-run", action="store_true", help="Only pretend to deploy files"
     )
+    parser.add_argument(
+        "--ig-output",
+        type=Path,
+        default=Path("./output"),
+        help="Directory that contains the generated FHIR IG (default: ./output)",
+    )
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--only-ig", action="store_true", help="Deploy only the IG")
@@ -38,6 +44,7 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
 def deploy(
     config: Config,
     environment: str,
+    ig_output: Path,
     ig_registry: bool = False,
     only_ig: bool = False,
     only_meta: bool = False,
@@ -65,6 +72,7 @@ def deploy(
             deploy_ig(
                 deploy_config,
                 environment,
+                ig_output=ig_output,
                 promote_from_env=promote_from,
                 dry_run=dry_run,
                 confirm_yes=yes,
@@ -74,6 +82,7 @@ def deploy(
             deploy_ig_meta(
                 deploy_config,
                 environment,
+                ig_output=ig_output,
                 promote_from_env=promote_from,
                 dry_run=dry_run,
                 confirm_yes=yes,
@@ -83,6 +92,7 @@ def deploy(
             deploy_ig(
                 deploy_config,
                 environment,
+                ig_output=ig_output,
                 promote_from_env=promote_from,
                 dry_run=dry_run,
                 confirm_yes=yes,
@@ -90,6 +100,7 @@ def deploy(
             deploy_ig_meta(
                 deploy_config,
                 environment,
+                ig_output=ig_output,
                 promote_from_env=promote_from,
                 dry_run=dry_run,
                 confirm_yes=yes,
@@ -140,6 +151,7 @@ def deploy_ig_registry(
 def deploy_ig(
     deploy_cfg: DeployConfig,
     target_env: str,
+    ig_output: Path,
     promote_from_env: str | None = None,
     confirm_yes: bool = False,
     dry_run: bool = False,
@@ -158,9 +170,9 @@ def deploy_ig(
 
     else:
         # Get 'project' and 'version' from built implementation guide
-        project, version = project_version_from_imp_guide()
+        project, version = project_version_from_imp_guide(ig_output)
 
-        source_path = Path("./output")
+        source_path = ig_output
         target_path = get_storage_path(deploy_cfg, target_env) / project / version
 
         log.info("Deploy built IG -> {}".format(target_path))
@@ -182,6 +194,7 @@ def deploy_ig(
 def deploy_ig_meta(
     deploy_cfg: DeployConfig,
     target_env: str,
+    ig_output: Path,
     promote_from_env: str | None = None,
     dry_run: bool = False,
     *args,
@@ -199,7 +212,7 @@ def deploy_ig_meta(
 
     else:
         # Get 'project' and 'version' from built implementation guide
-        project, _ = project_version_from_imp_guide()
+        project, _ = project_version_from_imp_guide(ig_output)
 
         # Check possible source paths
         # First the current path
@@ -259,11 +272,10 @@ def project_version_from_pub_req() -> tuple[str, str]:
     return project, version
 
 
-def project_version_from_imp_guide() -> tuple[str, str]:
-    output_dir = Path("./output")
-    igs = list(output_dir.glob("ImplementationGuide*.json"))
+def project_version_from_imp_guide(ig_dir: Path) -> tuple[str, str]:
+    igs = list(ig_dir.glob("ImplementationGuide*.json"))
     if len(igs) != 1:
-        raise Exception("Built IG not found")
+        raise Exception("Built IG not found in {}".format(ig_dir.absolute()))
 
     ig = json.loads(igs[0].read_text(encoding="utf-8"))
     return ig["url"].rsplit("/", 3)[1], ig["version"]
