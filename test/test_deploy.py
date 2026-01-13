@@ -65,7 +65,9 @@ class TestDeployIg(unittest.TestCase):
             )
 
         with patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text):
-            res = deploy.deploy_ig(cfg, "dev", dry_run=True, confirm_yes=True)
+            res = deploy.deploy_ig(
+                cfg, "dev", ig_output=Path("output"), dry_run=True, confirm_yes=True
+            )
 
         self.assertEqual(wanted, res)
 
@@ -86,7 +88,12 @@ class TestDeployIg(unittest.TestCase):
 
         with patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text):
             res = deploy.deploy_ig(
-                cfg, "prod", promote_from_env="dev", dry_run=True, confirm_yes=True
+                cfg,
+                "prod",
+                ig_output=Path("output"),
+                promote_from_env="dev",
+                dry_run=True,
+                confirm_yes=True,
             )
 
         self.assertEqual(wanted, res)
@@ -125,7 +132,9 @@ class TestDeployIgMeta(unittest.TestCase):
             )
 
         with patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text):
-            res = deploy.deploy_ig_meta(cfg, "dev", dry_run=True, confirm_yes=True)
+            res = deploy.deploy_ig_meta(
+                cfg, "dev", ig_output=Path("output"), dry_run=True, confirm_yes=True
+            )
 
         self.assertListEqual(wanted, res)
 
@@ -152,7 +161,12 @@ class TestDeployIgMeta(unittest.TestCase):
 
         with patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text):
             res = deploy.deploy_ig_meta(
-                cfg, "prod", promote_from_env="dev", dry_run=True, confirm_yes=True
+                cfg,
+                "prod",
+                ig_output=Path("output"),
+                promote_from_env="dev",
+                dry_run=True,
+                confirm_yes=True,
             )
 
         self.assertEqual(wanted, res)
