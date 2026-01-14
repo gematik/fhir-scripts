@@ -13,10 +13,12 @@ DOWNLOAD_URL = REPO_URL + "/releases/latest/download/publisher.jar"
 INPUT_CACHE_DIR = Path("./input-cache")
 PUBLISHER_JAR = INPUT_CACHE_DIR / "publisher.jar"
 
+MIN_JAVA_VER = "17"
+
 
 def run():
     is_installed()
-    java.require_min_version(Version("17"))
+    java.require_min_version(Version(MIN_JAVA_VER))
 
     log.info("Run IG Publisher")
 
@@ -64,6 +66,8 @@ def qa():
 
 
 def update(*args, **kwargs):
+    java.require_min_version(Version(MIN_JAVA_VER))
+
     if not INPUT_CACHE_DIR.exists():
         INPUT_CACHE_DIR.mkdir(parents=True)
 

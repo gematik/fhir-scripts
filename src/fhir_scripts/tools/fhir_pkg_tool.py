@@ -12,10 +12,12 @@ DOWNLOAD_URL = REPO_URL + "/releases/latest/download/" + JAR_NAME
 JAR_DIR = (Path(home) if (home := os.environ.get("HOME")) else Path()) / "fhir-pkg-tool"
 JAR = JAR_DIR / JAR_NAME
 
+MIN_JAVA_VER = "21"
+
 
 def install_deps():
-    java.require_min_version(Version("21"))
     ensure_installed()
+    java.require_min_version(Version(MIN_JAVA_VER))
 
     log.info("Run {}".format(__tool_name__))
 
@@ -45,7 +47,7 @@ def ensure_installed():
 
 
 def update(*args, **kwargs):
-    java.require_min_version(Version("21"))
+    java.require_min_version(Version(MIN_JAVA_VER))
 
     if not JAR_DIR.exists():
         JAR_DIR.mkdir(parents=True)
