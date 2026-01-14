@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.23.0
+
+* Check the Java version requirement during installation
+
 ## Release 0.22.0
 
 * Allow to define an alternative directory for the generated FHIR IG for deployment using `--ig-output` (default `./output`)
