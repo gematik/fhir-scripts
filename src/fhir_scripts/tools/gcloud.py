@@ -56,7 +56,7 @@ def version(*args, **kwargs) -> Version | None:
         res = shell.run("gcloud -v", check=True, log_output=False)
 
         # Extract the version string from output
-        match = VERSION_REGEX.match(res.stdout_oneline)
+        match = VERSION_REGEX.search(res.stdout_oneline)
 
         return Version(match[1] if match else None)
 
