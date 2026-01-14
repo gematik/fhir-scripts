@@ -28,7 +28,7 @@ RUN apk add --no-cache \
     # Node.js and NPM for FSH Sushi
     nodejs npm \
     # Java (OpenJDK) and Jeykll for IG Publisher
-    openjdk17 jekyll \
+    openjdk21 jekyll \
     # Additional dependencies
     # jq findutils curl ca-certificates \
     # PlantUML
