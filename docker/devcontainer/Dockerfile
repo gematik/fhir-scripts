@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:alpine-3.20
+FROM mcr.microsoft.com/devcontainers/base:alpine
 
 # ENV CLOUD_SDK_VERSION=464.0.0
 # ENV JAVA_VALIDATOR_VERSION=6.3.25
