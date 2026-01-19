@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from . import log
-from .helper import confirm
+from .helper import confirm, confirm_with_path_modification
 from .models.config import Config, DeployConfig
 from .tools import gcloud
 from .types import Url
@@ -177,8 +177,11 @@ def deploy_ig(
 
         log.info("Deploy built IG -> {}".format(target_path))
 
-    # Copy IG
-    confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
+    # Copy IG - with path modification option for non-promote deployments
+    if not promote_from_env:
+        target_path = confirm_with_path_modification(str(target_path), confirm_yes=confirm_yes)
+    else:
+        confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
 
     if dry_run:
         log.info("Would have copied {} -> {}".format(source_path, target_path))
