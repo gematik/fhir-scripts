@@ -19,6 +19,8 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
     fi \
     && tar -xf google-cloud-cli-linux.tar.gz \
     && ./google-cloud-sdk/install.sh --quiet \
+    && echo "Remove secrets" \
+    && rm -rf /google-cloud-sdk/platform/gsutil/third_party/urllib3/dummyserver/certs \
     && rm google-cloud-cli-linux.tar.gz
 
 RUN apk add --no-cache \
