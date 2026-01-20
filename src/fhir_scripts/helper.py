@@ -44,33 +44,39 @@ def confirm_with_path_modification(initial_path: str, confirm_yes: bool = False)
         return initial_path
 
     current_path = initial_path
-    
+
     while True:
         # Show current path and ask for confirmation
         suffix = " [Y/n]: "
         ans = input("Continue?" + suffix).strip().lower()
-        
+
         if not ans or ans in ("y", "yes"):
             # User confirmed, return the current path
             return current_path
-        
+
         if ans in ("n", "no"):
             # User declined, ask if they want to modify the path
             modify_suffix = " [Y/n]: "
-            modify_ans = input("Would you like to modify the path?" + modify_suffix).strip().lower()
-            
+            modify_ans = (
+                input("Would you like to modify the path?" + modify_suffix)
+                .strip()
+                .lower()
+            )
+
             if not modify_ans or modify_ans in ("y", "yes"):
                 # User wants to modify, ask for new path
                 new_path = input("Enter modified path: ").strip()
-                
+
                 if new_path:
                     current_path = new_path
                     from . import log
+
                     log.info(f"Deploy built IG -> {current_path}")
                     # Loop back to confirm the new path
                     continue
                 else:
                     from . import log
+
                     log.warn("No path entered, keeping current path")
                     continue
             else:
