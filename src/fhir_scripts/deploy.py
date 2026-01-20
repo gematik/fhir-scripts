@@ -183,7 +183,12 @@ def deploy_ig(
             confirm_with_path_modification(str(target_path), confirm_yes=confirm_yes)
         )
     else:
-        confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
+        confirm(
+            f"Continue with deployment to {target_path}?",
+            "Aborted by user",
+            confirm_yes=confirm_yes,
+            default=True,
+        )
 
     if dry_run:
         log.info("Would have copied {} -> {}".format(source_path, target_path))
