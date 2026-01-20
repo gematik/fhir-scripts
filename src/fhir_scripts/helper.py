@@ -48,7 +48,7 @@ def confirm_with_path_modification(initial_path: str, confirm_yes: bool = False)
     while True:
         # Show current path and ask for confirmation
         suffix = " [Y/n]: "
-        ans = input("Continue?" + suffix).strip().lower()
+        ans = input(f"Continue with path: {current_path}?" + suffix).strip().lower()
 
         if not ans or ans in ("y", "yes"):
             # User confirmed, return the current path
