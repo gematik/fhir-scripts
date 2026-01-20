@@ -179,8 +179,8 @@ def deploy_ig(
 
     # Copy IG - with path modification option for non-promote deployments
     if not promote_from_env:
-        target_path = confirm_with_path_modification(
-            str(target_path), confirm_yes=confirm_yes
+        target_path = Url(
+            confirm_with_path_modification(str(target_path), confirm_yes=confirm_yes)
         )
     else:
         confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
