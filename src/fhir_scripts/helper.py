@@ -77,7 +77,7 @@ def confirm_with_path_modification(initial_path: str, confirm_yes: bool = False)
                 else:
                     from . import log
 
-                    log.warn("No path entered, keeping current path")
+                    log.warning("No path entered, keeping current path")
                     continue
             else:
                 # User doesn't want to modify, abort
