@@ -35,6 +35,58 @@ def confirm(prompt: str, log_no: str, confirm_yes: bool = False, default: bool =
             raise CancelException(log_no)
 
 
+def confirm_with_path_modification(initial_path: str, confirm_yes: bool = False) -> str:
+    """
+    Prompt for confirmation with option to modify the path.
+    Returns the confirmed path (either original or modified).
+    """
+    if confirm_yes:
+        return initial_path
+
+    current_path = initial_path
+
+    while True:
+        # Show current path and ask for confirmation
+        suffix = " [Y/n]: "
+        ans = input(f"Continue with path: {current_path}?" + suffix).strip().lower()
+
+        if not ans or ans in ("y", "yes"):
+            # User confirmed, return the current path
+            return current_path
+
+        if ans in ("n", "no"):
+            # User declined, ask if they want to modify the path
+            modify_suffix = " [Y/n]: "
+            modify_ans = (
+                input("Would you like to modify the path?" + modify_suffix)
+                .strip()
+                .lower()
+            )
+
+            if not modify_ans or modify_ans in ("y", "yes"):
+                # User wants to modify, ask for new path
+                new_path = input("Enter modified path: ").strip()
+
+                if new_path:
+                    current_path = new_path
+                    from . import log
+
+                    log.info(f"Deploy built IG -> {current_path}")
+                    # Loop back to confirm the new path
+                    continue
+                else:
+                    from . import log
+
+                    log.warning("No path entered, keeping current path")
+                    continue
+            else:
+                # User doesn't want to modify, abort
+                raise CancelException("Aborted by user")
+        else:
+            # Invalid input, ask again
+            continue
+
+
 def check_installed(cmd: str, name: str):
     try:
         shell.run(f"which {cmd}", check=True, log_output=False)
