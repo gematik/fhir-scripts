@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.24.0
+
+* Allow to define publication path for IG deployment using dialogue
+
 ## Release 0.23.0
 
 * Check the Java version requirement during installation
