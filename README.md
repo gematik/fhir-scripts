@@ -29,7 +29,7 @@ fhirscripts --help
 
 ### Config
 
-The script uses a config file. [An example can be found here](./examples/fhirscripts.config.yaml). The default path for this file `./config.yaml`. A different path can be defined
+The script uses a config file. [An example can be found here](./examples/fhirscripts.config.yaml). The default path for this file `./fhirscripts.config.yaml`. A different path can be defined
 
 ```bash
 fhirscripts --config <config> <command>
