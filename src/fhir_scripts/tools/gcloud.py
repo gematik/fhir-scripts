@@ -111,13 +111,13 @@ def ls(path: Url) -> list[str]:
     # Try interpret `path` as directory
     try:
         path_dir = path / "**" if not path.endswith("/**") else path
-        res = shell.run(CMD_LS.format(path_dir), check=False, log_output=False)
+        res = shell.run(CMD_LS.format(path_dir), check=True, log_output=False)
         return res.stdout
 
     except shell.CalledProcessError:
         # If this fails it might be a single file
         try:
-            res = shell.run(CMD_LS.format(path), check=False, log_output=False)
+            res = shell.run(CMD_LS.format(path), check=True, log_output=False)
             return res.stdout
 
         except shell.CalledProcessError:

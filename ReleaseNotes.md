@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+# Release 0.24.1
+
+* Fix detection of pre-existing target for gcloud copy
+
 ## Release 0.24.0
 
 * Allow to define publication path for IG deployment using dialogue
