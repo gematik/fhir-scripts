@@ -57,7 +57,7 @@ def _convert_std(input) -> list[str]:
 
     return [
         COLOR_FORMATTING.sub("", line.strip())
-        for line in input.strip().split("\n")
+        for line in (input.strip() if isinstance(input, str) else input).split("\n")
         if line
     ]
 
