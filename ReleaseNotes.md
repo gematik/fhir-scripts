@@ -2,9 +2,15 @@
 
 # Release Notes FHIR Scripts
 
-# Release 0.24.1
+## Release 0.25.0
+
+* For package cache handling, introduce `--new` and `--legacy` flags to select which tool should be use in the under the hood
+  * If nothing is selected, the default is `--legacy` as the new one is still WIP
+
+## Release 0.24.1
 
 * Fix detection of pre-existing target for gcloud copy
+* Fix handling of output from called processes (depending on system it may return an IO Text Wrapper of a string)
 
 ## Release 0.24.0
 

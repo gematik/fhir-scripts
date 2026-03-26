@@ -7,10 +7,14 @@ from . import log
 from .tools import fhir_pkg_tool, firely_terminal
 from .tools.basic import npm
 
+# Commands
 PKG = "package"
 BUILD = "build"
+
+# Arguments
 PKG_DIR = "--package-dir"
 NO_CLEAR = "--no-clear"
+NEW = "--new"
 LEGACY = "--legacy"
 
 FHIR_REGISTRY = "https://packages.simplifier.net"
@@ -28,7 +32,14 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
         action="store_true",
         help="Do no clear the FHIR cache before restoring",
     )
-    pkg_parser.add_argument(
+
+    group = pkg_parser.add_mutually_exclusive_group()
+    group.add_argument(
+        NEW,
+        action="store_true",
+        help="Use the new WIP implementation of a package manager",
+    )
+    group.add_argument(
         LEGACY, action="store_true", help="Old implementation using Firely Terminal"
     )
 
@@ -38,10 +49,15 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
 def cache_rebuild_fhir_cache(
     package_dir: Path | None = None,
     no_clear: bool = False,
+    new: bool = False,
     legacy: bool = False,
     *args,
     **kwargs,
 ):
+
+    # Set default to "legacy" at the moment
+    if not new and not legacy:
+        legacy = True
 
     if not fhir_pkg_tool.is_installed() and not legacy:
         legacy = True
