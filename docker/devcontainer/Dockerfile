@@ -71,6 +71,6 @@ ARG VERSION=FromEnvironment
 LABEL de.gematik.commit-sha=$COMMIT_HASH \
       de.gematik.version=$VERSION \
       de.gematik.vendor="gematik GmbH" \
-      maintainer="software-development@gematik.de" \
+      maintainer="patientteam@gematik.de" \
       de.gematik.app="FHIR Scripts DevContainer" \
       de.gematik.git-repo-name="https://github.com/gematik/fhir-scripts"
