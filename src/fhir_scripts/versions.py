@@ -9,7 +9,6 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument(
         "--outdated", action="store_true", help="List outdated versions"
     )
-    pass
 
 
 def versions(outdated: bool = False, *args, **kwargs) -> bool:

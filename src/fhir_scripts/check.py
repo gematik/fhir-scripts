@@ -1,0 +1,220 @@
+import json
+import re
+from argparse import ArgumentParser
+from pathlib import Path
+
+import yaml
+
+from . import log
+
+PUB_REQUEST_NAME = "publication-request.json"
+SUSHI_CONFIG_NAME = "sushi-config.yaml"
+PACKAGE_JSON_NAME = "package.json"
+
+VERSION_REGEX = re.compile(r"\d+(?:\.\d+){2}")
+
+
+def setup_parser(parser: ArgumentParser, *args, **kwarsg):
+    parser.add_argument(
+        "--workdir", type=Path, default=Path.cwd(), help="Working directory"
+    )
+    parser.add_argument(
+        "--release", action="store_true", help="Perform extra checks for release"
+    )
+
+
+def check(workdir: Path, release: bool, *args, **kwargs):
+    errors = 0
+    warnings = 0
+
+    # Define the file names
+    pub_request_file = workdir / PUB_REQUEST_NAME
+    sushi_config_file = workdir / SUSHI_CONFIG_NAME
+    package_json_file = workdir / PACKAGE_JSON_NAME
+
+    # Read the content of the files
+    pub_request = (
+        json.loads(pub_request_file.read_text("utf-8"))
+        if pub_request_file.exists()
+        else None
+    )
+    sushi_config = (
+        yaml.safe_load(sushi_config_file.read_text("utf-8"))
+        if sushi_config_file.exists()
+        else None
+    )
+    package_json = (
+        json.loads(package_json_file.read_text("utf-8"))
+        if package_json_file.exists()
+        else None
+    )
+
+    # Check all files exist
+    if pub_request is None or sushi_config is None or package_json is None:
+        raise Exception(
+            "Project malformed: publication request, sushi config or package JSON missing"
+        )
+
+    # Check versions equal
+    err, warn = _check_versions(pub_request, sushi_config, package_json)
+    errors += err
+    warnings += warn
+
+    # Check versions of dependencies
+    err, warn = _check_deps(pub_request, sushi_config, package_json)
+    errors += err
+    warnings += warn
+
+    # Make release specific checks
+    if release:
+        err, warn = _check_release(pub_request, sushi_config, package_json)
+        errors += err
+        warnings += warn
+
+    if errors > 0 or warnings > 0:
+        log.fail(f"Checks failed: {log.ERR}{errors}, {log.WARN}{warnings}")
+        raise Exception("Checks failed")
+
+    else:
+        log.succ("Checks successful")
+
+
+def _check_versions(pub_request: dict, sushi_config: dict, package_json: dict):
+    errors = 0
+    warnings = 0
+
+    pub_request_version = pub_request.get("version")
+    sushi_config_version = sushi_config.get("version")
+    package_json_version = package_json.get("version")
+
+    # Publication Request == Sushi Config
+    if (
+        pub_request_version == sushi_config_version
+        and sushi_config_version == package_json_version
+    ):
+        log.succ(f"All IG versions match: {pub_request_version}")
+
+    else:
+        errors += 1
+
+        log.fail(
+            f"IG versions not match: Publication Request {pub_request_version},Sushi Config {sushi_config_version}, Package JSON {package_json_version}"
+        )
+
+    # Version in path of Publication Request
+    if (path_version_match := VERSION_REGEX.search(pub_request.get("path", ""))) and (
+        path_version := path_version_match[0]
+    ) == pub_request_version:
+        log.succ("Version in path in publication request matches")
+
+    else:
+        errors += 1
+
+        log.fail(
+            "Version in path does not match version in publication request: {} != {}".format(
+                path_version, pub_request_version
+            )
+        )
+
+    # Version in description in Publication Request
+    if (desc_version_match := VERSION_REGEX.search(pub_request.get("desc", ""))) and (
+        desc_version := desc_version_match[0]
+    ) == pub_request_version:
+        log.succ("Version in description in publication request matches")
+
+    else:
+        errors += 1
+
+        log.fail(
+            "Version in description does not match version in publication request: {} != {}".format(
+                desc_version, pub_request_version
+            )
+        )
+
+    return errors, warnings
+
+
+def _check_deps(pub_request: dict, sushi_config: dict, package_json: dict):
+    errors = 0
+    warnings = 0
+
+    package_json_deps = package_json.get("dependencies", {})
+    sushi_config_deps = sushi_config.get("dependencies", {})
+
+    pkg_deps = set(package_json_deps)
+    sushi_deps = set(sushi_config_deps)
+    ignore_deps = set(["hl7.fhir.r4.core"])
+
+    if not_sushi := pkg_deps - sushi_deps - ignore_deps:
+        warnings += 1
+
+        log.warn(
+            "Missing dependencies in Sushi Config: {}".format(", ".join(not_sushi))
+        )
+
+    if not_pkg := sushi_deps - pkg_deps - ignore_deps:
+        warnings += 1
+
+        log.warn("Missing dependencies in Package JSON: {}".format(", ".join(not_pkg)))
+
+    for entry in pkg_deps & sushi_deps:
+        if (pkg_version := package_json_deps.get(entry)) != (
+            sushi_version := sushi_config_deps.get(entry)
+        ):
+            errors += 1
+
+            log.fail(
+                "Dependency {} version does not match: Sushi Config {}, Package JSON {}".format(
+                    entry, sushi_version, pkg_version
+                )
+            )
+
+        else:
+            log.succ(
+                "Dependency {} version does match: {}".format(entry, sushi_version)
+            )
+
+    return errors, warnings
+
+
+def _check_release(pub_request: dict, sushi_config: dict, package_json: dict):
+    errors = 0
+    warnings = 0
+
+    if (status := sushi_config.get("status")) != "active":
+        errors += 1
+
+        log.fail(
+            'Status in Sushi Config is "{}", but should be "active"'.format(status)
+        )
+    else:
+        log.succ('Status in Sushi Config is "active"')
+
+    if (status := sushi_config.get("releaseLabel")) != "release":
+        errors += 1
+
+        log.fail(
+            'Release label in Sushi Config is "{}", but should be "release"'.format(
+                status
+            )
+        )
+    else:
+        log.succ('Release label in Sushi Config is "release"')
+
+    if (status := pub_request.get("status")) != "release":
+        errors += 1
+
+        log.fail(
+            'Status in Publication Request is "{}", but should be "release"'.format(
+                status
+            )
+        )
+    else:
+        log.succ('Status in Publication Request is "release"')
+
+    return errors, warnings
+
+
+__doc__ = "Check consistencies"
+__handler__ = check
+__setup_subparser__ = setup_parser

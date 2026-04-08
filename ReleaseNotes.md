@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.26.0
+
+* Command to check consistency in project
+
 ## Release 0.25.0
 
 * For package cache handling, introduce `--new` and `--legacy` flags to select which tool should be use in the under the hood
