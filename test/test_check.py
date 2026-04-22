@@ -3,6 +3,100 @@ import unittest
 from fhir_scripts import check
 
 
+class TestCheckVersions(unittest.TestCase):
+
+    def test_matching(self):
+        input_pub = {
+            "version": "1.2.3",
+            "path": "http://example.org/ExampleIG/1.2.3",
+            "desc": "Example IG 1.2.3",
+        }
+        input_sushi = {"version": "1.2.3"}
+        input_package = {"version": "1.2.3"}
+        wanted = 0, 0
+
+        res = check._check_versions(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, res)
+
+    def test_pub_not_matching(self):
+        input_pub = {
+            "version": "1.2.4",
+            "path": "http://example.org/ExampleIG/1.2.3",
+            "desc": "Example IG 1.2.3",
+        }
+        input_sushi = {"version": "1.2.3"}
+        input_package = {"version": "1.2.3"}
+        wanted = 1, 0
+
+        res = check._check_versions(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, res)
+
+    def test_pub_path_not_matching(self):
+        input_pub = {
+            "version": "1.2.4",
+            "path": "http://example.org/ExampleIG/1.2.4",
+            "desc": "Example IG 1.2.3",
+        }
+        input_sushi = {"version": "1.2.3"}
+        input_package = {"version": "1.2.3"}
+        wanted = 2, 0
+
+        res = check._check_versions(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, res)
+
+    def test_pub_desc_not_matching(self):
+        input_pub = {
+            "version": "1.2.4",
+            "path": "http://example.org/ExampleIG/1.2.4",
+            "desc": "Example IG 1.2.4",
+        }
+        input_sushi = {"version": "1.2.3"}
+        input_package = {"version": "1.2.3"}
+        wanted = 3, 0
+
+        res = check._check_versions(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, res)
+
+    def test_sushi_not_matching(self):
+        input_pub = {
+            "version": "1.2.3",
+            "path": "http://example.org/ExampleIG/1.2.3",
+            "desc": "Example IG 1.2.3",
+        }
+        input_sushi = {"version": "1.2.4"}
+        input_package = {"version": "1.2.3"}
+        wanted = 3, 0
+
+        res = check._check_versions(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, res)
+
+    def test_package_not_matching(self):
+        input_pub = {
+            "version": "1.2.3",
+            "path": "http://example.org/ExampleIG/1.2.3",
+            "desc": "Example IG 1.2.3",
+        }
+        input_sushi = {"version": "1.2.3"}
+        input_package = {"version": "1.2.4"}
+        wanted = 1, 0
+
+        res = check._check_versions(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, res)
+
+    def test_version_missing(self):
+        input_pub = {
+            "version": "1.2.3",
+            "path": "http://example.org/ExampleIG/1.2.3",
+            "desc": "Example IG 1.2.3",
+        }
+        input_sushi = {"version": "1.2.3"}
+        input_package = {}
+        wanted = 1, 0
+
+        res = check._check_versions(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, res)
+
+
 class TestCheckDeps(unittest.TestCase):
 
     def test_matching(self):

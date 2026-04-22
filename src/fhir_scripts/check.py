@@ -11,7 +11,7 @@ PUB_REQUEST_NAME = "publication-request.json"
 SUSHI_CONFIG_NAME = "sushi-config.yaml"
 PACKAGE_JSON_NAME = "package.json"
 
-VERSION_REGEX = re.compile(r"(?:\s|^)(\d+(?:\.\d+){2}(?:-[a-z\.\d]+)?)(?:\s|$)")
+VERSION_REGEX = re.compile(r"(?:\/|\s|^)(\d+(?:\.\d+){2}(?:-[a-z\.\d]+)?)(?:\s|$)")
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
@@ -101,33 +101,29 @@ def _check_versions(pub_request: dict, sushi_config: dict, package_json: dict):
             f"IG versions not match: Publication Request {pub_request_version}, Sushi Config {sushi_config_version}, Package JSON {package_json_version}"
         )
 
-    # Version in path of Publication Request
-    if (
-        path_version := _get_version(pub_request.get("path", ""))
-    ) == pub_request_version:
+    # Version in path of Sushi Config
+    if (path_version := _get_version(pub_request, "path")) == sushi_config_version:
         log.succ("Version in path in publication request matches")
 
     else:
         errors += 1
 
         log.fail(
-            "Version in path does not match version in publication request: {} != {}".format(
-                path_version, pub_request_version
+            "Version in path does not match version in sushi config: {} != {}".format(
+                path_version, sushi_config_version
             )
         )
 
-    # Version in description in Publication Request
-    if (
-        desc_version := _get_version(pub_request.get("desc", ""))
-    ) == pub_request_version:
+    # Version in description in Sushi Config
+    if (desc_version := _get_version(pub_request, "desc")) == sushi_config_version:
         log.succ("Version in description in publication request matches")
 
     else:
         errors += 1
 
         log.fail(
-            "Version in description does not match version in publication request: {} != {}".format(
-                desc_version, pub_request_version
+            "Version in description does not match version in sushi config: {} != {}".format(
+                desc_version, sushi_config_version
             )
         )
 
