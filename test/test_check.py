@@ -3,6 +3,76 @@ import unittest
 from fhir_scripts import check
 
 
+class TestCheckDeps(unittest.TestCase):
+
+    def test_matching(self):
+        input_pub = {}
+        input_sushi = {"dependencies": {"org.example.abc": "1.2.3"}}
+        input_package = {"dependencies": {"org.example.abc": "1.2.3"}}
+        wanted = 0, 0
+
+        result = check._check_deps(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, result)
+
+    def test_not_matching(self):
+        input_pub = {}
+        input_sushi = {"dependencies": {"org.example.abc": "1.2.3"}}
+        input_package = {"dependencies": {"org.example.abc": "1.2.4"}}
+        wanted = 1, 0
+
+        result = check._check_deps(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, result)
+
+    def test_not_matching_multiple(self):
+        input_pub = {}
+        input_sushi = {
+            "dependencies": {"org.example.abc": "1.2.3", "org.example.def": "4.5.6"}
+        }
+        input_package = {
+            "dependencies": {"org.example.abc": "1.2.4", "org.example.def": "4.5.7"}
+        }
+        wanted = 2, 0
+
+        result = check._check_deps(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, result)
+
+    def test_not_in_sushi(self):
+        input_pub = {}
+        input_sushi = {"dependencies": {}}
+        input_package = {"dependencies": {"org.example.abc": "1.2.3"}}
+        wanted = 0, 1
+
+        result = check._check_deps(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, result)
+
+    def test_no_deps_in_sushi(self):
+        input_pub = {}
+        input_sushi = {}
+        input_package = {"dependencies": {"org.example.abc": "1.2.3"}}
+        wanted = 0, 1
+
+        result = check._check_deps(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, result)
+
+    def test_not_in_package(self):
+        input_pub = {}
+        input_sushi = {"dependencies": {"org.example.abc": "1.2.3"}}
+        input_package = {"dependencies": {}}
+        wanted = 0, 1
+
+        result = check._check_deps(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, result)
+
+    def test_no_deps_in_package(self):
+        input_pub = {}
+        input_sushi = {"dependencies": {"org.example.abc": "1.2.3"}}
+        input_package = {}
+        wanted = 0, 1
+
+        result = check._check_deps(input_pub, input_sushi, input_package)
+        self.assertEqual(wanted, result)
+
+
 class TestCheckRelease(unittest.TestCase):
 
     def test_sushi_correct(self):
