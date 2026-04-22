@@ -11,7 +11,7 @@ PUB_REQUEST_NAME = "publication-request.json"
 SUSHI_CONFIG_NAME = "sushi-config.yaml"
 PACKAGE_JSON_NAME = "package.json"
 
-VERSION_REGEX = re.compile(r"\d+(?:\.\d+){2}")
+VERSION_REGEX = re.compile(r"(?:\s|^)(\d+(?:\.\d+){2}(?:-[a-z\.\d]+)?)(?:\s|$)")
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
@@ -102,8 +102,8 @@ def _check_versions(pub_request: dict, sushi_config: dict, package_json: dict):
         )
 
     # Version in path of Publication Request
-    if (path_version_match := VERSION_REGEX.search(pub_request.get("path", ""))) and (
-        path_version := path_version_match[0]
+    if (
+        path_version := _get_version(pub_request.get("path", ""))
     ) == pub_request_version:
         log.succ("Version in path in publication request matches")
 
@@ -117,8 +117,8 @@ def _check_versions(pub_request: dict, sushi_config: dict, package_json: dict):
         )
 
     # Version in description in Publication Request
-    if (desc_version_match := VERSION_REGEX.search(pub_request.get("desc", ""))) and (
-        desc_version := desc_version_match[0]
+    if (
+        desc_version := _get_version(pub_request.get("desc", ""))
     ) == pub_request_version:
         log.succ("Version in description in publication request matches")
 
@@ -213,6 +213,17 @@ def _check_release(pub_request: dict, sushi_config: dict, package_json: dict):
         log.succ('Status in Publication Request is "release"')
 
     return errors, warnings
+
+
+def _get_version(value: str | dict[str, str], key: str | None = None) -> str | None:
+    if isinstance(value, dict):
+        if key is None:
+            return None
+
+        value = value.get(key, "")
+
+    match = VERSION_REGEX.search(value)
+    return match[1] if match else None
 
 
 __doc__ = "Check consistencies"
