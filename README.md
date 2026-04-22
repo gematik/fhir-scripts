@@ -4,6 +4,28 @@
 
 ## Python Script
 
+The Python tooling can be used with
+
+```bash
+fhirscripts [command] ...
+```
+
+Get more information about the usage with
+
+```bash
+fhirscripts --help
+```
+
+### uv (preferred)
+
+Install using uv as a tool
+
+```bash
+uv tool install git+https://github.com/gematik/fhir-scripts.git
+```
+
+### pipx
+
 Install using pipx
 
 ```bash
@@ -14,18 +36,6 @@ Optionally, one can provide addtional arguments for `pipx install`:
 
 * `-f`, `--force`: overwrite an existing installation
 * `--global`: install for all users (may need to be called using `sudo`)
-
-Also there can optional compentens be defined to be also installed using `fhir_scripts[opt,...]`. These are Python packages that otherwise may be called using a shell. Available components are:
-
-* `epatools`: Handle CapabilityStatements and OpenAPI
-* `igtools`: Handle requirements
-* `publishtools`: Support the publish workflow
-
-Get information about the usage with
-
-```bash
-fhirscripts --help
-```
 
 ### Config
 
