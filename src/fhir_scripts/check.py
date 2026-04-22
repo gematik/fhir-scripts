@@ -98,7 +98,7 @@ def _check_versions(pub_request: dict, sushi_config: dict, package_json: dict):
         errors += 1
 
         log.fail(
-            f"IG versions not match: Publication Request {pub_request_version},Sushi Config {sushi_config_version}, Package JSON {package_json_version}"
+            f"IG versions not match: Publication Request {pub_request_version}, Sushi Config {sushi_config_version}, Package JSON {package_json_version}"
         )
 
     # Version in path of Publication Request

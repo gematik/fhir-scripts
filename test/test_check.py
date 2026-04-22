@@ -3,6 +3,54 @@ import unittest
 from fhir_scripts import check
 
 
+class TestCheckRelease(unittest.TestCase):
+
+    def test_sushi_correct(self):
+        pub_request = {"status": "release"}
+        sushi_config = {"status": "active", "releaseLabel": "release"}
+        package_json = {}
+        wanted = 0, 0
+
+        result = check._check_release(pub_request, sushi_config, package_json)
+        self.assertEqual(wanted, result)
+
+    def test_sushi_pub_status_draft(self):
+        pub_request = {"status": "draft"}
+        sushi_config = {"status": "active", "releaseLabel": "release"}
+        package_json = {}
+        wanted = 1, 0
+
+        result = check._check_release(pub_request, sushi_config, package_json)
+        self.assertEqual(wanted, result)
+
+    def test_sushi_sushi_status_draft(self):
+        pub_request = {"status": "release"}
+        sushi_config = {"status": "draft", "releaseLabel": "release"}
+        package_json = {}
+        wanted = 1, 0
+
+        result = check._check_release(pub_request, sushi_config, package_json)
+        self.assertEqual(wanted, result)
+
+    def test_sushi_pub_label_draft(self):
+        pub_request = {"status": "release"}
+        sushi_config = {"status": "active", "releaseLabel": "draft"}
+        package_json = {}
+        wanted = 1, 0
+
+        result = check._check_release(pub_request, sushi_config, package_json)
+        self.assertEqual(wanted, result)
+
+    def test_sushi_everything_draft(self):
+        pub_request = {"status": "draft"}
+        sushi_config = {"status": "draft", "releaseLabel": "draft"}
+        package_json = {}
+        wanted = 3, 0
+
+        result = check._check_release(pub_request, sushi_config, package_json)
+        self.assertEqual(wanted, result)
+
+
 class TestCheckGetVersion(unittest.TestCase):
 
     def test_basic(self):
