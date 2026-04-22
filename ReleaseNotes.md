@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.26.1
+
+* Improve variations for version numbers in checks
+
 ## Release 0.26.0
 
 * Command to check consistency in project
