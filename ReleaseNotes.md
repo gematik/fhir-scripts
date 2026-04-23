@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.27.0
+
+* Add consistency check for definitions
+
 ## Release 0.26.1
 
 * Improve variations for version numbers in checks
