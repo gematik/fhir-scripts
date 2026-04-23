@@ -1,6 +1,65 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from fhir_scripts import check
+
+
+class TestCheckDefVersions(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.tmpdir = tempfile.TemporaryDirectory()
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        self.tmpdir.cleanup()
+        return super().tearDown()
+
+    def setupFiles(self, input: list[dict]):
+        for e in input:
+            file = tempfile.NamedTemporaryFile(
+                mode="w+t",
+                dir=self.tmpdir.name,
+                suffix=".json",
+                delete=False,
+                delete_on_close=False,
+            )
+            file.write(json.dumps(e))
+            file.close()
+
+    def test_multiple_versions(self):
+        input = [
+            {"version": "1.2.3", "date": "2020-01-01"},
+            {"version": "1.2.4", "date": "2022-01-01"},
+        ]
+        wanted = 0, 0
+        self.setupFiles(input)
+
+        res = check._check_def_versions(Path(self.tmpdir.name))
+        self.assertEqual(wanted, res)
+
+    def test_same_version_same_date(self):
+        input = [
+            {"version": "1.2.3", "date": "2020-01-01"},
+            {"version": "1.2.3", "date": "2020-01-01"},
+        ]
+        wanted = 0, 0
+        self.setupFiles(input)
+
+        res = check._check_def_versions(Path(self.tmpdir.name))
+        self.assertEqual(wanted, res)
+
+    def test_same_version_diff_date(self):
+        input = [
+            {"version": "1.2.3", "date": "2020-01-01"},
+            {"version": "1.2.3", "date": "2022-01-01"},
+        ]
+        wanted = 1, 0
+        self.setupFiles(input)
+
+        res = check._check_def_versions(Path(self.tmpdir.name))
+        self.assertEqual(wanted, res)
 
 
 class TestCheckVersions(unittest.TestCase):
@@ -170,48 +229,53 @@ class TestCheckDeps(unittest.TestCase):
 class TestCheckRelease(unittest.TestCase):
 
     def test_sushi_correct(self):
-        pub_request = {"status": "release"}
-        sushi_config = {"status": "active", "releaseLabel": "release"}
-        package_json = {}
+        input = {
+            "pub_request": {"status": "release"},
+            "sushi_config": {"status": "active", "releaseLabel": "release"},
+        }
         wanted = 0, 0
 
-        result = check._check_release(pub_request, sushi_config, package_json)
+        result = check._check_release(**input)
         self.assertEqual(wanted, result)
 
     def test_sushi_pub_status_draft(self):
-        pub_request = {"status": "draft"}
-        sushi_config = {"status": "active", "releaseLabel": "release"}
-        package_json = {}
+        input = {
+            "pub_request": {"status": "draft"},
+            "sushi_config": {"status": "active", "releaseLabel": "release"},
+        }
         wanted = 1, 0
 
-        result = check._check_release(pub_request, sushi_config, package_json)
+        result = check._check_release(**input)
         self.assertEqual(wanted, result)
 
     def test_sushi_sushi_status_draft(self):
-        pub_request = {"status": "release"}
-        sushi_config = {"status": "draft", "releaseLabel": "release"}
-        package_json = {}
+        input = {
+            "pub_request": {"status": "release"},
+            "sushi_config": {"status": "draft", "releaseLabel": "release"},
+        }
         wanted = 1, 0
 
-        result = check._check_release(pub_request, sushi_config, package_json)
+        result = check._check_release(**input)
         self.assertEqual(wanted, result)
 
     def test_sushi_pub_label_draft(self):
-        pub_request = {"status": "release"}
-        sushi_config = {"status": "active", "releaseLabel": "draft"}
-        package_json = {}
+        input = {
+            "pub_request": {"status": "release"},
+            "sushi_config": {"status": "active", "releaseLabel": "draft"},
+        }
         wanted = 1, 0
 
-        result = check._check_release(pub_request, sushi_config, package_json)
+        result = check._check_release(**input)
         self.assertEqual(wanted, result)
 
     def test_sushi_everything_draft(self):
-        pub_request = {"status": "draft"}
-        sushi_config = {"status": "draft", "releaseLabel": "draft"}
-        package_json = {}
+        input = {
+            "pub_request": {"status": "draft"},
+            "sushi_config": {"status": "draft", "releaseLabel": "draft"},
+        }
         wanted = 3, 0
 
-        result = check._check_release(pub_request, sushi_config, package_json)
+        result = check._check_release(**input)
         self.assertEqual(wanted, result)
 
 

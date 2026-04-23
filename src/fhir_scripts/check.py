@@ -55,19 +55,31 @@ def check(workdir: Path, release: bool, *args, **kwargs):
             "Project malformed: publication request, sushi config or package JSON missing"
         )
 
+    args = {
+        "pub_request": pub_request,
+        "sushi_config": sushi_config,
+        "package_json": package_json,
+        "defs_dir": workdir / "fsh-generated" / "resources",
+    }
+
     # Check versions equal
-    err, warn = _check_versions(pub_request, sushi_config, package_json)
+    err, warn = _check_versions(**args)
     errors += err
     warnings += warn
 
     # Check versions of dependencies
-    err, warn = _check_deps(pub_request, sushi_config, package_json)
+    err, warn = _check_deps(**args)
+    errors += err
+    warnings += warn
+
+    # Check definitions
+    err, warn = _check_def_versions(**args)
     errors += err
     warnings += warn
 
     # Make release specific checks
     if release:
-        err, warn = _check_release(pub_request, sushi_config, package_json)
+        err, warn = _check_release(**args)
         errors += err
         warnings += warn
 
@@ -79,7 +91,9 @@ def check(workdir: Path, release: bool, *args, **kwargs):
         log.succ("Checks successful")
 
 
-def _check_versions(pub_request: dict, sushi_config: dict, package_json: dict):
+def _check_versions(
+    pub_request: dict, sushi_config: dict, package_json: dict, **kwargs
+):
     errors = 0
     warnings = 0
 
@@ -130,7 +144,7 @@ def _check_versions(pub_request: dict, sushi_config: dict, package_json: dict):
     return errors, warnings
 
 
-def _check_deps(pub_request: dict, sushi_config: dict, package_json: dict):
+def _check_deps(pub_request: dict, sushi_config: dict, package_json: dict, **kwargs):
     errors = 0
     warnings = 0
 
@@ -173,7 +187,40 @@ def _check_deps(pub_request: dict, sushi_config: dict, package_json: dict):
     return errors, warnings
 
 
-def _check_release(pub_request: dict, sushi_config: dict, package_json: dict):
+def _check_def_versions(defs_dir: Path, **kwargs):
+    err = 0
+    warn = 0
+
+    # Generate list of versions and associated dates
+    version_dates: dict[str, list[str]] = {}
+    for f in defs_dir.glob("**/*.json"):
+        content = json.loads(f.read_text())
+        version = content.get("version")
+        date = content.get("date")
+
+        if version is None:
+            continue
+
+        if version not in version_dates:
+            version_dates[version] = []
+
+        if date not in version_dates[version]:
+            version_dates[version].append(date)
+
+    log.info(f"Versions in definitions: {', '.join(version_dates.keys())}")
+
+    for version, dates in version_dates.items():
+        if len(dates) == 1:
+            log.succ(f"Version {version} has consistent dates")
+
+        else:
+            log.fail(f"Different dates for version {version}: {', '.join(dates)}")
+            err += 1
+
+    return err, warn
+
+
+def _check_release(pub_request: dict, sushi_config: dict, **kwargs):
     errors = 0
     warnings = 0
 
