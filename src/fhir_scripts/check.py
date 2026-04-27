@@ -193,8 +193,8 @@ def _check_deps(pub_request: dict, sushi_config: dict, package_json: dict, **kwa
     return errors, warnings
 
 
-def _check_transitive_deps(sushi_config: dict, **kwargs):
-    fhir_pkg_dir = Path.home() / ".fhir" / "packages"
+def _check_transitive_deps(sushi_config: dict, pkg_dir: Path | None = None, **kwargs):
+    fhir_pkg_dir = pkg_dir or (Path.home() / ".fhir" / "packages")
     sushi_config_deps = sushi_config.get("dependencies", {})
 
     err = 0
