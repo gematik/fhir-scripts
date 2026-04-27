@@ -1,6 +1,7 @@
 import json
 import re
 from argparse import ArgumentParser
+from collections import deque
 from pathlib import Path
 
 import yaml
@@ -69,6 +70,11 @@ def check(workdir: Path, release: bool, *args, **kwargs):
 
     # Check versions of dependencies
     err, warn = _check_deps(**args)
+    errors += err
+    warnings += warn
+
+    # Check versions of transistive dependencies
+    err, warn = _check_transitive_deps(**args)
     errors += err
     warnings += warn
 
@@ -185,6 +191,50 @@ def _check_deps(pub_request: dict, sushi_config: dict, package_json: dict, **kwa
             )
 
     return errors, warnings
+
+
+def _check_transitive_deps(sushi_config: dict, pkg_dir: Path | None = None, **kwargs):
+    fhir_pkg_dir = pkg_dir or (Path.home() / ".fhir" / "packages")
+    sushi_config_deps = sushi_config.get("dependencies", {})
+
+    err = 0
+    warn = 0
+
+    dep_versions: dict[str, list[str]] = {}
+
+    to_process = deque(sushi_config_deps.items())
+    while len(to_process) > 0:
+        pkg, version = to_process.popleft()
+
+        if pkg not in dep_versions:
+            dep_versions[pkg] = []
+
+        if version not in dep_versions[pkg]:
+            dep_versions[pkg].append(version)
+
+        pkg_json = fhir_pkg_dir / f"{pkg}#{version}" / "package" / "package.json"
+
+        if not pkg_json.exists():
+            log.fail(f"Transitive package {pkg}#{version} not installed")
+            err += 1
+            continue
+
+        pkg_content = json.loads(pkg_json.read_text())
+        pkg_deps = pkg_content.get("dependencies", {})
+
+        to_process += deque(pkg_deps.items())
+
+    for pkg, versions in dep_versions.items():
+        if len(versions) > 1:
+            log.warn(
+                f"Different transitive versions of package {pkg}: {', '.join(versions)}"
+            )
+            warn += 1
+
+        else:
+            log.succ(f"Matching transitive versions of package {pkg}: {versions[0]}")
+
+    return err, warn
 
 
 def _check_def_versions(defs_dir: Path, **kwargs):

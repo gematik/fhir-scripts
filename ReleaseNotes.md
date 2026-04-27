@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.28.0
+
+* Add consistency check for transitive dependencies
+
 ## Release 0.27.0
 
 * Add consistency check for definitions

@@ -226,6 +226,69 @@ class TestCheckDeps(unittest.TestCase):
         self.assertEqual(wanted, result)
 
 
+class TestCheckTransitiveDeps(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.tmpdir = tempfile.TemporaryDirectory()
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        self.tmpdir.cleanup()
+        return super().tearDown()
+
+    def setupFiles(self, input: dict[str, dict[str, str]]):
+        for pkg, deps in input.items():
+            file = Path(self.tmpdir.name) / pkg / "package/package.json"
+            file.parent.mkdir(parents=True, exist_ok=True)
+            content = {"dependencies": deps}
+            file.write_text(json.dumps(content), "utf-8")
+
+    def test_matching(self):
+        input_sushi = {
+            "dependencies": {"org.example.abc": "1.2.3", "org.example.def": "4.5.6"}
+        }
+        input_pkgs = {
+            "org.example.abc#1.2.3": {"org.example.def": "4.5.6"},
+            "org.example.def#4.5.6": {},
+        }
+
+        wanted = 0, 0
+        self.setupFiles(input_pkgs)
+
+        res = check._check_transitive_deps(input_sushi, Path(self.tmpdir.name))
+        self.assertEqual(wanted, res)
+
+    def test_different(self):
+        input_sushi = {
+            "dependencies": {"org.example.abc": "1.2.3", "org.example.def": "4.5.6"}
+        }
+        input_pkgs = {
+            "org.example.abc#1.2.3": {"org.example.def": "4.5.7"},
+            "org.example.def#4.5.6": {},
+            "org.example.def#4.5.7": {},
+        }
+
+        wanted = 0, 1
+        self.setupFiles(input_pkgs)
+
+        res = check._check_transitive_deps(input_sushi, Path(self.tmpdir.name))
+        self.assertEqual(wanted, res)
+
+    def test_missing(self):
+        input_sushi = {
+            "dependencies": {"org.example.abc": "1.2.3", "org.example.def": "4.5.6"}
+        }
+        input_pkgs = {
+            "org.example.abc#1.2.3": {"org.example.def": "4.5.6"},
+        }
+
+        wanted = 2, 0
+        self.setupFiles(input_pkgs)
+
+        res = check._check_transitive_deps(input_sushi, Path(self.tmpdir.name))
+        self.assertEqual(wanted, res)
+
+
 class TestCheckRelease(unittest.TestCase):
 
     def test_sushi_correct(self):
