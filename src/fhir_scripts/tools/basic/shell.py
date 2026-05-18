@@ -1,7 +1,7 @@
 import re
 import subprocess
 from subprocess import CalledProcessError
-
+from io import IOBase
 from tqdm import tqdm
 
 from ... import helper, log
@@ -55,11 +55,20 @@ def _convert_std(input) -> list[str]:
     if isinstance(input, bytes):
         input = input.decode("utf-8")
 
-    return [
-        COLOR_FORMATTING.sub("", line.strip())
-        for line in (input.strip() if isinstance(input, str) else input).split("\n")
-        if line
-    ]
+    # Split input into lines
+    if isinstance(input, str):
+        lines = input.strip().split("\n")
+
+    elif isinstance(input, IOBase):
+        lines = input.readlines()
+        lines = [line if isinstance(line, bytes) else line for line in lines]
+
+    else:
+        raise Exception(
+            f"Error reading from process output, not supported {type(input)}"
+        )
+
+    return [COLOR_FORMATTING.sub("", line.strip()) for line in lines if line]
 
 
 def _oneline(list_: list[str]) -> str:
