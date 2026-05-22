@@ -61,6 +61,8 @@ Install one or multiple tools
 fhirscripts install --<tool> [--<tool> [...]]
 ```
 
+For multi-IG repositories, running `fhirscripts install` from repository root will automatically read each IG-local `fhirscripts.config.yaml` and install tools listed in its `install` section.
+
 Get a list of available tools to install
 
 ```bash
