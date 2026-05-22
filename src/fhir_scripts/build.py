@@ -55,9 +55,7 @@ def setup_subparser(
         "--only-cap", action="store_true", help="Only merge CapabilityStatements"
     )
 
-    ig_parser = subparser.add_parser(
-        IG, help="Build IG", parents=[target_args_parser]
-    )
+    ig_parser = subparser.add_parser(IG, help="Build IG", parents=[target_args_parser])
     ig_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
     ig_parser.add_argument(
         "--only-oapi", action="store_true", help="Only build OpenAPI"
