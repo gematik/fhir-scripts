@@ -71,7 +71,9 @@ def install(
                 log.info(
                     "Detected multi-IG repository, installing tools from each IG config"
                 )
-                for target in [project.targets[name] for name in sorted(project.targets)]:
+                for target in [
+                    project.targets[name] for name in sorted(project.targets)
+                ]:
                     with working_directory(target.path):
                         target_config = config_loader.load(
                             Path("./fhirscripts.config.yaml")
