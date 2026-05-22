@@ -75,3 +75,42 @@ class TestInstallMultiIg(unittest.TestCase):
                 )
 
         self.assertEqual([("core", "tool_a"), ("rx", "tool_b")], calls)
+
+    def test_install_without_flags_inside_ig_uses_current_config(self):
+        calls = []
+
+        class ToolA:
+            __tool_name__ = "tool-a"
+
+            @staticmethod
+            def version(*args, **kwargs):
+                return None
+
+            @staticmethod
+            def update(*args, **kwargs):
+                calls.append((Path.cwd().name, "tool_a"))
+
+        class ToolB:
+            __tool_name__ = "tool-b"
+
+            @staticmethod
+            def version(*args, **kwargs):
+                return None
+
+            @staticmethod
+            def update(*args, **kwargs):
+                calls.append((Path.cwd().name, "tool_b"))
+
+        with patch.dict(
+            install_module.TOOL_MODULES,
+            {"tool_a": ToolA, "tool_b": ToolB},
+            clear=True,
+        ):
+            with working_directory(self.repo / "igs" / "core"):
+                install_module.install(
+                    config=Config.model_validate({"install": ["tool_a"]}),
+                    config_file=False,
+                    config_path=None,
+                )
+
+        self.assertEqual([("core", "tool_a")], calls)
