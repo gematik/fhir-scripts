@@ -17,6 +17,10 @@ class TestBuildPipelineMultiIg(unittest.TestCase):
             ig_dir = self.repo / "igs" / name
             ig_dir.mkdir(parents=True, exist_ok=True)
             (ig_dir / "sushi-config.yaml").write_text("id: test\n", "utf-8")
+            (ig_dir / "fhirscripts.config.yaml").write_text(
+                "build:\n  pipeline:\n    - sushi\n",
+                "utf-8",
+            )
 
         self.cfg = Config.model_validate({"build": {"pipeline": ["sushi"]}})
         return super().setUp()
@@ -87,3 +91,25 @@ class TestBuildPipelineMultiIg(unittest.TestCase):
         with self.assertRaisesRegex(Exception, "Unknown IG name"):
             with build.working_directory(self.repo):
                 build.build_pipeline(config=self.cfg, ig=["unknown"], all=False)
+
+    def test_pipeline_uses_ig_local_config_when_no_explicit_config(self):
+        called_steps = []
+
+        def record_sushi(*args, **kwargs):
+            called_steps.append((Path.cwd().name, "sushi"))
+
+        def record_igpub(*args, **kwargs):
+            called_steps.append((Path.cwd().name, "igpub"))
+
+        core_cfg = self.repo / "igs" / "core" / "fhirscripts.config.yaml"
+        core_cfg.write_text("build:\n  pipeline:\n    - igpub\n", "utf-8")
+
+        with patch.dict(
+            build.PIPELINE_STEPS,
+            {"sushi": record_sushi, "igpub": record_igpub},
+            clear=False,
+        ):
+            with build.working_directory(self.repo):
+                build.build_pipeline(config=Config(), ig=["core"], all=False)
+
+        self.assertEqual([("core", "igpub")], called_steps)

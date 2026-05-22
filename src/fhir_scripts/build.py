@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
-from . import log
+from . import config as config_file, log
 from .exception import NoConfigException, NotInstalledException
 from .models.config import Config
 from .multiig import select_targets, working_directory
@@ -84,14 +84,20 @@ def build_defs(
     update: bool = False,
     ig: list[str] | None = None,
     all: bool = False,
+    config_path: Path | None = None,
     *args,
     **kwargs,
 ):
     for target in _selected_targets(ig=ig, all=all):
         with working_directory(target.path):
+            target_config = _resolve_build_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
             log.info(f"Building definitions for IG '{target.name}'")
             _build_defs_once(
-                config=config,
+                config=target_config,
                 only_cap=only_cap,
                 only_req=only_req,
                 req=req,
@@ -140,14 +146,20 @@ def build_ig(
     update: bool = False,
     ig: list[str] | None = None,
     all: bool = False,
+    config_path: Path | None = None,
     *args,
     **kwargs,
 ):
     for target in _selected_targets(ig=ig, all=all):
         with working_directory(target.path):
+            target_config = _resolve_build_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
             log.info(f"Building IG '{target.name}'")
             _build_ig_once(
-                config=config,
+                config=target_config,
                 only_oapi=only_oapi,
                 oapi=oapi,
                 update=update,
@@ -174,15 +186,21 @@ def build_openapi(*args, **kwargs):
 def build_all(config: Config, update: bool = False, *args, **kwargs):
     ig = kwargs.pop("ig", None)
     all = kwargs.pop("all", False)
+    config_path = kwargs.pop("config_path", None)
 
     for target in _selected_targets(ig=ig, all=all):
         with working_directory(target.path):
+            target_config = _resolve_build_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
             log.info(f"Building everything for IG '{target.name}'")
             if update:
                 handle_update(*args, **kwargs)
 
-            _build_defs_once(config=config, *args, **kwargs)
-            _build_ig_once(config=config, *args, **kwargs)
+            _build_defs_once(config=target_config, *args, **kwargs)
+            _build_ig_once(config=target_config, *args, **kwargs)
             log.succ(f"Build completed for IG '{target.name}'")
 
 
@@ -210,11 +228,17 @@ PIPELINE_STEPS = {
 def build_pipeline(config: Config, *args, **kwargs):
     ig = kwargs.pop("ig", None)
     all = kwargs.pop("all", False)
+    config_path = kwargs.pop("config_path", None)
 
     for target in _selected_targets(ig=ig, all=all):
         with working_directory(target.path):
+            target_config = _resolve_build_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
             log.info(f"Processing build pipeline for IG '{target.name}'")
-            _build_pipeline_once(config=config, *args, **kwargs)
+            _build_pipeline_once(config=target_config, *args, **kwargs)
             log.succ(f"Build pipeline completed for IG '{target.name}'")
 
 
@@ -226,6 +250,19 @@ def _selected_targets(ig: list[str] | None, all: bool):
         return [IGTarget(name="current", path=Path.cwd())]
 
     return targets
+
+
+def _resolve_build_config_for_target(
+    default_config: Config, target_path: Path, config_path: Path | None
+) -> Config:
+    if config_path is not None:
+        return default_config
+
+    target_config_file = target_path / "fhirscripts.config.yaml"
+    if target_config_file.exists():
+        return config_file.load(target_config_file)
+
+    return default_config
 
 
 def _build_defs_once(
