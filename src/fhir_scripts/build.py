@@ -22,25 +22,26 @@ def setup_subparser(
         "-u", "--update", action="store_true", help="Update tooling before building"
     )
 
-    def add_target_args(target_parser: ArgumentParser):
-        target_parser.add_argument(
-            "--ig",
-            action="extend",
-            nargs="+",
-            default=[],
-            help=(
-                "Target IG name(s), e.g. 'fhirscripts build pipeline --ig core rx' "
-                "or '--ig core --ig rx'"
-            ),
-        )
-        target_parser.add_argument(
-            "--all",
-            action="store_true",
-            help="Run for all IGs, e.g. 'fhirscripts build pipeline --all'",
-        )
+    target_args_parser = ArgumentParser(add_help=False)
+    target_args_parser.add_argument(
+        "--ig",
+        action="extend",
+        nargs="+",
+        default=[],
+        help=(
+            "Target IG name(s), e.g. 'fhirscripts build pipeline --ig core rx' "
+            "or '--ig core --ig rx'"
+        ),
+    )
+    target_args_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run for all IGs, e.g. 'fhirscripts build pipeline --all'",
+    )
 
-    defs_parser = subparser.add_parser(DEFS, help="Build definitions")
-    add_target_args(defs_parser)
+    defs_parser = subparser.add_parser(
+        DEFS, help="Build definitions", parents=[target_args_parser]
+    )
     defs_parser.add_argument(
         "--req", action="store_true", help="Also process requirements"
     )
@@ -54,15 +55,17 @@ def setup_subparser(
         "--only-cap", action="store_true", help="Only merge CapabilityStatements"
     )
 
-    ig_parser = subparser.add_parser(IG, help="Build IG")
-    add_target_args(ig_parser)
+    ig_parser = subparser.add_parser(
+        IG, help="Build IG", parents=[target_args_parser]
+    )
     ig_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
     ig_parser.add_argument(
         "--only-oapi", action="store_true", help="Only build OpenAPI"
     )
 
-    all_parser = subparser.add_parser(ALL, help="Build everything")
-    add_target_args(all_parser)
+    all_parser = subparser.add_parser(
+        ALL, help="Build everything", parents=[target_args_parser]
+    )
     all_parser.add_argument(
         "--req", action="store_true", help="Also process requirements"
     )
@@ -71,8 +74,7 @@ def setup_subparser(
     )
     all_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
 
-    pipeline_parser = subparser.add_parser(PIPELINE, help="Build IG")
-    add_target_args(pipeline_parser)
+    subparser.add_parser(PIPELINE, help="Build IG", parents=[target_args_parser])
 
 
 def build_defs(
