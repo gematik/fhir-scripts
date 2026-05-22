@@ -6,6 +6,10 @@
 
 * Add functionality for multi ig environments
 
+## Release 0.28.1
+
+* Fix an issue when handling process output that returns a IOTextWrapper
+
 ## Release 0.28.0
 
 * Add consistency check for transitive dependencies
