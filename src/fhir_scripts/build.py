@@ -21,6 +21,7 @@ def setup_subparser(
     parser.add_argument(
         "-u", "--update", action="store_true", help="Update tooling before building"
     )
+
     def add_target_args(target_parser: ArgumentParser):
         target_parser.add_argument(
             "--ig",

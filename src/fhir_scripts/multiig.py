@@ -173,7 +173,9 @@ def _project_from_convention(repo_root: Path) -> MultiIGProject | None:
         ):
             continue
 
-        targets[candidate.name] = IGTarget(name=candidate.name, path=candidate.resolve())
+        targets[candidate.name] = IGTarget(
+            name=candidate.name, path=candidate.resolve()
+        )
 
     if len(targets) == 0:
         return None

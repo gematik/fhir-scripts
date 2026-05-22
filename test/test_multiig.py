@@ -99,9 +99,7 @@ class TestParserSupport(unittest.TestCase):
         subparser = parser.add_subparsers(dest="publish")
         publish.setup_subparser(parser, subparser)
 
-        args = parser.parse_args(
-            ["project", "--ig-registry", "./registry", "--all"]
-        )
+        args = parser.parse_args(["project", "--ig-registry", "./registry", "--all"])
         self.assertEqual([], args.ig)
         self.assertTrue(args.all)
 

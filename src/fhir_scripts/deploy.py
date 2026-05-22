@@ -135,6 +135,8 @@ def deploy(
             log.succ(f"Deployment finished for IG '{target.name}'")
 
     return True
+
+
 def deploy_ig_registry(
     deploy_cfg: DeployConfig,
     target_env: str,
