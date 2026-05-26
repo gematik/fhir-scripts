@@ -101,9 +101,34 @@ Rebuild the local FHIR package cache
 fhirscripts cache package [--package-dir <packagedir>] [--no-clear]
 ```
 
+For multi-IG repositories from root directory:
+
+```bash
+fhirscripts cache package --ig core rx
+fhirscripts cache package --all
+fhirscripts cache build --all
+```
+
 _(WIP)_ A local directory can be used as package cache. If `--package-dir <packagedir>` is provided, packages from `<packagedir>` will be installed instead and if not found, cached to this directory before installing them from there.
 
 `--no-clear` allows to restore the FHIR package cache without clearing the directory in beforehand.
+
+### Check
+
+Check project consistency:
+
+```bash
+fhirscripts check [--release] [--workdir <dir>]
+```
+
+For multi-IG repositories from root directory:
+
+```bash
+fhirscripts check --ig core rx
+fhirscripts check --all
+```
+
+Note: `--workdir` is for single-project mode and cannot be combined with `--ig` or `--all`.
 
 ### Build
 
