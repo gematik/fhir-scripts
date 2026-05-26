@@ -2,9 +2,10 @@ import json
 from argparse import ArgumentParser
 from pathlib import Path
 
-from . import log
+from . import config as config_file, log
 from .helper import confirm, confirm_with_path_modification
 from .models.config import Config, DeployConfig
+from .multiig import IGTarget, select_targets, working_directory
 from .tools import gcloud
 from .types import Url
 
@@ -13,6 +14,21 @@ TARGET_BASE_DIR = "ig/fhir"
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument("environment", help="Name of the environment")
+    parser.add_argument(
+        "--ig",
+        action="extend",
+        nargs="+",
+        default=[],
+        help=(
+            "Target IG name(s), e.g. 'fhirscripts deploy dev --ig rx' or "
+            "'fhirscripts deploy prod --ig core rx'"
+        ),
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run for all IGs, e.g. 'fhirscripts deploy dev --all'",
+    )
     parser.add_argument(
         "-y", "--yes", action="store_true", help="Confirm all prompts with 'yes'"
     )
@@ -51,62 +67,95 @@ def deploy(
     yes: bool = False,
     dry_run: bool = False,
     promote_from: str | None = None,
+    ig: list[str] | None = None,
+    all: bool = False,
+    config_path: Path | None = None,
     *args,
     **kwargs,
 ) -> bool:
-    deploy_config = config.deploy
-    if deploy_config is None:
-        raise Exception("deploy configuration missing")
+    targets = select_targets(ig=ig, select_all=all)
+    if len(targets) == 0:
+        targets = [IGTarget(name="current", path=Path.cwd())]
 
-    if ig_registry:
-        deploy_ig_registry(
-            deploy_config,
-            environment,
-            promote_from_env=promote_from,
-            dry_run=dry_run,
-            confirm_yes=yes,
-        )
+    for target in targets:
+        with working_directory(target.path):
+            target_config = _resolve_deploy_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
+            deploy_config = target_config.deploy
+            if deploy_config is None:
+                raise Exception(
+                    f"deploy configuration missing in IG '{target.name}'"
+                )
 
-    else:
-        if only_ig:
-            deploy_ig(
-                deploy_config,
-                environment,
-                ig_output=ig_output,
-                promote_from_env=promote_from,
-                dry_run=dry_run,
-                confirm_yes=yes,
-            )
+            log.info(f"Deploying IG selection '{target.name}'")
 
-        elif only_meta:
-            deploy_ig_meta(
-                deploy_config,
-                environment,
-                ig_output=ig_output,
-                promote_from_env=promote_from,
-                dry_run=dry_run,
-                confirm_yes=yes,
-            )
+            if ig_registry:
+                deploy_ig_registry(
+                    deploy_config,
+                    environment,
+                    promote_from_env=promote_from,
+                    dry_run=dry_run,
+                    confirm_yes=yes,
+                )
 
-        else:
-            deploy_ig(
-                deploy_config,
-                environment,
-                ig_output=ig_output,
-                promote_from_env=promote_from,
-                dry_run=dry_run,
-                confirm_yes=yes,
-            )
-            deploy_ig_meta(
-                deploy_config,
-                environment,
-                ig_output=ig_output,
-                promote_from_env=promote_from,
-                dry_run=dry_run,
-                confirm_yes=yes,
-            )
+            else:
+                if only_ig:
+                    deploy_ig(
+                        deploy_config,
+                        environment,
+                        ig_output=ig_output,
+                        promote_from_env=promote_from,
+                        dry_run=dry_run,
+                        confirm_yes=yes,
+                    )
+
+                elif only_meta:
+                    deploy_ig_meta(
+                        deploy_config,
+                        environment,
+                        ig_output=ig_output,
+                        promote_from_env=promote_from,
+                        dry_run=dry_run,
+                        confirm_yes=yes,
+                    )
+
+                else:
+                    deploy_ig(
+                        deploy_config,
+                        environment,
+                        ig_output=ig_output,
+                        promote_from_env=promote_from,
+                        dry_run=dry_run,
+                        confirm_yes=yes,
+                    )
+                    deploy_ig_meta(
+                        deploy_config,
+                        environment,
+                        ig_output=ig_output,
+                        promote_from_env=promote_from,
+                        dry_run=dry_run,
+                        confirm_yes=yes,
+                    )
+
+            log.succ(f"Deployment finished for IG '{target.name}'")
 
     return True
+
+
+def _resolve_deploy_config_for_target(
+    default_config: Config, target_path: Path, config_path: Path | None
+) -> Config:
+    if config_path is not None:
+        return default_config
+
+    target_config_file = target_path / "fhirscripts.config.yaml"
+    if target_config_file.exists():
+        return config_file.load(target_config_file)
+
+    return default_config
 
 
 def deploy_ig_registry(

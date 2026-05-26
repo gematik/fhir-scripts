@@ -1,10 +1,12 @@
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from fhir_scripts import deploy
 from fhir_scripts.models import config
+from fhir_scripts.multiig import working_directory
 from fhir_scripts.types import Url
 
 
@@ -170,3 +172,50 @@ class TestDeployIgMeta(unittest.TestCase):
             )
 
         self.assertEqual(wanted, res)
+
+
+class TestDeployMultiIg(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.repo = Path(self.tmpdir.name)
+
+        (self.repo / "fhirscripts.multiig.config.yaml").write_text(
+            "version: 1\nigsRoot: igs\n",
+            "utf-8",
+        )
+
+        for name in ["core", "rx"]:
+            ig_dir = self.repo / "igs" / name
+            ig_dir.mkdir(parents=True, exist_ok=True)
+            (ig_dir / "fhirscripts.config.yaml").write_text(
+                "deploy:\n  env:\n    dev: dev_bucket\n",
+                "utf-8",
+            )
+
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        self.tmpdir.cleanup()
+        return super().tearDown()
+
+    def test_deploy_all_uses_ig_local_config(self):
+        calls = []
+
+        def deploy_ig_stub(*args, **kwargs):
+            calls.append(Path.cwd().name)
+
+        with patch("fhir_scripts.deploy.deploy_ig", side_effect=deploy_ig_stub):
+            with patch("fhir_scripts.deploy.deploy_ig_meta", lambda *a, **k: None):
+                with working_directory(self.repo):
+                    deploy.deploy(
+                        config=config.Config(),
+                        environment="dev",
+                        ig_output=Path("output"),
+                        ig=[],
+                        all=True,
+                        dry_run=True,
+                        yes=True,
+                    )
+
+        self.assertEqual(["core", "rx"], calls)

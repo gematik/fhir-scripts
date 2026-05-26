@@ -1,11 +1,13 @@
 import importlib
 import pkgutil
 from argparse import ArgumentParser
+from pathlib import Path
 
 import fhir_scripts.tools
 
-from . import log
+from . import config as config_loader, log
 from .config import Config
+from .multiig import CONFIG_FILE_NAME, discover_project, working_directory
 
 TOOL_MODULES = {}
 
@@ -40,7 +42,13 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
         )
 
 
-def install(config: Config, config_file: bool = False, *args, **kwargs):
+def install(
+    config: Config,
+    config_file: bool = False,
+    config_path: Path | None = None,
+    *args,
+    **kwargs,
+):
     # If '--config-file' argument, get list of tools to install from the config file 'install' section
     if config_file:
         install_tools = config.install
@@ -50,6 +58,37 @@ def install(config: Config, config_file: bool = False, *args, **kwargs):
         install_tools = [
             tool for tool, v in kwargs.items() if isinstance(v, bool) and v
         ]
+
+    # Default behavior for plain `install` without flags.
+    if not config_file and config_path is None and len(install_tools) == 0:
+        cwd = Path.cwd()
+
+        # Only trigger multi-IG mode when executed from the directory
+        # that contains the explicit multi-IG config file.
+        if (cwd / CONFIG_FILE_NAME).exists():
+            project = discover_project(cwd)
+            if project is not None:
+                log.info(
+                    "Detected multi-IG repository, installing tools from each IG config"
+                )
+                for target in [
+                    project.targets[name] for name in sorted(project.targets)
+                ]:
+                    with working_directory(target.path):
+                        target_config = config_loader.load(
+                            Path("./fhirscripts.config.yaml")
+                        )
+                        log.info(f"Install tooling for IG '{target.name}'")
+                        _install_tools(target_config.install)
+                return
+
+        # In single-IG context, default to the current config's install list.
+        install_tools = config.install
+
+    _install_tools(install_tools)
+
+
+def _install_tools(install_tools: list[str]):
 
     # Get the module for each tool
     modules = []

@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 
 from . import log
+from .multiig import IGTarget, select_targets
 
 PUB_REQUEST_NAME = "publication-request.json"
 SUSHI_CONFIG_NAME = "sushi-config.yaml"
@@ -17,14 +18,51 @@ VERSION_REGEX = re.compile(r"(?:\/|\s|^)(\d+(?:\.\d+){2}(?:-[a-z\.\d]+)?)(?:\s|$
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument(
-        "--workdir", type=Path, default=Path.cwd(), help="Working directory"
+        "--ig",
+        action="extend",
+        nargs="+",
+        default=[],
+        help="Target IG name(s), e.g. '--ig core rx' or '--ig core --ig rx'",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run checks for all IGs in a multi-IG repository",
+    )
+    parser.add_argument(
+        "--workdir",
+        type=Path,
+        default=None,
+        help="Working directory (single-project mode only)",
     )
     parser.add_argument(
         "--release", action="store_true", help="Perform extra checks for release"
     )
 
 
-def check(workdir: Path, release: bool, *args, **kwargs):
+def check(
+    workdir: Path | None,
+    release: bool,
+    ig: list[str] | None = None,
+    all: bool = False,
+    *args,
+    **kwargs,
+):
+    targets = select_targets(ig=ig, select_all=all)
+
+    if len(targets) > 0 and workdir is not None:
+        raise Exception("'--workdir' cannot be combined with '--ig' or '--all'")
+
+    if len(targets) == 0:
+        targets = [IGTarget(name="current", path=(workdir or Path.cwd()))]
+
+    for target in targets:
+        log.info(f"Running checks for IG '{target.name}'")
+        _check_project(target.path, release)
+        log.succ(f"Checks successful for IG '{target.name}'")
+
+
+def _check_project(workdir: Path, release: bool):
     errors = 0
     warnings = 0
 
@@ -92,9 +130,6 @@ def check(workdir: Path, release: bool, *args, **kwargs):
     if errors > 0 or warnings > 0:
         log.fail(f"Checks failed: {log.ERR}{errors}, {log.WARN}{warnings}")
         raise Exception("Checks failed")
-
-    else:
-        log.succ("Checks successful")
 
 
 def _check_versions(

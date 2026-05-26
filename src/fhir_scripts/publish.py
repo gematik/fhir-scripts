@@ -1,20 +1,37 @@
-import os
-from argparse import _SubParsersAction
+from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
 from . import log
+from .multiig import IGTarget, select_targets, working_directory
 from .tools import publishtools
 
 PROJECT = "project"
 IG_REGISTRY = "ig-registry"
 
 
-def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
+def setup_subparser(
+    parser: ArgumentParser, subparser: _SubParsersAction, *args, **kwarsg
+):
     project_parser = subparser.add_parser(PROJECT, help="Publish the current project")
+    project_parser.add_argument(
+        "--ig",
+        action="extend",
+        nargs="+",
+        default=[],
+        help=(
+            "Target IG name(s), e.g. 'fhirscripts publish project --ig core rx "
+            "--ig-registry ../fhir-ig-registry' or '--ig core --ig rx'"
+        ),
+    )
+    project_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run for all IGs, e.g. 'fhirscripts publish project --all --ig-registry ...'",
+    )
     project_parser.add_argument(
         "--project-dir",
         type=Path,
-        default=os.getcwd(),
+        default=None,
         help="Path of the project to publish",
     )
     project_parser.add_argument(
@@ -34,10 +51,26 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     )
 
 
-def publish_project(project_dir: Path, ig_registry: Path, *args, **kwargs):
-    log.info(f"Publish project '{project_dir}' using IG registry '{ig_registry}'")
-    publishtools.publish(project_dir, ig_registry)
-    log.succ("Project published")
+def publish_project(
+    project_dir: Path | None,
+    ig_registry: Path,
+    ig: list[str] | None = None,
+    all: bool = False,
+    *args,
+    **kwargs,
+):
+    targets = select_targets(ig=ig, select_all=all)
+    if len(targets) == 0:
+        targets = [IGTarget(name="current", path=Path.cwd())]
+
+    for target in targets:
+        with working_directory(target.path):
+            selected_project_dir = project_dir or Path.cwd()
+            log.info(
+                f"Publish project '{selected_project_dir}' using IG registry '{ig_registry}'"
+            )
+            publishtools.publish(selected_project_dir, ig_registry)
+            log.succ(f"Project published for IG '{target.name}'")
 
 
 def publish_igregistry(ig_registry: Path, *args, **kwargs):

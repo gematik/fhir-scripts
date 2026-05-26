@@ -38,6 +38,7 @@ def main():
 
         # Unpack the cli arguments
         cli_args = vars(args)
+        cli_args["config_path"] = args.config
         del cli_args["config"]
 
         # Otherwise handle the command

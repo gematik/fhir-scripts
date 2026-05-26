@@ -1,9 +1,10 @@
 from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
-from . import log
+from . import config as config_file, log
 from .exception import NoConfigException, NotInstalledException
 from .models.config import Config
+from .multiig import select_build_targets, working_directory
 from .tools import epatools, igpub, igtools, sushi
 from .tools.basic import shell
 from .update import update as handle_update
@@ -21,7 +22,26 @@ def setup_subparser(
         "-u", "--update", action="store_true", help="Update tooling before building"
     )
 
-    defs_parser = subparser.add_parser(DEFS, help="Build definitions")
+    target_args_parser = ArgumentParser(add_help=False)
+    target_args_parser.add_argument(
+        "--ig",
+        action="extend",
+        nargs="+",
+        default=[],
+        help=(
+            "Target IG name(s), e.g. 'fhirscripts build pipeline --ig core rx' "
+            "or '--ig core --ig rx'"
+        ),
+    )
+    target_args_parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run for all IGs, e.g. 'fhirscripts build pipeline --all'",
+    )
+
+    defs_parser = subparser.add_parser(
+        DEFS, help="Build definitions", parents=[target_args_parser]
+    )
     defs_parser.add_argument(
         "--req", action="store_true", help="Also process requirements"
     )
@@ -35,13 +55,15 @@ def setup_subparser(
         "--only-cap", action="store_true", help="Only merge CapabilityStatements"
     )
 
-    ig_parser = subparser.add_parser(IG, help="Build IG")
+    ig_parser = subparser.add_parser(IG, help="Build IG", parents=[target_args_parser])
     ig_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
     ig_parser.add_argument(
         "--only-oapi", action="store_true", help="Only build OpenAPI"
     )
 
-    all_parser = subparser.add_parser(ALL, help="Build everything")
+    all_parser = subparser.add_parser(
+        ALL, help="Build everything", parents=[target_args_parser]
+    )
     all_parser.add_argument(
         "--req", action="store_true", help="Also process requirements"
     )
@@ -50,7 +72,7 @@ def setup_subparser(
     )
     all_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
 
-    subparser.add_parser(PIPELINE, help="Build IG")
+    subparser.add_parser(PIPELINE, help="Build IG", parents=[target_args_parser])
 
 
 def build_defs(
@@ -60,36 +82,31 @@ def build_defs(
     req: bool = False,
     cap: bool = False,
     update: bool = False,
+    ig: list[str] | None = None,
+    all: bool = False,
+    config_path: Path | None = None,
     *args,
     **kwargs,
 ):
-    if update:
-        handle_update(*args, **kwargs)
-
-    log.info("Building definitions")
-
-    epatools_config = config.build.builtin.epatools
-    igtools_config = config.build.builtin.igtools
-
-    enable_requirements = (igtools_config or req or only_req) and not only_cap
-    enable_sushi = not only_req and not only_cap
-    enable_cap_statements = (
-        (isinstance(epatools_config, bool) and epatools_config)
-        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
-        or ((cap or only_cap))
-        and not only_req
-    )
-
-    if enable_requirements:
-        build_req(*args, **kwargs)
-
-    if enable_sushi:
-        build_sushi(*args, **kwargs)
-
-    if enable_cap_statements:
-        build_cap(*args, **kwargs)
-
-    log.succ("Definitions built successfully")
+    for target in _selected_targets(ig=ig, all=all):
+        with working_directory(target.path):
+            target_config = _resolve_build_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
+            log.info(f"Building definitions for IG '{target.name}'")
+            _build_defs_once(
+                config=target_config,
+                only_cap=only_cap,
+                only_req=only_req,
+                req=req,
+                cap=cap,
+                update=update,
+                *args,
+                **kwargs,
+            )
+            log.succ(f"Definitions built successfully for IG '{target.name}'")
 
 
 def build_sushi(*args, **kwargs):
@@ -127,32 +144,29 @@ def build_ig(
     only_oapi: bool = False,
     oapi: bool = False,
     update: bool = False,
+    ig: list[str] | None = None,
+    all: bool = False,
+    config_path: Path | None = None,
     *args,
     **kwargs,
 ):
-    if update:
-        handle_update(*args, **kwargs)
-
-    log.info("Building IG")
-
-    epatools_config = config.build.builtin.epatools
-
-    enable_igpub = not only_oapi
-    enable_openapi = (
-        (isinstance(epatools_config, bool) and epatools_config)
-        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
-        or only_oapi
-        or oapi
-    )
-
-    if enable_igpub:
-        build_igpub(*args, **kwargs)
-
-    if enable_openapi:
-        build_openapi(config)
-
-    log.succ("IG built successfully")
-    build_igpub_qa(*args, **kwargs)
+    for target in _selected_targets(ig=ig, all=all):
+        with working_directory(target.path):
+            target_config = _resolve_build_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
+            log.info(f"Building IG '{target.name}'")
+            _build_ig_once(
+                config=target_config,
+                only_oapi=only_oapi,
+                oapi=oapi,
+                update=update,
+                *args,
+                **kwargs,
+            )
+            log.succ(f"IG built successfully for IG '{target.name}'")
 
 
 def build_igpub(*args, **kwargs):
@@ -170,11 +184,24 @@ def build_openapi(*args, **kwargs):
 
 
 def build_all(config: Config, update: bool = False, *args, **kwargs):
-    if update:
-        handle_update(*args, **kwargs)
+    ig = kwargs.pop("ig", None)
+    all = kwargs.pop("all", False)
+    config_path = kwargs.pop("config_path", None)
 
-    build_defs(config, *args, **kwargs)
-    build_ig(config, *args, **kwargs)
+    for target in _selected_targets(ig=ig, all=all):
+        with working_directory(target.path):
+            target_config = _resolve_build_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
+            log.info(f"Building everything for IG '{target.name}'")
+            if update:
+                handle_update(*args, **kwargs)
+
+            _build_defs_once(config=target_config, *args, **kwargs)
+            _build_ig_once(config=target_config, *args, **kwargs)
+            log.succ(f"Build completed for IG '{target.name}'")
 
 
 def build_shell(c_args: str, *args, **kwargs):
@@ -199,6 +226,111 @@ PIPELINE_STEPS = {
 
 
 def build_pipeline(config: Config, *args, **kwargs):
+    ig = kwargs.pop("ig", None)
+    all = kwargs.pop("all", False)
+    config_path = kwargs.pop("config_path", None)
+
+    for target in _selected_targets(ig=ig, all=all):
+        with working_directory(target.path):
+            target_config = _resolve_build_config_for_target(
+                default_config=config,
+                target_path=target.path,
+                config_path=config_path,
+            )
+            log.info(f"Processing build pipeline for IG '{target.name}'")
+            _build_pipeline_once(config=target_config, *args, **kwargs)
+            log.succ(f"Build pipeline completed for IG '{target.name}'")
+
+
+def _selected_targets(ig: list[str] | None, all: bool):
+    targets = select_build_targets(ig=ig, select_all=all)
+    if len(targets) == 0:
+        from .multiig import IGTarget
+
+        return [IGTarget(name="current", path=Path.cwd())]
+
+    return targets
+
+
+def _resolve_build_config_for_target(
+    default_config: Config, target_path: Path, config_path: Path | None
+) -> Config:
+    if config_path is not None:
+        return default_config
+
+    target_config_file = target_path / "fhirscripts.config.yaml"
+    if target_config_file.exists():
+        return config_file.load(target_config_file)
+
+    return default_config
+
+
+def _build_defs_once(
+    config: Config,
+    only_cap: bool = False,
+    only_req: bool = False,
+    req: bool = False,
+    cap: bool = False,
+    update: bool = False,
+    *args,
+    **kwargs,
+):
+    if update:
+        handle_update(*args, **kwargs)
+
+    epatools_config = config.build.builtin.epatools
+    igtools_config = config.build.builtin.igtools
+
+    enable_requirements = (igtools_config or req or only_req) and not only_cap
+    enable_sushi = not only_req and not only_cap
+    enable_cap_statements = (
+        (isinstance(epatools_config, bool) and epatools_config)
+        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
+        or ((cap or only_cap))
+        and not only_req
+    )
+
+    if enable_requirements:
+        build_req(*args, **kwargs)
+
+    if enable_sushi:
+        build_sushi(*args, **kwargs)
+
+    if enable_cap_statements:
+        build_cap(*args, **kwargs)
+
+
+def _build_ig_once(
+    config: Config,
+    only_oapi: bool = False,
+    oapi: bool = False,
+    update: bool = False,
+    *args,
+    **kwargs,
+):
+    if update:
+        handle_update(*args, **kwargs)
+
+    epatools_config = config.build.builtin.epatools
+
+    enable_igpub = not only_oapi
+    enable_openapi = (
+        (isinstance(epatools_config, bool) and epatools_config)
+        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
+        or only_oapi
+        or oapi
+    )
+
+    if enable_igpub:
+        build_igpub(*args, **kwargs)
+
+    if enable_openapi:
+        build_openapi(config)
+
+    build_igpub_qa(*args, **kwargs)
+
+
+def _build_pipeline_once(config: Config, *args, **kwargs):
     pipeline = config.build.pipeline
 
     invalid_steps = [
@@ -210,7 +342,8 @@ def build_pipeline(config: Config, *args, **kwargs):
 
     if invalid_steps:
         raise Exception(
-            f"Pipeline configuration contains invalid step(s): {", ".join(invalid_steps)}"
+            "Pipeline configuration contains invalid step(s): "
+            + ", ".join(invalid_steps)
         )
 
     for step in pipeline:
