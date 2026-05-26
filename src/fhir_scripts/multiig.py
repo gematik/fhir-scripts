@@ -18,6 +18,7 @@ class IGTarget:
 class MultiIGProject:
     repo_root: Path
     targets: dict[str, IGTarget]
+    base_igs: list[str]
 
 
 class SelectionError(Exception):
@@ -84,6 +85,21 @@ def select_targets(
     )
 
 
+def select_build_targets(
+    ig: list[str] | None,
+    select_all: bool,
+    cwd: Path | None = None,
+) -> list[IGTarget]:
+    current_dir = (cwd or Path.cwd()).resolve()
+    selected = select_targets(ig=ig, select_all=select_all, cwd=current_dir)
+    project = discover_project(current_dir)
+
+    if project is None or len(project.base_igs) == 0:
+        return selected
+
+    return _prepend_base_igs(selected, project)
+
+
 def _project_from_config(repo_root: Path, config_path: Path) -> MultiIGProject:
     raw = yaml.safe_load(config_path.read_text("utf-8")) or {}
     igs_root = raw.get("igsRoot", DEFAULT_IGS_ROOT)
@@ -94,7 +110,7 @@ def _project_from_config(repo_root: Path, config_path: Path) -> MultiIGProject:
 
     ig_entries = raw.get("igs")
     if ig_entries is None:
-        return _project_from_root_only_config(repo_root, igs_root)
+        return _project_from_root_only_config(repo_root, raw, igs_root)
 
     if not isinstance(ig_entries, dict):
         raise SelectionError(
@@ -102,7 +118,7 @@ def _project_from_config(repo_root: Path, config_path: Path) -> MultiIGProject:
         )
 
     if len(ig_entries) == 0:
-        return _project_from_root_only_config(repo_root, igs_root)
+        return _project_from_root_only_config(repo_root, raw, igs_root)
 
     targets: dict[str, IGTarget] = {}
 
@@ -131,10 +147,16 @@ def _project_from_config(repo_root: Path, config_path: Path) -> MultiIGProject:
 
         targets[ig_name] = IGTarget(name=ig_name, path=abs_path)
 
-    return MultiIGProject(repo_root=repo_root, targets=targets)
+    return MultiIGProject(
+        repo_root=repo_root,
+        targets=targets,
+        base_igs=_parse_base_igs(raw, targets),
+    )
 
 
-def _project_from_root_only_config(repo_root: Path, igs_root: str) -> MultiIGProject:
+def _project_from_root_only_config(
+    repo_root: Path, raw: dict, igs_root: str
+) -> MultiIGProject:
     root = (repo_root / Path(igs_root)).resolve()
     if not root.exists() or not root.is_dir():
         raise SelectionError(
@@ -152,7 +174,11 @@ def _project_from_root_only_config(repo_root: Path, igs_root: str) -> MultiIGPro
             f"Invalid '{CONFIG_FILE_NAME}': no IG directories found below {root}"
         )
 
-    return MultiIGProject(repo_root=repo_root, targets=targets)
+    return MultiIGProject(
+        repo_root=repo_root,
+        targets=targets,
+        base_igs=_parse_base_igs(raw, targets),
+    )
 
 
 def _project_from_convention(repo_root: Path) -> MultiIGProject | None:
@@ -180,7 +206,62 @@ def _project_from_convention(repo_root: Path) -> MultiIGProject | None:
     if len(targets) == 0:
         return None
 
-    return MultiIGProject(repo_root=repo_root, targets=targets)
+    return MultiIGProject(repo_root=repo_root, targets=targets, base_igs=[])
+
+
+def _parse_base_igs(raw: dict, targets: dict[str, IGTarget]) -> list[str]:
+    base = raw.get("baseIG", [])
+
+    if base is None:
+        return []
+
+    if not isinstance(base, list):
+        raise SelectionError(
+            f"Invalid '{CONFIG_FILE_NAME}': field 'baseIG' must be a list if provided"
+        )
+
+    target_names = sorted(targets.keys())
+    normalized: list[str] = []
+    for entry in base:
+        if not isinstance(entry, str) or not entry.strip():
+            raise SelectionError(
+                f"Invalid '{CONFIG_FILE_NAME}': entries in 'baseIG' must be non-empty strings"
+            )
+
+        ig_name = entry.strip()
+        if ig_name not in targets:
+            raise SelectionError(
+                "Invalid '{}': baseIG contains unknown IG '{}'. Valid IG names: {}".format(
+                    CONFIG_FILE_NAME,
+                    ig_name,
+                    ", ".join(target_names),
+                )
+            )
+
+        if ig_name not in normalized:
+            normalized.append(ig_name)
+
+    return normalized
+
+
+def _prepend_base_igs(
+    selected: list[IGTarget], project: MultiIGProject
+) -> list[IGTarget]:
+    if len(selected) == 0:
+        return selected
+
+    selected_names = [target.name for target in selected]
+    base = project.base_igs
+    base_set = set(base)
+
+    if any(name not in base_set for name in selected_names):
+        base_prefix = base
+    else:
+        max_idx = max(base.index(name) for name in selected_names)
+        base_prefix = base[: max_idx + 1]
+
+    ordered_names = list(dict.fromkeys([*base_prefix, *selected_names]))
+    return [project.targets[name] for name in ordered_names]
 
 
 def _detect_target_from_cwd(project: MultiIGProject, cwd: Path) -> IGTarget | None:

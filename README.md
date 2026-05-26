@@ -272,6 +272,9 @@ An optional file `fhirscripts.multiig.config.yaml` can be added in repository ro
 ```yaml
 version: 1
 igsRoot: igs
+baseIG:
+  - core
+  - test
 ```
 
 With this structure
@@ -285,6 +288,22 @@ igs/
 
 you can call `fhirscripts build pipeline --ig test` and it will resolve to `igs/test` automatically.
 
+`baseIG` is optional and only affects build commands. Base IGs are built first in the configured order:
+
+```text
+baseIG:
+  - core
+  - test
+```
+
+Examples:
+
+```bash
+fhirscripts build pipeline --ig rx      # builds: core, test, rx
+fhirscripts build pipeline --ig test    # builds: core, test
+fhirscripts build pipeline --ig core    # builds: core
+fhirscripts build pipeline --ig rx diga # builds: core, test, rx, diga
+```
 If needed, you can still define explicit mappings and aliases using the optional `igs` section:
 
 ```yaml

@@ -113,3 +113,29 @@ class TestBuildPipelineMultiIg(unittest.TestCase):
                 build.build_pipeline(config=Config(), ig=["core"], all=False)
 
         self.assertEqual([("core", "igpub")], called_steps)
+
+    def test_pipeline_base_ig_runs_before_selected_ig(self):
+        (self.repo / "igs" / "test").mkdir(parents=True, exist_ok=True)
+        (self.repo / "igs" / "test" / "sushi-config.yaml").write_text(
+            "id: test\n", "utf-8"
+        )
+        (self.repo / "igs" / "test" / "fhirscripts.config.yaml").write_text(
+            "build:\n  pipeline:\n    - sushi\n",
+            "utf-8",
+        )
+
+        (self.repo / "fhirscripts.multiig.config.yaml").write_text(
+            "version: 1\nigsRoot: igs\nbaseIG:\n  - core\n  - test\n",
+            "utf-8",
+        )
+
+        called_order = []
+
+        def record_step(*args, **kwargs):
+            called_order.append(Path.cwd().name)
+
+        with patch.dict(build.PIPELINE_STEPS, {"sushi": record_step}, clear=False):
+            with build.working_directory(self.repo):
+                build.build_pipeline(config=Config(), ig=["rx"], all=False)
+
+        self.assertEqual(["core", "test", "rx"], called_order)

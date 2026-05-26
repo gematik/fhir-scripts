@@ -4,7 +4,7 @@ from pathlib import Path
 from . import config as config_file, log
 from .exception import NoConfigException, NotInstalledException
 from .models.config import Config
-from .multiig import select_targets, working_directory
+from .multiig import select_build_targets, working_directory
 from .tools import epatools, igpub, igtools, sushi
 from .tools.basic import shell
 from .update import update as handle_update
@@ -243,7 +243,7 @@ def build_pipeline(config: Config, *args, **kwargs):
 
 
 def _selected_targets(ig: list[str] | None, all: bool):
-    targets = select_targets(ig=ig, select_all=all)
+    targets = select_build_targets(ig=ig, select_all=all)
     if len(targets) == 0:
         from .multiig import IGTarget
 
