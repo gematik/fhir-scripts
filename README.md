@@ -93,6 +93,8 @@ Update each installed tool
 fhirscripts update
 ```
 
+In a multi-IG repository root (with `fhirscripts.multiig.config.yaml`), `fhirscripts update` updates IG Publisher per IG directory, so `input-cache/publisher.jar` is refreshed inside each selected IG folder instead of repository root.
+
 ### Cache
 
 Rebuild the local FHIR package cache
