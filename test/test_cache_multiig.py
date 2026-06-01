@@ -50,7 +50,12 @@ class TestCacheMultiIg(unittest.TestCase):
 
     def test_clear_build_caches_with_explicit_igs(self):
         for name in ["core", "rx"]:
-            for rel in ["input-cache/schemas", "input-cache/txcache", "temp", "template"]:
+            for rel in [
+                "input-cache/schemas",
+                "input-cache/txcache",
+                "temp",
+                "template",
+            ]:
                 path = self.repo / "igs" / name / rel
                 path.mkdir(parents=True, exist_ok=True)
 
@@ -58,7 +63,11 @@ class TestCacheMultiIg(unittest.TestCase):
             cache.clear_build_caches(ig=["core", "rx"], all=False)
 
         for name in ["core", "rx"]:
-            self.assertFalse((self.repo / "igs" / name / "input-cache/schemas").exists())
-            self.assertFalse((self.repo / "igs" / name / "input-cache/txcache").exists())
+            self.assertFalse(
+                (self.repo / "igs" / name / "input-cache/schemas").exists()
+            )
+            self.assertFalse(
+                (self.repo / "igs" / name / "input-cache/txcache").exists()
+            )
             self.assertFalse((self.repo / "igs" / name / "temp").exists())
             self.assertFalse((self.repo / "igs" / name / "template").exists())

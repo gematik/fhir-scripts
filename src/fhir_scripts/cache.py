@@ -236,9 +236,7 @@ def _cache_rebuild_fhir_cache_once(
         log.succ("Restore successful")
 
 
-def clear_build_caches(
-    ig: list[str] | None = None, all: bool = False, *args, **kwargs
-):
+def clear_build_caches(ig: list[str] | None = None, all: bool = False, *args, **kwargs):
     for target in _selected_targets(ig=ig, all=all):
         with working_directory(target.path):
             log.info(f"Clear build caches for IG '{target.name}'")

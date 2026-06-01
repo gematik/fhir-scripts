@@ -86,9 +86,7 @@ def deploy(
             )
             deploy_config = target_config.deploy
             if deploy_config is None:
-                raise Exception(
-                    f"deploy configuration missing in IG '{target.name}'"
-                )
+                raise Exception(f"deploy configuration missing in IG '{target.name}'")
 
             log.info(f"Deploying IG selection '{target.name}'")
 
