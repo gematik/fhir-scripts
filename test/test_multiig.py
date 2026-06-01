@@ -153,6 +153,25 @@ class TestMultiIgSelection(unittest.TestCase):
         with self.assertRaisesRegex(SelectionError, "baseIG contains unknown IG"):
             select_build_targets(ig=["rx"], select_all=False, cwd=self.repo)
 
+    def test_no_base_skips_base_ig_prepending(self):
+        config = {
+            "version": 1,
+            "igsRoot": "igs",
+            "baseIG": ["core", "test"],
+        }
+        (self.repo / "fhirscripts.multiig.config.yaml").write_text(
+            yaml.safe_dump(config),
+            "utf-8",
+        )
+
+        res = select_build_targets(
+            ig=["rx"],
+            select_all=False,
+            no_base=True,
+            cwd=self.repo,
+        )
+        self.assertEqual(["rx"], [entry.name for entry in res])
+
 
 class TestParserSupport(unittest.TestCase):
 
@@ -161,9 +180,10 @@ class TestParserSupport(unittest.TestCase):
         subparser = parser.add_subparsers(dest="build")
         build.setup_subparser(parser, subparser)
 
-        args = parser.parse_args(["pipeline", "--ig", "core", "rx"])
+        args = parser.parse_args(["pipeline", "--ig", "core", "rx", "--no-base"])
         self.assertEqual(["core", "rx"], args.ig)
         self.assertFalse(args.all)
+        self.assertTrue(args.no_base)
 
     def test_publish_parser_ig_options(self):
         parser = ArgumentParser()

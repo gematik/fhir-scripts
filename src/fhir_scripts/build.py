@@ -38,6 +38,11 @@ def setup_subparser(
         action="store_true",
         help="Run for all IGs, e.g. 'fhirscripts build pipeline --all'",
     )
+    target_args_parser.add_argument(
+        "--no-base",
+        action="store_true",
+        help="Skip configured baseIG builds for this invocation",
+    )
 
     defs_parser = subparser.add_parser(
         DEFS, help="Build definitions", parents=[target_args_parser]
@@ -84,11 +89,12 @@ def build_defs(
     update: bool = False,
     ig: list[str] | None = None,
     all: bool = False,
+    no_base: bool = False,
     config_path: Path | None = None,
     *args,
     **kwargs,
 ):
-    for target in _selected_targets(ig=ig, all=all):
+    for target in _selected_targets(ig=ig, all=all, no_base=no_base):
         with working_directory(target.path):
             target_config = _resolve_build_config_for_target(
                 default_config=config,
@@ -146,11 +152,12 @@ def build_ig(
     update: bool = False,
     ig: list[str] | None = None,
     all: bool = False,
+    no_base: bool = False,
     config_path: Path | None = None,
     *args,
     **kwargs,
 ):
-    for target in _selected_targets(ig=ig, all=all):
+    for target in _selected_targets(ig=ig, all=all, no_base=no_base):
         with working_directory(target.path):
             target_config = _resolve_build_config_for_target(
                 default_config=config,
@@ -186,9 +193,10 @@ def build_openapi(*args, **kwargs):
 def build_all(config: Config, update: bool = False, *args, **kwargs):
     ig = kwargs.pop("ig", None)
     all = kwargs.pop("all", False)
+    no_base = kwargs.pop("no_base", False)
     config_path = kwargs.pop("config_path", None)
 
-    for target in _selected_targets(ig=ig, all=all):
+    for target in _selected_targets(ig=ig, all=all, no_base=no_base):
         with working_directory(target.path):
             target_config = _resolve_build_config_for_target(
                 default_config=config,
@@ -228,9 +236,10 @@ PIPELINE_STEPS = {
 def build_pipeline(config: Config, *args, **kwargs):
     ig = kwargs.pop("ig", None)
     all = kwargs.pop("all", False)
+    no_base = kwargs.pop("no_base", False)
     config_path = kwargs.pop("config_path", None)
 
-    for target in _selected_targets(ig=ig, all=all):
+    for target in _selected_targets(ig=ig, all=all, no_base=no_base):
         with working_directory(target.path):
             target_config = _resolve_build_config_for_target(
                 default_config=config,
@@ -242,8 +251,8 @@ def build_pipeline(config: Config, *args, **kwargs):
             log.succ(f"Build pipeline completed for IG '{target.name}'")
 
 
-def _selected_targets(ig: list[str] | None, all: bool):
-    targets = select_build_targets(ig=ig, select_all=all)
+def _selected_targets(ig: list[str] | None, all: bool, no_base: bool = False):
+    targets = select_build_targets(ig=ig, select_all=all, no_base=no_base)
     if len(targets) == 0:
         from .multiig import IGTarget
 

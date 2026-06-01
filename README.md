@@ -328,6 +328,7 @@ fhirscripts build pipeline --ig rx      # builds: core, test, rx
 fhirscripts build pipeline --ig test    # builds: core, test
 fhirscripts build pipeline --ig core    # builds: core
 fhirscripts build pipeline --ig rx diga # builds: core, test, rx, diga
+fhirscripts build pipeline --ig rx --no-base # builds: rx
 ```
 If needed, you can still define explicit mappings and aliases using the optional `igs` section:
 

@@ -88,13 +88,14 @@ def select_targets(
 def select_build_targets(
     ig: list[str] | None,
     select_all: bool,
+    no_base: bool = False,
     cwd: Path | None = None,
 ) -> list[IGTarget]:
     current_dir = (cwd or Path.cwd()).resolve()
     selected = select_targets(ig=ig, select_all=select_all, cwd=current_dir)
     project = discover_project(current_dir)
 
-    if project is None or len(project.base_igs) == 0:
+    if no_base or project is None or len(project.base_igs) == 0:
         return selected
 
     return _prepend_base_igs(selected, project)
