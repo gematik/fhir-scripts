@@ -63,13 +63,18 @@ def publish_project(
     if len(targets) == 0:
         targets = [IGTarget(name="current", path=Path.cwd())]
 
+    invocation_cwd = Path.cwd()
+    selected_project_dir = (
+        project_dir if project_dir is None or project_dir.is_absolute() else invocation_cwd / project_dir
+    )
+
     for target in targets:
         with working_directory(target.path):
-            selected_project_dir = project_dir or Path.cwd()
+            project_to_publish = selected_project_dir or Path.cwd()
             log.info(
-                f"Publish project '{selected_project_dir}' using IG registry '{ig_registry}'"
+                f"Publish project '{project_to_publish}' using IG registry '{ig_registry}'"
             )
-            publishtools.publish(selected_project_dir, ig_registry)
+            publishtools.publish(project_to_publish, ig_registry)
             log.succ(f"Project published for IG '{target.name}'")
 
 
