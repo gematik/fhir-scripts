@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 from fhir_scripts import build, deploy, publish
-from fhir_scripts.multiig import SelectionError, select_build_targets, select_targets
+from fhir_scripts.multiig import SelectionError, select_targets
 
 
 class TestMultiIgSelection(unittest.TestCase):
@@ -82,96 +82,6 @@ class TestMultiIgSelection(unittest.TestCase):
         res = select_targets(ig=["test"], select_all=False, cwd=self.repo)
         self.assertEqual(["test"], [entry.name for entry in res])
 
-    def test_base_ig_prepended_for_non_base_selection(self):
-        config = {
-            "version": 1,
-            "igsRoot": "igs",
-            "baseIG": ["core", "test"],
-        }
-        (self.repo / "fhirscripts.multiig.config.yaml").write_text(
-            yaml.safe_dump(config),
-            "utf-8",
-        )
-
-        res = select_build_targets(ig=["rx"], select_all=False, cwd=self.repo)
-        self.assertEqual(["core", "test", "rx"], [entry.name for entry in res])
-
-    def test_base_ig_cutoff_for_base_selection(self):
-        config = {
-            "version": 1,
-            "igsRoot": "igs",
-            "baseIG": ["core", "test"],
-        }
-        (self.repo / "fhirscripts.multiig.config.yaml").write_text(
-            yaml.safe_dump(config),
-            "utf-8",
-        )
-
-        res = select_build_targets(ig=["core"], select_all=False, cwd=self.repo)
-        self.assertEqual(["core"], [entry.name for entry in res])
-
-        res = select_build_targets(ig=["test"], select_all=False, cwd=self.repo)
-        self.assertEqual(["core", "test"], [entry.name for entry in res])
-
-    def test_base_ig_prepended_for_multiple_selection(self):
-        (self.repo / "igs" / "diga").mkdir(parents=True, exist_ok=True)
-        (self.repo / "igs" / "diga" / "sushi-config.yaml").write_text(
-            "id: test\n", "utf-8"
-        )
-
-        config = {
-            "version": 1,
-            "igsRoot": "igs",
-            "baseIG": ["core", "test"],
-        }
-        (self.repo / "fhirscripts.multiig.config.yaml").write_text(
-            yaml.safe_dump(config),
-            "utf-8",
-        )
-
-        res = select_build_targets(
-            ig=["rx", "diga"],
-            select_all=False,
-            cwd=self.repo,
-        )
-        self.assertEqual(
-            ["core", "test", "rx", "diga"],
-            [entry.name for entry in res],
-        )
-
-    def test_base_ig_unknown_entry_is_error(self):
-        config = {
-            "version": 1,
-            "igsRoot": "igs",
-            "baseIG": ["unknown"],
-        }
-        (self.repo / "fhirscripts.multiig.config.yaml").write_text(
-            yaml.safe_dump(config),
-            "utf-8",
-        )
-
-        with self.assertRaisesRegex(SelectionError, "baseIG contains unknown IG"):
-            select_build_targets(ig=["rx"], select_all=False, cwd=self.repo)
-
-    def test_no_base_skips_base_ig_prepending(self):
-        config = {
-            "version": 1,
-            "igsRoot": "igs",
-            "baseIG": ["core", "test"],
-        }
-        (self.repo / "fhirscripts.multiig.config.yaml").write_text(
-            yaml.safe_dump(config),
-            "utf-8",
-        )
-
-        res = select_build_targets(
-            ig=["rx"],
-            select_all=False,
-            no_base=True,
-            cwd=self.repo,
-        )
-        self.assertEqual(["rx"], [entry.name for entry in res])
-
 
 class TestParserSupport(unittest.TestCase):
 
@@ -180,10 +90,9 @@ class TestParserSupport(unittest.TestCase):
         subparser = parser.add_subparsers(dest="build")
         build.setup_subparser(parser, subparser)
 
-        args = parser.parse_args(["pipeline", "--ig", "core", "rx", "--no-base"])
+        args = parser.parse_args(["pipeline", "--ig", "core", "rx"])
         self.assertEqual(["core", "rx"], args.ig)
         self.assertFalse(args.all)
-        self.assertTrue(args.no_base)
 
     def test_publish_parser_ig_options(self):
         parser = ArgumentParser()

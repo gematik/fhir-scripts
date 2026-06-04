@@ -1,5 +1,2 @@
 version: 1
 igsRoot: igs
-baseIG:
-  - core
-  - test

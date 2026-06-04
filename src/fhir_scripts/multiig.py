@@ -1,8 +1,17 @@
+import subprocess
+import sys
+from argparse import REMAINDER
+from argparse import ArgumentParser
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+from pydantic import ValidationError
+
+from . import log
+from .exception import SelectionError
+from .models.multiig_config import MultiIGConfig
 
 CONFIG_FILE_NAME = "fhirscripts.multiig.config.yaml"
 DEFAULT_IGS_ROOT = "igs"
@@ -18,15 +27,11 @@ class IGTarget:
 class MultiIGProject:
     repo_root: Path
     targets: dict[str, IGTarget]
-    base_igs: list[str]
-
-
-class SelectionError(Exception):
-    pass
 
 
 def discover_project(start_dir: Path | None = None) -> MultiIGProject | None:
-    cwd = (start_dir or Path.cwd()).resolve()
+    """Discover a multi-IG repository starting from current directory and parents."""
+    cwd = (start_dir or Path.cwd()).expanduser().resolve()
 
     for base in [cwd, *cwd.parents]:
         if (cfg_path := base / CONFIG_FILE_NAME).exists():
@@ -43,8 +48,9 @@ def select_targets(
     select_all: bool,
     cwd: Path | None = None,
 ) -> list[IGTarget]:
-    current_dir = (cwd or Path.cwd()).resolve()
-    requested = [name.strip() for name in (ig or []) if name.strip()]
+    """Resolve IG targets by explicit selection, --all, or auto-detection from cwd."""
+    current_dir = (cwd or Path.cwd()).expanduser().resolve()
+    requested = [n for name in (ig or []) if (n := name.strip())]
     project = discover_project(current_dir)
 
     if project is None:
@@ -85,62 +91,30 @@ def select_targets(
     )
 
 
-def select_build_targets(
-    ig: list[str] | None,
-    select_all: bool,
-    no_base: bool = False,
-    cwd: Path | None = None,
-) -> list[IGTarget]:
-    current_dir = (cwd or Path.cwd()).resolve()
-    selected = select_targets(ig=ig, select_all=select_all, cwd=current_dir)
-    project = discover_project(current_dir)
-
-    if no_base or project is None or len(project.base_igs) == 0:
-        return selected
-
-    return _prepend_base_igs(selected, project)
-
-
 def _project_from_config(repo_root: Path, config_path: Path) -> MultiIGProject:
+    """Build a project definition from explicit multi-IG configuration."""
     raw = yaml.safe_load(config_path.read_text("utf-8")) or {}
-    igs_root = raw.get("igsRoot", DEFAULT_IGS_ROOT)
-    if not isinstance(igs_root, str) or not igs_root.strip():
-        raise SelectionError(
-            f"Invalid '{CONFIG_FILE_NAME}': field 'igsRoot' must be a non-empty string"
-        )
+    try:
+        model = MultiIGConfig.model_validate(raw)
+    except ValidationError as exc:
+        raise SelectionError(f"Invalid '{CONFIG_FILE_NAME}': {exc}") from exc
 
-    ig_entries = raw.get("igs")
+    ig_entries = model.igs
     if ig_entries is None:
-        return _project_from_root_only_config(repo_root, raw, igs_root)
-
-    if not isinstance(ig_entries, dict):
-        raise SelectionError(
-            f"Invalid '{CONFIG_FILE_NAME}': field 'igs' must be a mapping if provided"
-        )
+        return _project_from_root_only_config(repo_root, model.igsRoot)
 
     if len(ig_entries) == 0:
-        return _project_from_root_only_config(repo_root, raw, igs_root)
+        return _project_from_root_only_config(repo_root, model.igsRoot)
 
     targets: dict[str, IGTarget] = {}
 
     for ig_name, ig_conf in ig_entries.items():
-        if not isinstance(ig_name, str) or not ig_name:
+        if not ig_name:
             raise SelectionError(
                 f"Invalid '{CONFIG_FILE_NAME}': IG names must be non-empty strings"
             )
 
-        if not isinstance(ig_conf, dict):
-            raise SelectionError(
-                f"Invalid '{CONFIG_FILE_NAME}': IG entry '{ig_name}' must be a mapping"
-            )
-
-        rel_path = ig_conf.get("path")
-        if not isinstance(rel_path, str) or not rel_path.strip():
-            raise SelectionError(
-                f"Invalid '{CONFIG_FILE_NAME}': IG '{ig_name}' requires a non-empty 'path'"
-            )
-
-        abs_path = (repo_root / Path(rel_path)).resolve()
+        abs_path = (repo_root / Path(ig_conf.path)).expanduser().resolve()
         if not abs_path.exists() or not abs_path.is_dir():
             raise SelectionError(
                 f"IG '{ig_name}' points to missing directory: {abs_path}"
@@ -148,17 +122,12 @@ def _project_from_config(repo_root: Path, config_path: Path) -> MultiIGProject:
 
         targets[ig_name] = IGTarget(name=ig_name, path=abs_path)
 
-    return MultiIGProject(
-        repo_root=repo_root,
-        targets=targets,
-        base_igs=_parse_base_igs(raw, targets),
-    )
+    return MultiIGProject(repo_root=repo_root, targets=targets)
 
 
-def _project_from_root_only_config(
-    repo_root: Path, raw: dict, igs_root: str
-) -> MultiIGProject:
-    root = (repo_root / Path(igs_root)).resolve()
+def _project_from_root_only_config(repo_root: Path, igs_root: str) -> MultiIGProject:
+    """Discover IG directories below the configured IG root path."""
+    root = (repo_root / Path(igs_root)).expanduser().resolve()
     if not root.exists() or not root.is_dir():
         raise SelectionError(
             f"Invalid '{CONFIG_FILE_NAME}': igsRoot points to missing directory: {root}"
@@ -166,7 +135,7 @@ def _project_from_root_only_config(
 
     targets = {
         candidate.name: IGTarget(name=candidate.name, path=candidate.resolve())
-        for candidate in sorted(root.iterdir())
+        for candidate in root.iterdir()
         if candidate.is_dir()
     }
 
@@ -175,21 +144,18 @@ def _project_from_root_only_config(
             f"Invalid '{CONFIG_FILE_NAME}': no IG directories found below {root}"
         )
 
-    return MultiIGProject(
-        repo_root=repo_root,
-        targets=targets,
-        base_igs=_parse_base_igs(raw, targets),
-    )
+    return MultiIGProject(repo_root=repo_root, targets=targets)
 
 
 def _project_from_convention(repo_root: Path) -> MultiIGProject | None:
+    """Discover IGs by convention in igs/<name> when no explicit config exists."""
     igs_root = repo_root / DEFAULT_IGS_ROOT
     if not igs_root.exists() or not igs_root.is_dir():
         return None
 
     targets: dict[str, IGTarget] = {}
 
-    for candidate in sorted(igs_root.iterdir()):
+    for candidate in igs_root.iterdir():
         if not candidate.is_dir():
             continue
 
@@ -207,65 +173,11 @@ def _project_from_convention(repo_root: Path) -> MultiIGProject | None:
     if len(targets) == 0:
         return None
 
-    return MultiIGProject(repo_root=repo_root, targets=targets, base_igs=[])
-
-
-def _parse_base_igs(raw: dict, targets: dict[str, IGTarget]) -> list[str]:
-    base = raw.get("baseIG", [])
-
-    if base is None:
-        return []
-
-    if not isinstance(base, list):
-        raise SelectionError(
-            f"Invalid '{CONFIG_FILE_NAME}': field 'baseIG' must be a list if provided"
-        )
-
-    target_names = sorted(targets.keys())
-    normalized: list[str] = []
-    for entry in base:
-        if not isinstance(entry, str) or not entry.strip():
-            raise SelectionError(
-                f"Invalid '{CONFIG_FILE_NAME}': entries in 'baseIG' must be non-empty strings"
-            )
-
-        ig_name = entry.strip()
-        if ig_name not in targets:
-            raise SelectionError(
-                "Invalid '{}': baseIG contains unknown IG '{}'. Valid IG names: {}".format(
-                    CONFIG_FILE_NAME,
-                    ig_name,
-                    ", ".join(target_names),
-                )
-            )
-
-        if ig_name not in normalized:
-            normalized.append(ig_name)
-
-    return normalized
-
-
-def _prepend_base_igs(
-    selected: list[IGTarget], project: MultiIGProject
-) -> list[IGTarget]:
-    if len(selected) == 0:
-        return selected
-
-    selected_names = [target.name for target in selected]
-    base = project.base_igs
-    base_set = set(base)
-
-    if any(name not in base_set for name in selected_names):
-        base_prefix = base
-    else:
-        max_idx = max(base.index(name) for name in selected_names)
-        base_prefix = base[: max_idx + 1]
-
-    ordered_names = list(dict.fromkeys([*base_prefix, *selected_names]))
-    return [project.targets[name] for name in ordered_names]
+    return MultiIGProject(repo_root=repo_root, targets=targets)
 
 
 def _detect_target_from_cwd(project: MultiIGProject, cwd: Path) -> IGTarget | None:
+    """Map current working directory to the most specific matching IG target."""
     matches = [
         target
         for target in project.targets.values()
@@ -281,6 +193,7 @@ def _detect_target_from_cwd(project: MultiIGProject, cwd: Path) -> IGTarget | No
 
 @contextmanager
 def working_directory(path: Path):
+    """Temporarily switch process working directory for command execution."""
     previous = Path.cwd()
     try:
         Path(path).resolve()
@@ -292,3 +205,90 @@ def working_directory(path: Path):
         import os
 
         os.chdir(previous)
+
+
+def setup_parser(parser: ArgumentParser, *args, **kwargs):
+    parser.add_argument(
+        "command",
+        nargs=REMAINDER,
+        help="fhirscripts command to run in selected IG directories",
+    )
+
+
+def handle_multiig(
+    command: list[str],
+    config_path: Path | None = None,
+    *args,
+    **kwargs,
+):
+    """Execute a fhirscripts command sequentially for selected IG targets."""
+    requested_igs, forwarded_command = _extract_multiig_args(command)
+
+    if len(forwarded_command) == 0:
+        raise Exception("Missing command to execute in multi-IG mode")
+
+    if forwarded_command[0] == "multiig":
+        raise Exception("Nested multi-IG mode is not supported")
+
+    # Default behavior of multiig mode is to target all IGs when no --ig is provided.
+    targets = select_targets(ig=requested_igs, select_all=True)
+
+    base_cmd = [sys.executable, "-m", "fhir_scripts"]
+    if config_path is not None:
+        base_cmd += ["--config", str(config_path.resolve())]
+
+    failures: list[str] = []
+    for target in targets:
+        cmd = [*base_cmd, *forwarded_command]
+        log.info(f"Run command in IG '{target.name}': {' '.join(forwarded_command)}")
+        proc = subprocess.run(cmd, cwd=target.path, check=False)
+
+        if proc.returncode == 0:
+            log.succ(f"Command succeeded for IG '{target.name}'")
+        else:
+            failures.append(target.name)
+            log.fail(
+                f"Command failed for IG '{target.name}' (exit code {proc.returncode})"
+            )
+
+    if failures:
+        raise Exception(
+            "multiig execution failed for IG(s): {}".format(", ".join(failures))
+        )
+
+
+def _extract_multiig_args(command: list[str]) -> tuple[list[str], list[str]]:
+    """Extract trailing --ig selectors and return remaining forwarded command."""
+    selected: list[str] = []
+    forwarded: list[str] = []
+
+    i = 0
+    while i < len(command):
+        token = command[i]
+        if token != "--ig":
+            forwarded.append(token)
+            i += 1
+            continue
+
+        i += 1
+        if i >= len(command):
+            raise Exception("'--ig' requires at least one IG name")
+
+        ig_names: list[str] = []
+        while i < len(command) and not command[i].startswith("--"):
+            ig_names.append(command[i])
+            i += 1
+
+        if len(ig_names) == 0:
+            raise Exception("'--ig' requires at least one IG name")
+
+        selected += ig_names
+
+    # Keep first-seen order.
+    selected = list(dict.fromkeys(selected))
+    return selected, forwarded
+
+
+__doc__ = "Run any fhirscripts command for multiple IGs"
+__handler__ = handle_multiig
+__setup_parser__ = setup_parser

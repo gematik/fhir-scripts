@@ -53,6 +53,28 @@ Get the version of installed tooling
 fhirscripts versions
 ```
 
+### Multi-IG Mode
+
+Run any `fhirscripts` command for multiple IGs using the `multiig` keyword:
+
+```bash
+fhirscripts multiig <command> [args ...]
+```
+
+Examples:
+
+```bash
+fhirscripts multiig build pipeline
+fhirscripts multiig build pipeline --ig rx
+fhirscripts multiig build pipeline --ig core rx
+```
+
+Behavior:
+
+1. Without `--ig`, the command runs for all IGs from the multi-IG configuration.
+2. With `--ig`, only the listed IGs are targeted in the given order.
+3. The command is executed inside each IG directory.
+
 ### Install
 
 Install one or multiple tools
@@ -299,9 +321,6 @@ An optional file `fhirscripts.multiig.config.yaml` can be added in repository ro
 ```yaml
 version: 1
 igsRoot: igs
-baseIG:
-  - core
-  - test
 ```
 
 With this structure
@@ -315,23 +334,6 @@ igs/
 
 you can call `fhirscripts build pipeline --ig test` and it will resolve to `igs/test` automatically.
 
-`baseIG` is optional and only affects build commands. Base IGs are built first in the configured order:
-
-```text
-baseIG:
-  - core
-  - test
-```
-
-Examples:
-
-```bash
-fhirscripts build pipeline --ig rx      # builds: core, test, rx
-fhirscripts build pipeline --ig test    # builds: core, test
-fhirscripts build pipeline --ig core    # builds: core
-fhirscripts build pipeline --ig rx diga # builds: core, test, rx, diga
-fhirscripts build pipeline --ig rx --no-base # builds: rx
-```
 If needed, you can still define explicit mappings and aliases using the optional `igs` section:
 
 ```yaml
