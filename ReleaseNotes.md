@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.28.2
+
+* Fix not handling status code from sushi run
+
 ## Release 0.28.1
 
 * Fix an issue when handling process output that returns a IOTextWrapper

@@ -15,7 +15,7 @@ REPO_URL = "https://github.com/FHIR/sushi"
 def run():
     log.info("Run sushi")
     try:
-        shell.run("sushi build .")
+        shell.run("sushi build .", check=True)
         log.succ("Sushi run successful")
 
     except shell.CalledProcessError:
