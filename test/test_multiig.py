@@ -143,7 +143,9 @@ class TestPublishMultiIg(unittest.TestCase):
         def publish_stub(project_dir: Path, ig_registry: Path):
             calls.append((project_dir.resolve(), ig_registry, Path.cwd().name))
 
-        with patch("fhir_scripts.publish.publishtools.publish", side_effect=publish_stub):
+        with patch(
+            "fhir_scripts.publish.publishtools.publish", side_effect=publish_stub
+        ):
             with working_directory(self.repo):
                 publish.publish_project(
                     project_dir=Path("project"),

@@ -65,7 +65,9 @@ def publish_project(
 
     invocation_cwd = Path.cwd()
     selected_project_dir = (
-        project_dir if project_dir is None or project_dir.is_absolute() else invocation_cwd / project_dir
+        project_dir
+        if project_dir is None or project_dir.is_absolute()
+        else invocation_cwd / project_dir
     )
 
     for target in targets:
