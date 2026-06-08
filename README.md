@@ -1,6 +1,7 @@
 # FHIR
 
 [![Unit Tests](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml/badge.svg)](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/gematik/fhir-scripts)
 
 ## Python Script
 
