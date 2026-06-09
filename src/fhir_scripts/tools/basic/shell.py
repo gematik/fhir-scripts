@@ -1,7 +1,8 @@
 import re
 import subprocess
-from subprocess import CalledProcessError
 from io import IOBase
+from subprocess import CalledProcessError
+
 from tqdm import tqdm
 
 from ... import helper, log
@@ -63,6 +64,9 @@ def _convert_std(input) -> list[str]:
         lines = input.readlines()
         lines = [line if isinstance(line, bytes) else line for line in lines]
 
+    elif isinstance(input, list):
+        lines = input
+
     else:
         raise Exception(
             f"Error reading from process output, not supported {type(input)}"
@@ -121,6 +125,8 @@ def run_progress(cmd, total, prefixes, desc):
     defines a list of prefixes of lines to be counted as progress and `desc` is a string that is added as a title in
     front of the progress bar.
     """
+    stdout = []
+    stderr = []
     with subprocess.Popen(
         cmd,
         shell=True,
@@ -134,10 +140,12 @@ def run_progress(cmd, total, prefixes, desc):
         ) as bar:
             for line in proc.stdout:
                 line = line.rstrip()
+                stdout.append(line)
                 for pref in prefixes:
                     if line.startswith(pref):
                         bar.update(1)
                         break  # avoid double count if multiple prefixes match
+            stderr += [line.rstrip() for line in proc.stderr or []]
             proc.wait()
 
             # If we had an estimated total that was too large/small, normalize so bar shows 100%.
@@ -147,6 +155,8 @@ def run_progress(cmd, total, prefixes, desc):
 
             if proc.returncode != 0:
                 res = ShellResult(proc)
+                res.stdout = stdout
+                res.stderr = stderr
                 raise CalledProcessError(
                     proc.returncode, proc.args, res.stdout_oneline, res.stderr_oneline
                 )
