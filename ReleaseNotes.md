@@ -2,6 +2,11 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.28.3
+
+* Output output from gCloud process if errors occured
+* Fix output of CalledProcessError
+
 ## Release 0.28.2
 
 * Fix not handling status code from sushi run
