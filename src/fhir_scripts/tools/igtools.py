@@ -10,8 +10,8 @@ from ..helper import require_installed
 from ..version import Version
 from .basic import python, shell
 
-VERSION_REGEX = re.compile(r"IGTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
-PACKAGE = "git+https://github.com/onyg/req-tooling.git"
+VERSION_REGEX = re.compile(r"REQTOOLS\s\(v(\d+(?:\.\d+){,2})\b", re.IGNORECASE)
+PACKAGE = "git+https://github.com/gematik/fhir-igtools.git"
 
 config = Path("./.igtools/config.yaml")
 
@@ -32,35 +32,35 @@ def is_configured(func):
 
 
 @is_configured
-@require_installed("igtools", __tool_name__)
+@require_installed("reqtools", __tool_name__)
 def process():
     """
     Process requirements
     """
     log.info("Processing requirements")
-    shell.run("igtools process")
+    shell.run("reqtools process")
     log.succ("Requirements processed")
 
 
 @is_configured
-@require_installed("igtools", __tool_name__)
+@require_installed("reqtools", __tool_name__)
 def release_notes(output_dir: Path | str):
     """
     Update release notes
     """
     log.info("Updating release-notes")
-    shell.run(f"igtools ig-release-notes {str(output_dir)}")
+    shell.run(f"reqtools ig-release-notes {str(output_dir)}")
     log.succ("Release-notes updated")
 
 
 @is_configured
-@require_installed("igtools", __tool_name__)
+@require_installed("reqtools", __tool_name__)
 def export(output_dir: Path | str):
     """
     Exports requirements
     """
     log.info("Export requirements")
-    shell.run(f"igtools export {str(output_dir)}")
+    shell.run(f"reqtools export {str(output_dir)}")
     log.succ("Requirements exported successfully")
 
 
@@ -70,10 +70,10 @@ def update(*args, **kwargs):
 
 def version(short: bool = False, *args, **kwargs) -> Version | None:
     """
-    Get the installed version of igtools, returns None if not installed
+    Get the installed version of reqtools, returns None if not installed
     """
     try:
-        res = shell.run("igtools -v", check=True, log_output=False)
+        res = shell.run("reqtools -v", check=True, log_output=False)
 
         # Extract the version string from output
         match = VERSION_REGEX.search(res.stdout_oneline)
