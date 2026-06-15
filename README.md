@@ -71,6 +71,9 @@ fhirscripts multiig --ig core --ig rx build pipeline
 fhirscripts multiig --all build pipeline
 ```
 
+The IG selection options belong to `multiig` itself, so they must be placed
+before the forwarded command.
+
 Behavior:
 
 1. Without `--ig`, the command runs for all IGs from the multi-IG configuration.
@@ -128,13 +131,6 @@ Rebuild the local FHIR package cache
 fhirscripts cache package [--package-dir <packagedir>] [--no-clear]
 ```
 
-For multi-IG repositories from root directory:
-
-```bash
-fhirscripts cache package --ig core rx
-fhirscripts cache package --all
-fhirscripts cache build --all
-```
 
 _(WIP)_ A local directory can be used as package cache. If `--package-dir <packagedir>` is provided, packages from `<packagedir>` will be installed instead and if not found, cached to this directory before installing them from there.
 
@@ -148,14 +144,6 @@ Check project consistency:
 fhirscripts check [--release] [--workdir <dir>]
 ```
 
-For multi-IG repositories from root directory:
-
-```bash
-fhirscripts check --ig core rx
-fhirscripts check --all
-```
-
-Note: `--workdir` is for single-project mode and cannot be combined with `--ig` or `--all`.
 
 ### Build
 
@@ -222,23 +210,6 @@ Build from a pipeline defined in the configuration
 ```bash
 fhirscripts build pipeline
 ```
-
-For multi-IG repositories (for example `igs/core`, `igs/rx`) you can select IGs explicitly from repository root:
-
-```bash
-fhirscripts build pipeline --ig core
-fhirscripts build pipeline --ig rx
-fhirscripts build pipeline --ig core rx
-fhirscripts build pipeline --ig core --ig rx
-fhirscripts build pipeline --all
-```
-
-IG target selection priority is:
-
-1. explicit `--ig` options
-2. `--all`
-3. auto-detection from current directory when executed inside an IG directory
-4. otherwise a clear error with valid IG names
 
 The pipeline is defined like
 

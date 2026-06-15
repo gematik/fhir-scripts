@@ -38,6 +38,15 @@ class TestMultiIgMode(unittest.TestCase):
         self.assertFalse(args.all)
         self.assertEqual(["build", "pipeline"], args.command)
 
+    def test_parser_all_option(self):
+        parser = ArgumentParser()
+        multiig.setup_parser(parser)
+
+        args = parser.parse_args(["--all", "build", "pipeline"])
+        self.assertEqual([], args.ig)
+        self.assertTrue(args.all)
+        self.assertEqual(["build", "pipeline"], args.command)
+
     def test_multiig_runs_all_by_default(self):
         calls = []
 
@@ -53,6 +62,22 @@ class TestMultiIgMode(unittest.TestCase):
                 multiig.handle_multiig(command=["build", "pipeline"])
 
         self.assertEqual(["core", "rx", "test"], [entry[1] for entry in calls])
+
+    def test_multiig_runs_all_explicitly(self):
+        calls = []
+
+        class Proc:
+            returncode = 0
+
+        def fake_run(cmd, cwd, check):
+            calls.append(Path(cwd).name)
+            return Proc()
+
+        with patch("fhir_scripts.multiig.subprocess.run", side_effect=fake_run):
+            with multiig.working_directory(self.repo):
+                multiig.handle_multiig(command=["build", "pipeline"], all=True)
+
+        self.assertEqual(["core", "rx", "test"], calls)
 
     def test_multiig_runs_requested_order(self):
         calls = []

@@ -1,10 +1,9 @@
 from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
-from . import config as config_file, log
+from . import log
 from .exception import NoConfigException, NotInstalledException
 from .models.config import Config
-from .multiig import select_targets, working_directory
 from .tools import epatools, igpub, igtools, sushi
 from .tools.basic import shell
 from .update import update as handle_update
@@ -22,30 +21,7 @@ def setup_subparser(
         "-u", "--update", action="store_true", help="Update tooling before building"
     )
 
-    # target_args_parser is defined locally (not at module level) so that each
-    # call to setup_subparser starts with a fresh parser.  ArgumentParser
-    # accumulates actions in-place, so a module-level instance would collect
-    # duplicate arguments across test runs or re-imports.
-    target_args_parser = ArgumentParser(add_help=False)
-    target_args_parser.add_argument(
-        "--ig",
-        action="extend",
-        nargs="+",
-        default=[],
-        help=(
-            "Target IG name(s), e.g. 'fhirscripts build pipeline --ig core rx' "
-            "or '--ig core --ig rx'"
-        ),
-    )
-    target_args_parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Run for all IGs, e.g. 'fhirscripts build pipeline --all'",
-    )
-
-    defs_parser = subparser.add_parser(
-        DEFS, help="Build definitions", parents=[target_args_parser]
-    )
+    defs_parser = subparser.add_parser(DEFS, help="Build definitions")
     defs_parser.add_argument(
         "--req", action="store_true", help="Also process requirements"
     )
@@ -59,15 +35,13 @@ def setup_subparser(
         "--only-cap", action="store_true", help="Only merge CapabilityStatements"
     )
 
-    ig_parser = subparser.add_parser(IG, help="Build IG", parents=[target_args_parser])
+    ig_parser = subparser.add_parser(IG, help="Build IG")
     ig_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
     ig_parser.add_argument(
         "--only-oapi", action="store_true", help="Only build OpenAPI"
     )
 
-    all_parser = subparser.add_parser(
-        ALL, help="Build everything", parents=[target_args_parser]
-    )
+    all_parser = subparser.add_parser(ALL, help="Build everything")
     all_parser.add_argument(
         "--req", action="store_true", help="Also process requirements"
     )
@@ -76,7 +50,7 @@ def setup_subparser(
     )
     all_parser.add_argument("--oapi", action="store_true", help="Also build OpenAPI")
 
-    subparser.add_parser(PIPELINE, help="Build IG", parents=[target_args_parser])
+    subparser.add_parser(PIPELINE, help="Build IG")
 
 
 def build_defs(
@@ -86,31 +60,19 @@ def build_defs(
     req: bool = False,
     cap: bool = False,
     update: bool = False,
-    ig: list[str] | None = None,
-    all: bool = False,
-    config_path: Path | None = None,
     *args,
     **kwargs,
 ):
-    for target in _selected_targets(ig=ig, all=all):
-        with working_directory(target.path):
-            target_config = _resolve_build_config_for_target(
-                default_config=config,
-                target_path=target.path,
-                config_path=config_path,
-            )
-            log.info(f"Building definitions for IG '{target.name}'")
-            _build_defs_once(
-                config=target_config,
-                only_cap=only_cap,
-                only_req=only_req,
-                req=req,
-                cap=cap,
-                update=update,
-                *args,
-                **kwargs,
-            )
-            log.succ(f"Definitions built successfully for IG '{target.name}'")
+    _build_defs_once(
+        config=config,
+        only_cap=only_cap,
+        only_req=only_req,
+        req=req,
+        cap=cap,
+        update=update,
+        *args,
+        **kwargs,
+    )
 
 
 def build_sushi(*args, **kwargs):
@@ -148,29 +110,10 @@ def build_ig(
     only_oapi: bool = False,
     oapi: bool = False,
     update: bool = False,
-    ig: list[str] | None = None,
-    all: bool = False,
-    config_path: Path | None = None,
     *args,
     **kwargs,
 ):
-    for target in _selected_targets(ig=ig, all=all):
-        with working_directory(target.path):
-            target_config = _resolve_build_config_for_target(
-                default_config=config,
-                target_path=target.path,
-                config_path=config_path,
-            )
-            log.info(f"Building IG '{target.name}'")
-            _build_ig_once(
-                config=target_config,
-                only_oapi=only_oapi,
-                oapi=oapi,
-                update=update,
-                *args,
-                **kwargs,
-            )
-            log.succ(f"IG built successfully for IG '{target.name}'")
+    _build_ig_once(config=config, only_oapi=only_oapi, oapi=oapi, update=update, *args, **kwargs)
 
 
 def build_igpub(*args, **kwargs):
@@ -188,24 +131,11 @@ def build_openapi(*args, **kwargs):
 
 
 def build_all(config: Config, update: bool = False, *args, **kwargs):
-    ig = kwargs.pop("ig", None)
-    all = kwargs.pop("all", False)
-    config_path = kwargs.pop("config_path", None)
+    if update:
+        handle_update(*args, **kwargs)
 
-    for target in _selected_targets(ig=ig, all=all):
-        with working_directory(target.path):
-            target_config = _resolve_build_config_for_target(
-                default_config=config,
-                target_path=target.path,
-                config_path=config_path,
-            )
-            log.info(f"Building everything for IG '{target.name}'")
-            if update:
-                handle_update(*args, **kwargs)
-
-            _build_defs_once(config=target_config, *args, **kwargs)
-            _build_ig_once(config=target_config, *args, **kwargs)
-            log.succ(f"Build completed for IG '{target.name}'")
+    _build_defs_once(config=config, *args, **kwargs)
+    _build_ig_once(config=config, *args, **kwargs)
 
 
 def build_shell(c_args: str, *args, **kwargs):
@@ -230,43 +160,7 @@ PIPELINE_STEPS = {
 
 
 def build_pipeline(config: Config, *args, **kwargs):
-    ig = kwargs.pop("ig", None)
-    all = kwargs.pop("all", False)
-    config_path = kwargs.pop("config_path", None)
-
-    for target in _selected_targets(ig=ig, all=all):
-        with working_directory(target.path):
-            target_config = _resolve_build_config_for_target(
-                default_config=config,
-                target_path=target.path,
-                config_path=config_path,
-            )
-            log.info(f"Processing build pipeline for IG '{target.name}'")
-            _build_pipeline_once(config=target_config, *args, **kwargs)
-            log.succ(f"Build pipeline completed for IG '{target.name}'")
-
-
-def _selected_targets(ig: list[str] | None, all: bool):
-    targets = select_targets(ig=ig, select_all=all)
-    if len(targets) == 0:
-        from .multiig import IGTarget
-
-        return [IGTarget(name="current", path=Path.cwd())]
-
-    return targets
-
-
-def _resolve_build_config_for_target(
-    default_config: Config, target_path: Path, config_path: Path | None
-) -> Config:
-    if config_path is not None:
-        return default_config
-
-    target_config_file = target_path / "fhirscripts.config.yaml"
-    if target_config_file.exists():
-        return config_file.load(target_config_file)
-
-    return default_config
+    _build_pipeline_once(config=config, *args, **kwargs)
 
 
 def _build_defs_once(

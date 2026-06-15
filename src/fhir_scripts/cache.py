@@ -4,7 +4,6 @@ from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
 from . import log
-from .multiig import IGTarget, select_targets, working_directory
 from .tools import fhir_pkg_tool, firely_terminal
 from .tools.basic import npm
 
@@ -24,24 +23,9 @@ FHIR_REGISTRY = "https://packages.simplifier.net"
 def setup_subparser(
     parser: ArgumentParser, subparser: _SubParsersAction, *args, **kwarsg
 ):
-    target_args_parser = ArgumentParser(add_help=False)
-    target_args_parser.add_argument(
-        "--ig",
-        action="extend",
-        nargs="+",
-        default=[],
-        help="Target IG name(s), e.g. '--ig core rx' or '--ig core --ig rx'",
-    )
-    target_args_parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Run for all IGs in a multi-IG repository",
-    )
-
     pkg_parser = subparser.add_parser(
         PKG,
         help="Clear and rebuild the FHIR package cache",
-        parents=[target_args_parser],
     )
     pkg_parser.add_argument(
         PKG_DIR, type=Path, default=None, help="Local directory with packages archives"
@@ -62,11 +46,7 @@ def setup_subparser(
         LEGACY, action="store_true", help="Old implementation using Firely Terminal"
     )
 
-    subparser.add_parser(
-        BUILD,
-        help="Clear all build related cache directories",
-        parents=[target_args_parser],
-    )
+    subparser.add_parser(BUILD, help="Clear all build related cache directories")
 
 
 def cache_rebuild_fhir_cache(
@@ -74,22 +54,10 @@ def cache_rebuild_fhir_cache(
     no_clear: bool = False,
     new: bool = False,
     legacy: bool = False,
-    ig: list[str] | None = None,
-    all: bool = False,
     *args,
     **kwargs,
 ):
-
-    for target in _selected_targets(ig=ig, all=all):
-        with working_directory(target.path):
-            log.info(f"Rebuild package cache for IG '{target.name}'")
-            _cache_rebuild_fhir_cache_once(
-                package_dir=package_dir,
-                no_clear=no_clear,
-                new=new,
-                legacy=legacy,
-            )
-            log.succ(f"Package cache rebuilt for IG '{target.name}'")
+    _cache_rebuild_fhir_cache_once(package_dir=package_dir, no_clear=no_clear, new=new, legacy=legacy)
 
 
 def _cache_rebuild_fhir_cache_once(
@@ -237,27 +205,11 @@ def _cache_rebuild_fhir_cache_once(
 
 
 def clear_build_caches(ig: list[str] | None = None, all: bool = False, *args, **kwargs):
-    for target in _selected_targets(ig=ig, all=all):
-        with working_directory(target.path):
-            log.info(f"Clear build caches for IG '{target.name}'")
-            for p in [
-                "./input-cache/schemas",
-                "./input-cache/txcache",
-                "./temp",
-                "./template",
-            ]:
-                if (path := Path(p)).exists():
-                    shutil.rmtree(path)
-                    log.succ("Removed {}".format(str(path)))
-            log.succ(f"Cleared build caches successfully for IG '{target.name}'")
-
-
-def _selected_targets(ig: list[str] | None, all: bool):
-    targets = select_targets(ig=ig, select_all=all)
-    if len(targets) == 0:
-        return [IGTarget(name="current", path=Path.cwd())]
-
-    return targets
+def clear_build_caches(*args, **kwargs):
+    for p in ["./input-cache/schemas", "./input-cache/txcache", "./temp", "./template"]:
+        if (path := Path(p)).exists():
+            shutil.rmtree(path)
+            log.succ("Removed {}".format(str(path)))
 
 
 __doc__ = "Handle caches"
