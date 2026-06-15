@@ -33,8 +33,12 @@ class TestMultiIgMode(unittest.TestCase):
         parser = ArgumentParser()
         multiig.setup_parser(parser)
 
-        args = parser.parse_args(["build", "pipeline", "--ig", "core", "rx"])
-        self.assertEqual(["build", "pipeline", "--ig", "core", "rx"], args.command)
+        args = parser.parse_args(
+            ["--ig", "core", "--ig", "rx", "build", "pipeline"]
+        )
+        self.assertEqual(["core", "rx"], args.ig)
+        self.assertFalse(args.all)
+        self.assertEqual(["build", "pipeline"], args.command)
 
     def test_multiig_runs_all_by_default(self):
         calls = []
@@ -65,7 +69,8 @@ class TestMultiIgMode(unittest.TestCase):
         with patch("fhir_scripts.multiig.subprocess.run", side_effect=fake_run):
             with multiig.working_directory(self.repo):
                 multiig.handle_multiig(
-                    command=["build", "pipeline", "--ig", "rx", "core"],
+                    command=["build", "pipeline"],
+                    ig=["rx", "core"],
                 )
 
         self.assertEqual(["rx", "core"], calls)
@@ -109,7 +114,8 @@ class TestMultiIgMode(unittest.TestCase):
             with multiig.working_directory(self.repo):
                 multiig.handle_multiig(
                     command=["build", "pipeline", "--update", "--ig", "rx"],
+                    ig=["core"],
                 )
 
-        forwarded = calls[0][-3:]
-        self.assertEqual(["build", "pipeline", "--update"], forwarded)
+        forwarded = calls[0][-5:]
+        self.assertEqual(["build", "pipeline", "--update", "--ig", "rx"], forwarded)

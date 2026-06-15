@@ -22,6 +22,10 @@ def setup_subparser(
         "-u", "--update", action="store_true", help="Update tooling before building"
     )
 
+    # target_args_parser is defined locally (not at module level) so that each
+    # call to setup_subparser starts with a fresh parser.  ArgumentParser
+    # accumulates actions in-place, so a module-level instance would collect
+    # duplicate arguments across test runs or re-imports.
     target_args_parser = ArgumentParser(add_help=False)
     target_args_parser.add_argument(
         "--ig",

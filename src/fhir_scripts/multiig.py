@@ -73,11 +73,15 @@ def select_targets(
                 )
             )
 
-        # Keep user-defined order while removing duplicates.
-        unique_requested = list(dict.fromkeys(requested))
+        # Deduplicate while preserving the user-defined order.
+        # (dict.fromkeys keeps first-seen entries; set() would lose order)
+        seen: set[str] = set()
+        unique_requested = [n for n in requested if not (n in seen or seen.add(n))]
         return [project.targets[name] for name in unique_requested]
 
     if select_all:
+        # Return a stable, sorted list – not the raw dict – so callers always
+        # iterate IGs in a deterministic order regardless of insertion order.
         return [project.targets[name] for name in target_names]
 
     auto_detected = _detect_target_from_cwd(project, current_dir)
@@ -209,6 +213,17 @@ def working_directory(path: Path):
 
 def setup_parser(parser: ArgumentParser, *args, **kwargs):
     parser.add_argument(
+        "--ig",
+        action="append",
+        default=[],
+        help="Target IG name(s), repeat option: 'fhirscripts multiig --ig core --ig rx build pipeline'",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Run command for all IGs in the multi-IG repository",
+    )
+    parser.add_argument(
         "command",
         nargs=REMAINDER,
         help="fhirscripts command to run in selected IG directories",
@@ -217,12 +232,17 @@ def setup_parser(parser: ArgumentParser, *args, **kwargs):
 
 def handle_multiig(
     command: list[str],
+    ig: list[str] | None = None,
+    all: bool = False,
     config_path: Path | None = None,
     *args,
     **kwargs,
 ):
     """Execute a fhirscripts command sequentially for selected IG targets."""
-    requested_igs, forwarded_command = _extract_multiig_args(command)
+    forwarded_command = command
+
+    if len(forwarded_command) > 0 and forwarded_command[0] == "--":
+        forwarded_command = forwarded_command[1:]
 
     if len(forwarded_command) == 0:
         raise Exception("Missing command to execute in multi-IG mode")
@@ -230,8 +250,9 @@ def handle_multiig(
     if forwarded_command[0] == "multiig":
         raise Exception("Nested multi-IG mode is not supported")
 
-    # Default behavior of multiig mode is to target all IGs when no --ig is provided.
-    targets = select_targets(ig=requested_igs, select_all=True)
+    requested_igs = [name.strip() for name in (ig or []) if name and name.strip()]
+    select_all = all or len(requested_igs) == 0
+    targets = select_targets(ig=requested_igs, select_all=select_all)
 
     base_cmd = [sys.executable, "-m", "fhir_scripts"]
     if config_path is not None:
@@ -255,38 +276,6 @@ def handle_multiig(
         raise Exception(
             "multiig execution failed for IG(s): {}".format(", ".join(failures))
         )
-
-
-def _extract_multiig_args(command: list[str]) -> tuple[list[str], list[str]]:
-    """Extract trailing --ig selectors and return remaining forwarded command."""
-    selected: list[str] = []
-    forwarded: list[str] = []
-
-    i = 0
-    while i < len(command):
-        token = command[i]
-        if token != "--ig":
-            forwarded.append(token)
-            i += 1
-            continue
-
-        i += 1
-        if i >= len(command):
-            raise Exception("'--ig' requires at least one IG name")
-
-        ig_names: list[str] = []
-        while i < len(command) and not command[i].startswith("--"):
-            ig_names.append(command[i])
-            i += 1
-
-        if len(ig_names) == 0:
-            raise Exception("'--ig' requires at least one IG name")
-
-        selected += ig_names
-
-    # Keep first-seen order.
-    selected = list(dict.fromkeys(selected))
-    return selected, forwarded
 
 
 __doc__ = "Run any fhirscripts command for multiple IGs"

@@ -14,6 +14,8 @@ def main():
     args = cli.get_args(module_dict, parser_dict)
 
     try:
+        # config.load returns a default Config when the file is absent, so
+        # this is safe in a multi-IG root where no root-level config exists.
         cfg = config.load(args.config)
 
         # Get handle function for command

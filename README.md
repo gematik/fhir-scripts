@@ -65,15 +65,17 @@ Examples:
 
 ```bash
 fhirscripts multiig build pipeline
-fhirscripts multiig build pipeline --ig rx
-fhirscripts multiig build pipeline --ig core rx
+fhirscripts multiig --ig rx build pipeline
+fhirscripts multiig --ig core --ig rx build pipeline
+fhirscripts multiig --all build pipeline
 ```
 
 Behavior:
 
 1. Without `--ig`, the command runs for all IGs from the multi-IG configuration.
-2. With `--ig`, only the listed IGs are targeted in the given order.
-3. The command is executed inside each IG directory.
+2. With repeatable `--ig`, only the listed IGs are targeted in the given order.
+3. `--all` explicitly runs the command for every configured IG.
+4. The command is executed inside each IG directory.
 
 ### Install
 
