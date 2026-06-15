@@ -42,7 +42,9 @@ def publish_project(
     **kwargs,
 ):
     project_to_publish = project_dir or Path.cwd()
-    log.info(f"Publish project '{project_to_publish}' using IG registry '{ig_registry}'")
+    log.info(
+        f"Publish project '{project_to_publish}' using IG registry '{ig_registry}'"
+    )
     publishtools.publish(project_to_publish, ig_registry)
     log.succ("Project published")
 

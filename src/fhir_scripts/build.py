@@ -113,7 +113,9 @@ def build_ig(
     *args,
     **kwargs,
 ):
-    _build_ig_once(config=config, only_oapi=only_oapi, oapi=oapi, update=update, *args, **kwargs)
+    _build_ig_once(
+        config=config, only_oapi=only_oapi, oapi=oapi, update=update, *args, **kwargs
+    )
 
 
 def build_igpub(*args, **kwargs):
