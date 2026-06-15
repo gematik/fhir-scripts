@@ -57,7 +57,9 @@ def cache_rebuild_fhir_cache(
     *args,
     **kwargs,
 ):
-    _cache_rebuild_fhir_cache_once(package_dir=package_dir, no_clear=no_clear, new=new, legacy=legacy)
+    _cache_rebuild_fhir_cache_once(
+        package_dir=package_dir, no_clear=no_clear, new=new, legacy=legacy
+    )
 
 
 def _cache_rebuild_fhir_cache_once(
@@ -204,7 +206,6 @@ def _cache_rebuild_fhir_cache_once(
         log.succ("Restore successful")
 
 
-def clear_build_caches(ig: list[str] | None = None, all: bool = False, *args, **kwargs):
 def clear_build_caches(*args, **kwargs):
     for p in ["./input-cache/schemas", "./input-cache/txcache", "./temp", "./template"]:
         if (path := Path(p)).exists():
