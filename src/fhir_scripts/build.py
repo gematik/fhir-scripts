@@ -63,33 +63,16 @@ def build_defs(
     *args,
     **kwargs,
 ):
-    if update:
-        handle_update(*args, **kwargs)
-
-    log.info("Building definitions")
-
-    epatools_config = config.build.builtin.epatools
-    igtools_config = config.build.builtin.igtools
-
-    enable_requirements = (igtools_config or req or only_req) and not only_cap
-    enable_sushi = not only_req and not only_cap
-    enable_cap_statements = (
-        (isinstance(epatools_config, bool) and epatools_config)
-        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
-        or ((cap or only_cap))
-        and not only_req
+    _build_defs_once(
+        config=config,
+        only_cap=only_cap,
+        only_req=only_req,
+        req=req,
+        cap=cap,
+        update=update,
+        *args,
+        **kwargs,
     )
-
-    if enable_requirements:
-        build_req(*args, **kwargs)
-
-    if enable_sushi:
-        build_sushi(*args, **kwargs)
-
-    if enable_cap_statements:
-        build_cap(*args, **kwargs)
-
-    log.succ("Definitions built successfully")
 
 
 def build_sushi(*args, **kwargs):
@@ -130,29 +113,9 @@ def build_ig(
     *args,
     **kwargs,
 ):
-    if update:
-        handle_update(*args, **kwargs)
-
-    log.info("Building IG")
-
-    epatools_config = config.build.builtin.epatools
-
-    enable_igpub = not only_oapi
-    enable_openapi = (
-        (isinstance(epatools_config, bool) and epatools_config)
-        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
-        or only_oapi
-        or oapi
+    _build_ig_once(
+        config=config, only_oapi=only_oapi, oapi=oapi, update=update, *args, **kwargs
     )
-
-    if enable_igpub:
-        build_igpub(*args, **kwargs)
-
-    if enable_openapi:
-        build_openapi(config)
-
-    log.succ("IG built successfully")
-    build_igpub_qa(*args, **kwargs)
 
 
 def build_igpub(*args, **kwargs):
@@ -173,8 +136,8 @@ def build_all(config: Config, update: bool = False, *args, **kwargs):
     if update:
         handle_update(*args, **kwargs)
 
-    build_defs(config, *args, **kwargs)
-    build_ig(config, *args, **kwargs)
+    _build_defs_once(config=config, *args, **kwargs)
+    _build_ig_once(config=config, *args, **kwargs)
 
 
 def build_shell(c_args: str, *args, **kwargs):
@@ -199,6 +162,75 @@ PIPELINE_STEPS = {
 
 
 def build_pipeline(config: Config, *args, **kwargs):
+    _build_pipeline_once(config=config, *args, **kwargs)
+
+
+def _build_defs_once(
+    config: Config,
+    only_cap: bool = False,
+    only_req: bool = False,
+    req: bool = False,
+    cap: bool = False,
+    update: bool = False,
+    *args,
+    **kwargs,
+):
+    if update:
+        handle_update(*args, **kwargs)
+
+    epatools_config = config.build.builtin.epatools
+    igtools_config = config.build.builtin.igtools
+
+    enable_requirements = (igtools_config or req or only_req) and not only_cap
+    enable_sushi = not only_req and not only_cap
+    enable_cap_statements = (
+        (isinstance(epatools_config, bool) and epatools_config)
+        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
+        or ((cap or only_cap))
+        and not only_req
+    )
+
+    if enable_requirements:
+        build_req(*args, **kwargs)
+
+    if enable_sushi:
+        build_sushi(*args, **kwargs)
+
+    if enable_cap_statements:
+        build_cap(*args, **kwargs)
+
+
+def _build_ig_once(
+    config: Config,
+    only_oapi: bool = False,
+    oapi: bool = False,
+    update: bool = False,
+    *args,
+    **kwargs,
+):
+    if update:
+        handle_update(*args, **kwargs)
+
+    epatools_config = config.build.builtin.epatools
+
+    enable_igpub = not only_oapi
+    enable_openapi = (
+        (isinstance(epatools_config, bool) and epatools_config)
+        or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
+        or only_oapi
+        or oapi
+    )
+
+    if enable_igpub:
+        build_igpub(*args, **kwargs)
+
+    if enable_openapi:
+        build_openapi(config)
+
+    build_igpub_qa(*args, **kwargs)
+
+
+def _build_pipeline_once(config: Config, *args, **kwargs):
     pipeline = config.build.pipeline
 
     invalid_steps = [
@@ -210,7 +242,8 @@ def build_pipeline(config: Config, *args, **kwargs):
 
     if invalid_steps:
         raise Exception(
-            f"Pipeline configuration contains invalid step(s): {", ".join(invalid_steps)}"
+            "Pipeline configuration contains invalid step(s): "
+            + ", ".join(invalid_steps)
         )
 
     for step in pipeline:

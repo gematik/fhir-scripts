@@ -1,5 +1,4 @@
-import os
-from argparse import _SubParsersAction
+from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
 from . import log
@@ -9,12 +8,14 @@ PROJECT = "project"
 IG_REGISTRY = "ig-registry"
 
 
-def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
+def setup_subparser(
+    parser: ArgumentParser, subparser: _SubParsersAction, *args, **kwarsg
+):
     project_parser = subparser.add_parser(PROJECT, help="Publish the current project")
     project_parser.add_argument(
         "--project-dir",
         type=Path,
-        default=os.getcwd(),
+        default=None,
         help="Path of the project to publish",
     )
     project_parser.add_argument(
@@ -34,9 +35,17 @@ def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
     )
 
 
-def publish_project(project_dir: Path, ig_registry: Path, *args, **kwargs):
-    log.info(f"Publish project '{project_dir}' using IG registry '{ig_registry}'")
-    publishtools.publish(project_dir, ig_registry)
+def publish_project(
+    project_dir: Path | None,
+    ig_registry: Path,
+    *args,
+    **kwargs,
+):
+    project_to_publish = project_dir or Path.cwd()
+    log.info(
+        f"Publish project '{project_to_publish}' using IG registry '{ig_registry}'"
+    )
+    publishtools.publish(project_to_publish, ig_registry)
     log.succ("Project published")
 
 

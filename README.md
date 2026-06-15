@@ -54,6 +54,33 @@ Get the version of installed tooling
 fhirscripts versions
 ```
 
+### Multi-IG Mode
+
+Run any `fhirscripts` command for multiple IGs using the `multiig` keyword:
+
+```bash
+fhirscripts multiig <command> [args ...]
+```
+
+Examples:
+
+```bash
+fhirscripts multiig build pipeline
+fhirscripts multiig --ig rx build pipeline
+fhirscripts multiig --ig core --ig rx build pipeline
+fhirscripts multiig --all build pipeline
+```
+
+The IG selection options belong to `multiig` itself, so they must be placed
+before the forwarded command.
+
+Behavior:
+
+1. Without `--ig`, the command runs for all IGs from the multi-IG configuration.
+2. With repeatable `--ig`, only the listed IGs are targeted in the given order.
+3. `--all` explicitly runs the command for every configured IG.
+4. The command is executed inside each IG directory.
+
 ### Install
 
 Install one or multiple tools
@@ -61,6 +88,8 @@ Install one or multiple tools
 ```bash
 fhirscripts install --<tool> [--<tool> [...]]
 ```
+
+For multi-IG repositories, running `fhirscripts install` from repository root will automatically read each IG-local `fhirscripts.config.yaml` and install tools listed in its `install` section.
 
 Get a list of available tools to install
 
@@ -92,6 +121,8 @@ Update each installed tool
 fhirscripts update
 ```
 
+In a multi-IG repository root (with `fhirscripts.multiig.config.yaml`), `fhirscripts update` updates IG Publisher per IG directory, so `input-cache/publisher.jar` is refreshed inside each selected IG folder instead of repository root.
+
 ### Cache
 
 Rebuild the local FHIR package cache
@@ -100,9 +131,19 @@ Rebuild the local FHIR package cache
 fhirscripts cache package [--package-dir <packagedir>] [--no-clear]
 ```
 
+
 _(WIP)_ A local directory can be used as package cache. If `--package-dir <packagedir>` is provided, packages from `<packagedir>` will be installed instead and if not found, cached to this directory before installing them from there.
 
 `--no-clear` allows to restore the FHIR package cache without clearing the directory in beforehand.
+
+### Check
+
+Check project consistency:
+
+```bash
+fhirscripts check [--release] [--workdir <dir>]
+```
+
 
 ### Build
 
@@ -204,10 +245,18 @@ Publish and therefore preparing information from either a FHIR project or a FHIR
 Publish a FHIR project
 
 ```bash
-fhirscripts publish [--project-dir <projectdir>] --ig-registry <igregistry>
+fhirscripts publish project [--project-dir <projectdir>] --ig-registry <igregistry>
 ```
 
 from the current directory or `<projectdir>` if provided. This will generate JSON file containing the IG history and an HTML file representing the rendered history.
+
+For multi-IG repositories from root directory:
+
+```bash
+fhirscripts publish project --ig rx --ig-registry ../fhir-ig-registry
+fhirscripts publish project --ig core rx --ig-registry ../fhir-ig-registry
+fhirscripts publish project --all --ig-registry ../fhir-ig-registry
+```
 
 It will also update the FHIR IG registry in the `<igregistry>` directory. This will update a JSON file containing all versions of all IGs published by your organization, an HTML rendered version of it and update the `package-feed.xml` that can be used to publish your FHIR packages to the [official FHIR registry](https://registry.fhir.org).
 
@@ -230,6 +279,65 @@ in the environment named `<env>`. This nneds to match an environment defined in 
 By default the FHIR IG and other files like history and package list are deployed. With `--only-ig` only the IG is deployed.
 
 If not an IG but a FHIR registry should be deployed use `--ig-registry`.
+
+For multi-IG repositories from root directory:
+
+```bash
+fhirscripts deploy dev --ig rx
+fhirscripts deploy prod --ig core rx
+fhirscripts deploy dev --all
+```
+
+### Optional Multi-IG Configuration
+
+An optional file `fhirscripts.multiig.config.yaml` can be added in repository root. The minimal setup only defines the IG root. IG names are then automatically derived from folder names:
+
+```yaml
+version: 1
+igsRoot: igs
+```
+
+With this structure
+
+```text
+igs/
+  core/
+  rx/
+  test/
+```
+
+you can call `fhirscripts build pipeline --ig test` and it will resolve to `igs/test` automatically.
+
+If needed, you can still define explicit mappings and aliases using the optional `igs` section:
+
+```yaml
+version: 1
+igsRoot: igs
+igs:
+  core:
+    path: igs/core
+  rx:
+    path: igs/rx
+  erp-chrg:
+    path: igs/erp-chrg
+```
+
+If this file is missing, `fhirscripts` still works with the default convention `igs/<name>`.
+
+### Migration From cd Workflow
+
+Legacy workflow:
+
+```bash
+cd igs/rx
+fhirscripts build pipeline
+```
+
+New explicit workflow from repository root:
+
+```bash
+fhirscripts build pipeline --ig rx
+```
 
 ## Bash script (outdated)
 

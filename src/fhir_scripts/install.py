@@ -1,11 +1,13 @@
 import importlib
 import pkgutil
 from argparse import ArgumentParser
+from pathlib import Path
 
 import fhir_scripts.tools
 
-from . import log
+from . import config as config_loader, log
 from .config import Config
+from .multiig import CONFIG_FILE_NAME, discover_project, working_directory
 
 TOOL_MODULES = {}
 
@@ -40,16 +42,48 @@ def setup_parser(parser: ArgumentParser, *args, **kwarsg):
         )
 
 
-def install(config: Config, config_file: bool = False, *args, **kwargs):
-    # If '--config-file' argument, get list of tools to install from the config file 'install' section
+def install(
+    config: Config,
+    config_file: bool = False,
+    config_path: Path | None = None,
+    *args,
+    **kwargs,
+):
+    # '--config-file': install the tools listed in the config's install section.
     if config_file:
-        install_tools = config.install
+        _install_tools(config.install)
+        return
 
-    # Else get them from arguments
-    else:
-        install_tools = [
-            tool for tool, v in kwargs.items() if isinstance(v, bool) and v
-        ]
+    # Explicit tool flags (e.g. '--igpub --sushi'): install only those tools.
+    explicit_tools = [tool for tool, v in kwargs.items() if isinstance(v, bool) and v]
+    if explicit_tools:
+        _install_tools(explicit_tools)
+        return
+
+    # No flags given.  In a multi-IG root (detected by the presence of the
+    # multi-IG config file) install tools from each IG's own config.
+    if config_path is None:
+        cwd = Path.cwd()
+        if (cwd / CONFIG_FILE_NAME).exists():
+            project = discover_project(cwd)
+            if project is not None:
+                log.info(
+                    "Detected multi-IG repository, installing tools from each IG config"
+                )
+                for target in sorted(project.targets.values(), key=lambda t: t.name):
+                    with working_directory(target.path):
+                        target_config = config_loader.load(
+                            Path("./fhirscripts.config.yaml")
+                        )
+                        log.info(f"Install tooling for IG '{target.name}'")
+                        _install_tools(target_config.install)
+                return
+
+    # Single-IG fallback: use the tools defined in the loaded config.
+    _install_tools(config.install)
+
+
+def _install_tools(install_tools: list[str]):
 
     # Get the module for each tool
     modules = []

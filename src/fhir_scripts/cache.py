@@ -1,6 +1,6 @@
 import json
 import shutil
-from argparse import _SubParsersAction
+from argparse import ArgumentParser, _SubParsersAction
 from pathlib import Path
 
 from . import log
@@ -20,9 +20,12 @@ LEGACY = "--legacy"
 FHIR_REGISTRY = "https://packages.simplifier.net"
 
 
-def setup_subparser(subparser: _SubParsersAction, *args, **kwarsg):
+def setup_subparser(
+    parser: ArgumentParser, subparser: _SubParsersAction, *args, **kwarsg
+):
     pkg_parser = subparser.add_parser(
-        PKG, help="Clear and rebuild the FHIR package cache"
+        PKG,
+        help="Clear and rebuild the FHIR package cache",
     )
     pkg_parser.add_argument(
         PKG_DIR, type=Path, default=None, help="Local directory with packages archives"
@@ -53,6 +56,17 @@ def cache_rebuild_fhir_cache(
     legacy: bool = False,
     *args,
     **kwargs,
+):
+    _cache_rebuild_fhir_cache_once(
+        package_dir=package_dir, no_clear=no_clear, new=new, legacy=legacy
+    )
+
+
+def _cache_rebuild_fhir_cache_once(
+    package_dir: Path | None = None,
+    no_clear: bool = False,
+    new: bool = False,
+    legacy: bool = False,
 ):
 
     # Set default to "legacy" at the moment
@@ -193,12 +207,10 @@ def cache_rebuild_fhir_cache(
 
 
 def clear_build_caches(*args, **kwargs):
-    log.info("Clear build caches")
     for p in ["./input-cache/schemas", "./input-cache/txcache", "./temp", "./template"]:
         if (path := Path(p)).exists():
             shutil.rmtree(path)
             log.succ("Removed {}".format(str(path)))
-    log.succ("Cleared build caches successfully")
 
 
 __doc__ = "Handle caches"

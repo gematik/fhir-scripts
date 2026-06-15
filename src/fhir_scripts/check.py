@@ -17,14 +17,26 @@ VERSION_REGEX = re.compile(r"(?:\/|\s|^)(\d+(?:\.\d+){2}(?:-[a-z\.\d]+)?)(?:\s|$
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument(
-        "--workdir", type=Path, default=Path.cwd(), help="Working directory"
+        "--workdir",
+        type=Path,
+        default=None,
+        help="Working directory",
     )
     parser.add_argument(
         "--release", action="store_true", help="Perform extra checks for release"
     )
 
 
-def check(workdir: Path, release: bool, *args, **kwargs):
+def check(
+    workdir: Path | None,
+    release: bool,
+    *args,
+    **kwargs,
+):
+    _check_project(workdir or Path.cwd(), release)
+
+
+def _check_project(workdir: Path, release: bool):
     errors = 0
     warnings = 0
 
@@ -92,9 +104,6 @@ def check(workdir: Path, release: bool, *args, **kwargs):
     if errors > 0 or warnings > 0:
         log.fail(f"Checks failed: {log.ERR}{errors}, {log.WARN}{warnings}")
         raise Exception("Checks failed")
-
-    else:
-        log.succ("Checks successful")
 
 
 def _check_versions(

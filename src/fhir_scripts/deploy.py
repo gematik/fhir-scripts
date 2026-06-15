@@ -2,7 +2,7 @@ import json
 from argparse import ArgumentParser
 from pathlib import Path
 
-from . import log
+from . import config as config_file, log
 from .helper import confirm, confirm_with_path_modification
 from .models.config import Config, DeployConfig
 from .tools import gcloud
@@ -51,10 +51,15 @@ def deploy(
     yes: bool = False,
     dry_run: bool = False,
     promote_from: str | None = None,
+    config_path: Path | None = None,
     *args,
     **kwargs,
 ) -> bool:
-    deploy_config = config.deploy
+    deploy_config = _resolve_deploy_config_for_target(
+        default_config=config,
+        target_path=Path.cwd(),
+        config_path=config_path,
+    ).deploy
     if deploy_config is None:
         raise Exception("deploy configuration missing")
 
@@ -107,6 +112,19 @@ def deploy(
             )
 
     return True
+
+
+def _resolve_deploy_config_for_target(
+    default_config: Config, target_path: Path, config_path: Path | None
+) -> Config:
+    if config_path is not None:
+        return default_config
+
+    target_config_file = target_path / "fhirscripts.config.yaml"
+    if target_config_file.exists():
+        return config_file.load(target_config_file)
+
+    return default_config
 
 
 def deploy_ig_registry(

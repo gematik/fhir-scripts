@@ -12,3 +12,7 @@ class NoConfigException(Exception):
 
 class PrerequisiteFailed(Exception):
     pass
+
+
+class SelectionError(Exception):
+    pass

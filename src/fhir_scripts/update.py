@@ -1,10 +1,12 @@
 import importlib
 import pkgutil
 from argparse import ArgumentParser
+from pathlib import Path
 
 import fhir_scripts.tools
 
 from . import log
+from .multiig import CONFIG_FILE_NAME, discover_project, working_directory
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
@@ -25,8 +27,34 @@ def update(*args, **kwargs):
         if (mod := importlib.import_module(mod_name)) and hasattr(mod, "update")
     ]
 
-    for module in modules:
+    project = None
+    cwd = Path.cwd()
+
+    # Multi-IG root mode: update IG Publisher per IG directory.
+    if (cwd / CONFIG_FILE_NAME).exists():
+        project = discover_project(cwd)
+
+    if project is None:
+        for module in modules:
+            _update(module, *args, **kwargs)
+        return
+
+    igpub_modules = [module for module in modules if _is_igpub_module(module)]
+    other_modules = [module for module in modules if not _is_igpub_module(module)]
+
+    for module in other_modules:
         _update(module, *args, **kwargs)
+
+    for target_name in sorted(project.targets):
+        target = project.targets[target_name]
+        with working_directory(target.path):
+            for module in igpub_modules:
+                log.info(f"Update {module.__tool_name__} for IG '{target.name}'")
+                _update(module, *args, **kwargs)
+
+
+def _is_igpub_module(module) -> bool:
+    return module.__name__.rsplit(".", 1)[-1] == "igpub"
 
 
 def _update(module, dry_run: bool = False, *args, **kwargs):

@@ -14,6 +14,10 @@
 
 * Fix not handling status code from sushi run
 
+## Release 0.29.0
+
+* Add functionality for multi ig environments
+
 ## Release 0.28.1
 
 * Fix an issue when handling process output that returns a IOTextWrapper
