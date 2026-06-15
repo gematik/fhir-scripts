@@ -33,9 +33,7 @@ class TestMultiIgMode(unittest.TestCase):
         parser = ArgumentParser()
         multiig.setup_parser(parser)
 
-        args = parser.parse_args(
-            ["--ig", "core", "--ig", "rx", "build", "pipeline"]
-        )
+        args = parser.parse_args(["--ig", "core", "--ig", "rx", "build", "pipeline"])
         self.assertEqual(["core", "rx"], args.ig)
         self.assertFalse(args.all)
         self.assertEqual(["build", "pipeline"], args.command)
