@@ -5,6 +5,7 @@ from types import ModuleType
 
 from . import cli, config, log
 from .exception import CancelException
+from .tools.basic.shell import CalledProcessError
 
 
 def main():
@@ -50,13 +51,17 @@ def main():
         log.warn(str(e))
         sys.exit(-1)
 
+    except CalledProcessError as e:
+        for line in e.output.splitlines():
+            log.debug(line)
+
+        for line in e.stderr.splitlines():
+            log.debug(line)
+
+        log.fail(f"Error: {str(e)}")
+        sys.exit(os.EX_DATAERR)
+
     except Exception as e:
-        if stdout := getattr(e, "stdout", None):
-            log.info(stdout)
-
-        if stderr := getattr(e, "stderr", None):
-            log.fail(stderr)
-
         log.fail(f"Error: {str(e)}")
         sys.exit(os.EX_DATAERR)
 

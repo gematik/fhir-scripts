@@ -1,6 +1,7 @@
 # FHIR
 
 [![Unit Tests](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml/badge.svg)](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/gematik/fhir-scripts)
 
 ## Python Script
 
@@ -162,7 +163,7 @@ _Requirements:_
 
 * IG Publisher
 * FSH Sushi
-* (optional igtools, either as component or using pipx)
+* (optional reqtools (igtools), either as component or using pipx)
 * (optional epatools, either as component or using pipx)
 
 Building happens in two stages: FHIR definitions and FHIR IG.
@@ -255,7 +256,7 @@ Available steps are:
 | `sushi`          | None          | Run FSH Sushi                                                               |
 | `igpub`          | None          | Run IG Publisher                                                            |
 | `igpub_qa`       | None          | Display IG Publisher QA results                                             |
-| `requirements`   | None          | Process requirements using _igtools_                                        |
+| `requirements`   | None          | Process requirements using _reqtools_                                       |
 | `cap_statements` | None          | Process and merge CapabilityStatements using _epatools_                     |
 | `openapi`        | None          | Generate OpenAPI definitions using _epatools_ and add the to the IG archive |
 | `shell`          | Shell command | Execute a command on the shell, e.g. "touch file"                           |
@@ -414,7 +415,7 @@ jobs:
 
 ### Process Requirements
 
-Process the requirements that are specified in the Markdown files using _igtools_ and commit possible changes. To use the workflow
+Process the requirements that are specified in the Markdown files using _reqtools_ and commit possible changes. To use the workflow
 
 ```yaml
 name: Process Requirements

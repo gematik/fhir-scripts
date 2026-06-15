@@ -1,7 +1,8 @@
 import re
 import subprocess
-from subprocess import CalledProcessError
 from io import IOBase
+from subprocess import CalledProcessError
+
 from tqdm import tqdm
 
 from ... import helper, log
@@ -36,6 +37,10 @@ class ShellResult:
         return _oneline(self.stdout)
 
     @property
+    def stdout_linebreaks(self) -> str:
+        return _linebreaks(self.stdout)
+
+    @property
     def stderr(self) -> list[str]:
         return self._stderr
 
@@ -46,6 +51,10 @@ class ShellResult:
     @property
     def stderr_oneline(self) -> str:
         return _oneline(self.stderr)
+
+    @property
+    def stderr_linebreaks(self) -> str:
+        return _linebreaks(self.stderr)
 
 
 def _convert_std(input) -> list[str]:
@@ -63,6 +72,9 @@ def _convert_std(input) -> list[str]:
         lines = input.readlines()
         lines = [line if isinstance(line, bytes) else line for line in lines]
 
+    elif isinstance(input, list):
+        lines = input
+
     else:
         raise Exception(
             f"Error reading from process output, not supported {type(input)}"
@@ -73,6 +85,10 @@ def _convert_std(input) -> list[str]:
 
 def _oneline(list_: list[str]) -> str:
     return " ".join(list_)
+
+
+def _linebreaks(list_: list[str]) -> str:
+    return "\n".join(list_)
 
 
 def run(cmd, check: bool = False, log_output: bool = True):
@@ -107,7 +123,7 @@ def run(cmd, check: bool = False, log_output: bool = True):
 
     if check and res.returncode != 0:
         raise CalledProcessError(
-            res.returncode, res.args, res.stdout_oneline, res.stderr_oneline
+            res.returncode, res.args, res.stdout_linebreaks, res.stderr_linebreaks
         )
 
     return res
@@ -121,6 +137,8 @@ def run_progress(cmd, total, prefixes, desc):
     defines a list of prefixes of lines to be counted as progress and `desc` is a string that is added as a title in
     front of the progress bar.
     """
+    stdout = []
+    stderr = []
     with subprocess.Popen(
         cmd,
         shell=True,
@@ -134,10 +152,12 @@ def run_progress(cmd, total, prefixes, desc):
         ) as bar:
             for line in proc.stdout:
                 line = line.rstrip()
+                stdout.append(line)
                 for pref in prefixes:
                     if line.startswith(pref):
                         bar.update(1)
                         break  # avoid double count if multiple prefixes match
+            stderr += [line.rstrip() for line in proc.stderr or []]
             proc.wait()
 
             # If we had an estimated total that was too large/small, normalize so bar shows 100%.
@@ -147,6 +167,11 @@ def run_progress(cmd, total, prefixes, desc):
 
             if proc.returncode != 0:
                 res = ShellResult(proc)
+                res.stdout = stdout
+                res.stderr = stderr
                 raise CalledProcessError(
-                    proc.returncode, proc.args, res.stdout_oneline, res.stderr_oneline
+                    proc.returncode,
+                    proc.args,
+                    res.stdout_linebreaks,
+                    res.stderr_linebreaks,
                 )
