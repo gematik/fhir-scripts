@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .. import log
 from ..exception import NotInstalledException
+from ..helper import log_version
 from ..version import Version
 from .basic import github, java, shell
 
@@ -15,6 +16,8 @@ JAR = JAR_DIR / JAR_NAME
 MIN_JAVA_VER = "21"
 
 
+@log_version()
+@log_version(java)
 def install_deps():
     ensure_installed()
     java.require_min_version(Version(MIN_JAVA_VER))

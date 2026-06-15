@@ -3,7 +3,7 @@ __tool_name__ = "FSH Sushi"
 import re
 
 from .. import log
-from ..helper import require_installed
+from ..helper import log_version, require_installed
 from ..version import Version
 from .basic import github, npm, shell
 
@@ -12,6 +12,8 @@ REPO_URL = "https://github.com/FHIR/sushi"
 
 
 @require_installed("sushi", __tool_name__)
+@log_version()
+@log_version(npm)
 def run():
     log.info("Run sushi")
     try:

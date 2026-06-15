@@ -5,7 +5,9 @@ import yaml
 
 from .. import log
 from ..exception import NotInstalledException
+from ..helper import log_version
 from ..version import Version
+from . import plantuml
 from .basic import github, java, shell
 
 REPO_URL = "https://github.com/HL7/fhir-ig-publisher"
@@ -16,6 +18,9 @@ PUBLISHER_JAR = INPUT_CACHE_DIR / "publisher.jar"
 MIN_JAVA_VER = "17"
 
 
+@log_version()
+@log_version(java)
+@log_version(plantuml)
 def run():
     is_installed()
     java.require_min_version(Version(MIN_JAVA_VER))

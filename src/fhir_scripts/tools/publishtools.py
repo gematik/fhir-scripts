@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 from .. import log
-from ..helper import require_installed
+from ..helper import log_version, require_installed
 from ..version import Version
 from .basic import python, shell
 
@@ -13,6 +13,8 @@ PACKAGE = "git+https://github.com/gematik/publish-tools.git"
 
 
 @require_installed("publishtools", __tool_name__)
+@log_version()
+@log_version(python)
 def publish(project_dir: Path, ig_registry: Path):
     """
     Publish project

@@ -1,4 +1,4 @@
-__tool_name__ = "pipx"
+__tool_name__ = "Python"
 
 import re
 import tomllib

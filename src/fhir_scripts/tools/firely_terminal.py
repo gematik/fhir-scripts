@@ -3,7 +3,7 @@ __tool_name__ = "Firely Terminal"
 import re
 from pathlib import Path
 
-from ..helper import require_installed
+from ..helper import log_version, require_installed
 from ..version import Version
 from .basic import dotnet, shell
 
@@ -13,6 +13,8 @@ PACKAGE = "firely.terminal"
 
 
 @require_installed("fhir", __tool_name__)
+@log_version()
+@log_version(dotnet)
 def install(
     pkg: str | None = None, version: str | None = None, file: Path | None = None
 ):
