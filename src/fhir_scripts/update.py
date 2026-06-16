@@ -5,13 +5,15 @@ from argparse import ArgumentParser
 import fhir_scripts.tools
 
 from . import log
+from .config import Config
+from .models.config import InstallEntry
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
     parser.add_argument("--dry-run", action="store_true", help="Only simulate updating")
 
 
-def update(*args, **kwargs):
+def update(config: Config, *args, **kwargs):
     # Get modules dynmaically
     mod_names = [
         name
@@ -23,6 +25,16 @@ def update(*args, **kwargs):
         mod
         for mod_name in mod_names
         if (mod := importlib.import_module(mod_name)) and hasattr(mod, "update")
+    ]
+
+    # Remove modules with fixed versions
+    fixed_mods = [
+        mod.name
+        for mod in config.install
+        if isinstance(mod, InstallEntry) and mod.version
+    ]
+    modules = [
+        mod for mod in modules if mod.__name__.rsplit(".", 1)[1] not in fixed_mods
     ]
 
     for module in modules:
