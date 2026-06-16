@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.29.1
+
+* Fix positional argument for update call
+
 ## Release 0.29.0
 
 * Write the version of tooling used into a file named `build-record.yaml` to keep track of which version was used in a certain release (is also printed on the command line)

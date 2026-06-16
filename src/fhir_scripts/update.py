@@ -7,6 +7,7 @@ import fhir_scripts.tools
 from . import log
 from .config import Config
 from .models.config import InstallEntry
+from .version import Version
 
 
 def setup_parser(parser: ArgumentParser, *args, **kwarsg):
@@ -63,7 +64,7 @@ def _update(module, dry_run: bool = False, *args, **kwargs):
                     log.info("Would update {}: from {}".format(name, prev_version))
 
             else:
-                module.update()
+                module.update(Version())
                 log.succ(f"Updated {name}: {str(prev_version)} → {module.version()}")
 
 
