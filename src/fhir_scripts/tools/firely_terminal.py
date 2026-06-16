@@ -3,7 +3,7 @@ __tool_name__ = "Firely Terminal"
 import re
 from pathlib import Path
 
-from ..helper import require_installed
+from ..helper import log_version, require_installed
 from ..version import Version
 from .basic import dotnet, shell
 
@@ -13,6 +13,8 @@ PACKAGE = "firely.terminal"
 
 
 @require_installed("fhir", __tool_name__)
+@log_version()
+@log_version(dotnet)
 def install(
     pkg: str | None = None, version: str | None = None, file: Path | None = None
 ):
@@ -33,9 +35,9 @@ def install(
         )
 
 
-def update(install: bool = False, *args, **kwargs):
+def update(version: Version, install: bool = False, *args, **kwargs):
     if install:
-        dotnet.install(PACKAGE)
+        dotnet.install(PACKAGE, version)
 
     else:
         # Disable for now as this appears to cause problems

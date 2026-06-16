@@ -5,7 +5,7 @@ from functools import wraps
 from pathlib import Path
 
 from .. import helper, log
-from ..helper import require_installed
+from ..helper import log_version, require_installed
 from ..types import Url
 from ..version import Version
 from .basic import shell
@@ -70,6 +70,7 @@ def latest_version(*args, **kwargs) -> Version | None:
 
 @require_installed("gcloud", __tool_name__)
 @logged_in
+@log_version()
 def copy(source: Path | Url, target: Url, force=False):
     # Check for overwrite
     existing = ls(target)

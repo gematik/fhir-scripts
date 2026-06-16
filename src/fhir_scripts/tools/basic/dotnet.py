@@ -6,9 +6,14 @@ from . import shell
 
 
 @require_installed("dotnet", __tool_name__)
-def install(pkg_name: str):
+def install(pkg_name: str, version: Version):
 
-    cmd = f"dotnet tool install -g {pkg_name}"
+    flags = []
+
+    if not version.unknown:
+        flags += ["--version", str(version)]
+
+    cmd = f"dotnet tool install -g {pkg_name} {' '.join(flags)}"
     res = shell.run(cmd)
 
     if res.returncode != 0:

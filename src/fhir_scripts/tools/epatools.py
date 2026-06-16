@@ -9,7 +9,7 @@ import yaml
 
 from .. import log
 from ..exception import NoConfigException
-from ..helper import check_installed
+from ..helper import check_installed, log_version
 from ..models.config import Config
 from ..version import Version
 from .basic import python, shell
@@ -25,6 +25,8 @@ def check_configured():
         raise NoConfigException(f"{__tool_name__} not configured for project")
 
 
+@log_version()
+@log_version(python)
 def merge_capabilities():
     """
     Merge CapabilityStatements
@@ -37,6 +39,8 @@ def merge_capabilities():
     log.succ("CapabilityStatements merged successfully")
 
 
+@log_version()
+@log_version(python)
 def openapi(config: Config, *args, **kwargs):
     """
     Build the Open APIs
@@ -61,8 +65,8 @@ def openapi(config: Config, *args, **kwargs):
     update_archive(api_files + config.build.args.openapi.additional_archive)
 
 
-def update(*args, **kwargs):
-    python.install(PACKAGE, as_global=True)
+def update(version: Version, *args, **kwargs):
+    python.install(PACKAGE, version, as_global=True)
 
 
 def version(*args, **kwargs) -> Version | None:

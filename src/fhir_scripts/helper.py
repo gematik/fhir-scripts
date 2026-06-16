@@ -1,6 +1,11 @@
+import inspect
 import re
 from functools import wraps
+from pathlib import Path
 
+import yaml
+
+from . import log
 from .exception import CancelException, NotInstalledException
 from .tools.basic import shell
 
@@ -107,6 +112,49 @@ def require_installed(cmd: str, name: str):
         @wraps(func)
         def wrapper(*args, **kwargs):
             check_installed(cmd, name)
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def log_version(mod=None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Get module
+            module = inspect.getmodule(func) if mod is None else mod
+
+            # Get version
+            version_func = getattr(module, "version", None)
+            version = version_func() if version_func else None
+
+            # Get tool name
+            tool_name = getattr(module, "__tool_name__", None)
+
+            # Only can do if both is available
+            if tool_name and version:
+
+                # Get record
+                rec_file = Path.cwd() / "build-record.yaml"
+                rec = (
+                    yaml.safe_load(rec_file.read_text("utf-8"))
+                    if rec_file.exists()
+                    else {}
+                )
+
+                # Initialize version list
+                if "versions" not in rec:
+                    rec["versions"] = {}
+
+                rec["versions"][tool_name] = str(version)
+
+                # Write back record
+                rec_file.write_text(yaml.safe_dump(rec), "utf-8")
+
+                log.debug(f"Using {tool_name} version {version}")
 
             return func(*args, **kwargs)
 

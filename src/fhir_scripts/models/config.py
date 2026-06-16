@@ -7,7 +7,12 @@ class DeployConfig(StrictBaseModel):
     path: str | None = None
 
 
+class InstallEntry(StrictBaseModel):
+    name: str
+    version: str | None = None
+
+
 class Config(StrictBaseModel):
     build: BuildConfig = BuildConfig()
     deploy: DeployConfig | None = None
-    install: list[str] = []
+    install: list[str | InstallEntry] = []

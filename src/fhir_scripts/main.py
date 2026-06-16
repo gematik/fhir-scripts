@@ -5,9 +5,12 @@ from types import ModuleType
 
 from . import cli, config, log
 from .exception import CancelException
+from .helper import log_version
+from .tools import fhirscripts
 from .tools.basic.shell import CalledProcessError
 
 
+@log_version(fhirscripts)
 def main():
     module_dict: dict[str, ModuleType] = {}
     parser_dict: dict[str, ArgumentParser] = {}

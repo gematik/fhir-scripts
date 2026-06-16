@@ -3,7 +3,7 @@ __tool_name__ = "FSH Sushi"
 import re
 
 from .. import log
-from ..helper import require_installed
+from ..helper import log_version, require_installed
 from ..version import Version
 from .basic import github, npm, shell
 
@@ -12,6 +12,8 @@ REPO_URL = "https://github.com/FHIR/sushi"
 
 
 @require_installed("sushi", __tool_name__)
+@log_version()
+@log_version(npm)
 def run():
     log.info("Run sushi")
     try:
@@ -22,8 +24,8 @@ def run():
         raise Exception("Sushi run failed")
 
 
-def update(*args, **kwargs):
-    npm.install("fsh-sushi", as_global=True)
+def update(version: Version, *args, **kwargs):
+    npm.install("fsh-sushi", version, as_global=True)
 
 
 def version(short: bool = False, *args, **kwargs) -> Version | None:

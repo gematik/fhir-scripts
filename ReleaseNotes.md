@@ -1,6 +1,12 @@
 <img align="right" width="250" height="47" src="img/Gematik_Logo_Flag_With_Background.png" /><br />
 
 # Release Notes FHIR Scripts
+
+## Release 0.29.0
+
+* Write the version of tooling used into a file named `build-record.yaml` to keep track of which version was used in a certain release (is also printed on the command line)
+* Allow to specify a fixed version to be installed of a tool using a long formati in the config (see config section in readme)
+
 ## Release 0.28.4
 
 * Update reqtools repository URL to github.com/gematik/fhir-igtools

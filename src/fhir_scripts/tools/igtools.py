@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .. import log
 from ..exception import NoConfigException
-from ..helper import require_installed
+from ..helper import log_version, require_installed
 from ..version import Version
 from .basic import python, shell
 
@@ -33,6 +33,8 @@ def is_configured(func):
 
 @is_configured
 @require_installed("reqtools", __tool_name__)
+@log_version()
+@log_version(python)
 def process():
     """
     Process requirements
@@ -44,6 +46,8 @@ def process():
 
 @is_configured
 @require_installed("reqtools", __tool_name__)
+@log_version()
+@log_version(python)
 def release_notes(output_dir: Path | str):
     """
     Update release notes
@@ -55,6 +59,8 @@ def release_notes(output_dir: Path | str):
 
 @is_configured
 @require_installed("reqtools", __tool_name__)
+@log_version()
+@log_version(python)
 def export(output_dir: Path | str):
     """
     Exports requirements
@@ -64,8 +70,8 @@ def export(output_dir: Path | str):
     log.succ("Requirements exported successfully")
 
 
-def update(*args, **kwargs):
-    python.install(PACKAGE, as_global=True)
+def update(version: Version, *args, **kwargs):
+    python.install(PACKAGE, version, as_global=True)
 
 
 def version(short: bool = False, *args, **kwargs) -> Version | None:
