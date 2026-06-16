@@ -35,9 +35,9 @@ def install(
         )
 
 
-def update(install: bool = False, *args, **kwargs):
+def update(version: Version, install: bool = False, *args, **kwargs):
     if install:
-        dotnet.install(PACKAGE)
+        dotnet.install(PACKAGE, version)
 
     else:
         # Disable for now as this appears to cause problems
