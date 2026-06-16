@@ -9,7 +9,8 @@ from .basic import github, java, shell
 
 JAR_NAME = "fhir-pkg-tool.jar"
 REPO_URL = "https://github.com/Gefyra/fhir-pkg-tool"
-DOWNLOAD_URL = REPO_URL + "/releases/latest/download/" + JAR_NAME
+DOWNLOAD_LATEST_URL = REPO_URL + "/releases/latest/download/" + JAR_NAME
+DOWNLOAD_VERSION_URL = REPO_URL + "/releases/download/v{version}/" + JAR_NAME
 JAR_DIR = (Path(home) if (home := os.environ.get("HOME")) else Path()) / "fhir-pkg-tool"
 JAR = JAR_DIR / JAR_NAME
 
@@ -49,13 +50,19 @@ def ensure_installed():
         raise NotInstalledException(f"{__tool_name__} is needed but not installed")
 
 
-def update(*args, **kwargs):
+def update(version: Version, *args, **kwargs):
     java.require_min_version(Version(MIN_JAVA_VER))
 
     if not JAR_DIR.exists():
         JAR_DIR.mkdir(parents=True)
 
-    shell.run(f'curl -L "{DOWNLOAD_URL}" -o "{JAR}"', check=True)
+    if version.unknown:
+        download_url = DOWNLOAD_LATEST_URL
+
+    else:
+        download_url = DOWNLOAD_VERSION_URL.format(version=str(version))
+
+    shell.run(f'curl -L "{download_url}" -o "{JAR}"', check=True)
 
 
 def version(short: bool = False, *args, **kwargs) -> Version | None:
