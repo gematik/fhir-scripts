@@ -6,6 +6,8 @@ import fhir_scripts.tools
 
 from . import log
 from .config import Config
+from .models.config import InstallEntry
+from .version import Version
 
 TOOL_MODULES = {}
 
@@ -52,25 +54,49 @@ def install(config: Config, config_file: bool = False, *args, **kwargs):
         ]
 
     # Get the module for each tool
-    modules = []
+    module_configs = []
     for tool in install_tools:
-        if (mod := TOOL_MODULES.get(tool, None)) and hasattr(mod, "update"):
-            modules.append(mod)
+
+        if isinstance(tool, InstallEntry):
+            name = tool.name
+            version = Version(tool.version)
 
         else:
-            log.warn(f"Tool '{tool}' does not exist")
+            name = tool
+            version = Version(None)
 
-    if len(modules) == 0:
+        if (mod := TOOL_MODULES.get(name)) and hasattr(mod, "update"):
+            module_configs.append((mod, version))
+
+        else:
+            log.warn(f"Tool '{name}' does not exist")
+
+    if len(module_configs) == 0:
         log.warn("Nothing to install")
 
-    for module in modules:
-        # Skip if already installed
-        if module.version() is not None:
-            log.warn(f"{module.__tool_name__} already installed, skipping")
-            continue
+    for module, version in module_configs:
+
+        # Version dependend install
+        if not version.unknown:
+
+            # Skip if version already installed
+            if (
+                installed_version := module.version()
+            ) is not None and installed_version == version:
+                log.warn(
+                    f"{module.__tool_name__} already installed in version {version}, skipping"
+                )
+                continue
+
+        else:
+
+            # Skip if already installed
+            if module.version() is not None:
+                log.warn(f"{module.__tool_name__} already installed, skipping")
+                continue
 
         log.info(f"Install {module.__tool_name__}")
-        module.update(install=True)
+        module.update(install=True, version=version)
         log.succ(f"Installed {module.__tool_name__} ({module.version(short=True)})")
 
 

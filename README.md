@@ -84,6 +84,14 @@ install:
   - <tool2>
 ```
 
+It is also possible to define a specific version to be install with the long form
+
+```yaml
+install:
+  - name: <tool>
+    version: <version>
+```
+
 ### Update
 
 Update each installed tool

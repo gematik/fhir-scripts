@@ -24,8 +24,8 @@ def run():
         raise Exception("Sushi run failed")
 
 
-def update(*args, **kwargs):
-    npm.install("fsh-sushi", as_global=True)
+def update(version: str | None, *args, **kwargs):
+    npm.install("fsh-sushi", version, as_global=True)
 
 
 def version(short: bool = False, *args, **kwargs) -> Version | None:

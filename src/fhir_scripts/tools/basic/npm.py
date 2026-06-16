@@ -8,13 +8,19 @@ from . import shell
 
 
 @require_installed("npm", __tool_name__)
-def install(pkg_name: str, as_global: bool = False):
+def install(pkg_name: str, version: str | None, as_global: bool = False):
+
+    pkg = pkg_name if version is None else f"{pkg_name}@{version}"
+
+    flags = []
 
     if as_global:
-        cmd = f"sudo npm install -g {pkg_name}"
+        flags.append("-g")
 
-    else:
-        cmd = f"npm install {pkg_name}"
+    cmd = f"npm install {' '.join(flags)} {pkg}"
+
+    # Run as sudo if needed
+    cmd = "sudo " + cmd
 
     res = shell.run(cmd)
 
