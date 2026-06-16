@@ -65,8 +65,8 @@ def openapi(config: Config, *args, **kwargs):
     update_archive(api_files + config.build.args.openapi.additional_archive)
 
 
-def update(*args, **kwargs):
-    python.install(PACKAGE, as_global=True)
+def update(version: Version, *args, **kwargs):
+    python.install(PACKAGE, version, as_global=True)
 
 
 def version(*args, **kwargs) -> Version | None:

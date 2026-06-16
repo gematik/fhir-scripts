@@ -8,8 +8,8 @@ from .basic import python
 PACKAGE = "git+https://github.com/gematik/fhir-scripts.git"
 
 
-def update(*args, **kwargs):
-    python.install(PACKAGE, as_global=True)
+def update(version: Version, *args, **kwargs):
+    python.install(PACKAGE, version, as_global=True)
 
 
 def version(short: bool = False, *args, **kwargs) -> Version:

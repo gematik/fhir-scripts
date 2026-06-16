@@ -8,19 +8,22 @@ from . import shell
 
 
 @require_installed("npm", __tool_name__)
-def install(pkg_name: str, version: str | None, as_global: bool = False):
+def install(pkg_name: str, version: Version, as_global: bool = False):
 
-    pkg = pkg_name if version is None else f"{pkg_name}@{version}"
+    pkg = pkg_name if version.unknown else f"{pkg_name}@{version}"
 
     flags = []
+    sudo = False
 
     if as_global:
         flags.append("-g")
+        sudo = True
 
     cmd = f"npm install {' '.join(flags)} {pkg}"
 
     # Run as sudo if needed
-    cmd = "sudo " + cmd
+    if sudo:
+        cmd = "sudo " + cmd
 
     res = shell.run(cmd)
 

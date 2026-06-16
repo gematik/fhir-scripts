@@ -70,8 +70,8 @@ def export(output_dir: Path | str):
     log.succ("Requirements exported successfully")
 
 
-def update(*args, **kwargs):
-    python.install(PACKAGE, as_global=True)
+def update(version: Version, *args, **kwargs):
+    python.install(PACKAGE, version, as_global=True)
 
 
 def version(short: bool = False, *args, **kwargs) -> Version | None:

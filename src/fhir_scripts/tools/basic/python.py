@@ -29,21 +29,35 @@ except NotInstalledException:
     PIPX_AVAILABLE = False
 
 
-def install(pkg_name: str, as_global: bool = False):
-    if UV_AVAILABLE:
-        cmd = "uv tool install --force {}"
+def install(pkg_name: str, version: Version, as_global: bool = False):
 
-    elif PIPX_AVAILABLE:
-        if as_global:
-            cmd = "sudo pipx install -f --global {}"
-
-        else:
-            cmd = "pipx install -f {}"
-
-    else:
+    if not UV_AVAILABLE and not PIPX_AVAILABLE:
         raise Exception("No Python manager installed")
 
-    res = shell.run(cmd.format(pkg_name))
+    pkg = pkg_name if version.unknown else f"{pkg_name}=={version}"
+
+    flags = []
+    sudo = False
+    install_cmd = ""
+
+    if UV_AVAILABLE:
+        install_cmd = "uv tool install"
+        flags.append("--force")
+
+    elif PIPX_AVAILABLE:
+        install_cmd = "pipx install"
+        flags.append("-f")
+
+        if as_global:
+            flags.append("--global")
+            sudo = True
+
+    cmd = f"{install_cmd} {' '.join(flags)} {pkg}"
+
+    if sudo:
+        cmd = "sudo " + cmd
+
+    res = shell.run(pkg)
 
     if res.returncode != 0:
         raise shell.CalledProcessError(
