@@ -3,6 +3,9 @@
 **/*.egg-info
 **/build
 
+# Run artifacts
+build-record.yaml
+
 # OS specific
 # MacOS
 .DS_STORE

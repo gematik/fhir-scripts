@@ -57,7 +57,7 @@ def install(pkg_name: str, version: Version, as_global: bool = False):
     if sudo:
         cmd = "sudo " + cmd
 
-    res = shell.run(pkg)
+    res = shell.run(cmd)
 
     if res.returncode != 0:
         raise shell.CalledProcessError(
