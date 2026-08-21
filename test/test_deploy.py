@@ -49,6 +49,7 @@ class TestDeployIg(unittest.TestCase):
         cfg = config.DeployConfig(env={"dev": "dev_bucket"})
         project = "test_project"
         version = "1.2.3"
+        releaselabel = "release"
         wanted = (
             Path("output"),
             Url("gs://dev_bucket/ig/fhir/{}/{}".format(project, version)),
@@ -61,6 +62,17 @@ class TestDeployIg(unittest.TestCase):
                     "url": "http://example.com/{}/ImplementationGuide/com.example".format(
                         project
                     ),
+                    "definition": {
+                        "extension": [
+                            {
+                                "extension": [
+                                    {"url": "code", "valueString": "releaselabel"},
+                                    {"url": "value", "valueString": releaselabel},
+                                ],
+                                "url": "http://hl7.org/fhir/tools/StructureDefinition/ig-parameter",
+                            }
+                        ]
+                    },
                 }
             )
 
@@ -97,6 +109,66 @@ class TestDeployIg(unittest.TestCase):
             )
 
         self.assertEqual(wanted, res)
+
+
+class TestDeployIgCiBuild(unittest.TestCase):
+
+    @patch(
+        "fhir_scripts.deploy.Path.glob",
+        lambda *args, **kwargs: [Path("ImplementationGuide.json")],
+    )
+    def test_local(self):
+        cfg = config.DeployConfig(env={"dev": "dev_bucket"})
+        project = "test_project"
+        version = "1.2.3"
+        releaselabel = "ci-build"
+        wanted_main = (
+            Path("output"),
+            Url("gs://dev_bucket/ig/fhir/build/{}".format(project)),
+        )
+        wanted_with_git_branch = (
+            Path("output"),
+            Url("gs://dev_bucket/ig/fhir/build/{}/branches/BRANCH".format(project)),
+        )
+
+        def read_text(*args, **kwargs):
+            return json.dumps(
+                {
+                    "version": version,
+                    "url": "http://example.com/{}/ImplementationGuide/com.example".format(
+                        project
+                    ),
+                    "definition": {
+                        "extension": [
+                            {
+                                "extension": [
+                                    {"url": "code", "valueString": "releaselabel"},
+                                    {"url": "value", "valueString": releaselabel},
+                                ],
+                                "url": "http://hl7.org/fhir/tools/StructureDefinition/ig-parameter",
+                            }
+                        ]
+                    },
+                }
+            )
+
+        with (
+            patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text),
+            patch("fhir_scripts.deploy.subprocess.check_output", return_value="main"),
+        ):
+            res = deploy.deploy_ig(
+                cfg, "dev", ig_output=Path("output"), dry_run=True, confirm_yes=True
+            )
+        self.assertEqual(wanted_main, res)
+
+        with (
+            patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text),
+            patch("fhir_scripts.deploy.subprocess.check_output", return_value="BRANCH"),
+        ):
+            res = deploy.deploy_ig(
+                cfg, "dev", ig_output=Path("output"), dry_run=True, confirm_yes=True
+            )
+        self.assertEqual(wanted_with_git_branch, res)
 
 
 class TestDeployIgMeta(unittest.TestCase):

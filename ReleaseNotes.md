@@ -2,6 +2,14 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.30.0
+
+* Added support for publishing CI builds for Implementation Guides with releaseLabel set to `ci-build`. CI builds from `main` are published to the project's default build path, while builds from other branches are published under a branch-specific path:
+
+  * `main` → https://[host]/build/[project]
+  * `develop` → https://[host]/build/[project]/branches/develop
+  * [branch] → https://[host]/build/[project]/branches/[branch]
+
 ## Release 0.29.1
 
 * Fix positional argument for update call
