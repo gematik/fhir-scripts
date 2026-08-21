@@ -1,4 +1,5 @@
 import json
+import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -173,7 +174,11 @@ def deploy_ig(
         project, version = project_version_from_imp_guide(ig_output)
 
         source_path = ig_output
-        target_path = get_storage_path(deploy_cfg, target_env) / project / version
+
+        if is_ci_build(ig_output):
+            target_path = get_storage_path(deploy_cfg, target_env) / "build" / get_ci_build_subpath(project, ig_output)
+        else:
+            target_path = get_storage_path(deploy_cfg, target_env) / project / version
 
         log.info("Deploy built IG -> {}".format(target_path))
 
@@ -289,6 +294,31 @@ def project_version_from_imp_guide(ig_dir: Path) -> tuple[str, str]:
 
     ig = json.loads(igs[0].read_text(encoding="utf-8"))
     return ig["url"].rsplit("/", 3)[1], ig["version"]
+
+
+
+def is_ci_build(ig_dir: Path) -> bool:
+    igs = list(ig_dir.glob("ImplementationGuide*.json"))
+    if len(igs) != 1:
+        raise Exception("Built IG not found in {}".format(ig_dir.absolute()))
+    ig = json.loads(igs[0].read_text(encoding="utf-8"))
+    for ext in ig.get("definition", {}).get("extension", []):
+        values = {
+            e.get("url"): e.get("valueString") or e.get("valueCode")
+            for e in ext.get("extension", [])
+        }
+        if values.get("code") == "releaselabel":
+            return values.get("value") == "ci-build"
+    return False
+
+
+def get_ci_build_subpath(project, ig_dir) -> str:
+    git_branch = subprocess.check_output(
+        ["git", "branch", "--show-current"],
+        cwd=ig_dir,
+        text=True,
+    ).strip()
+    return project if git_branch in ("main", "master") else f"{project}/branches/{git_branch}"
 
 
 __doc__ = "Deploy IG"
