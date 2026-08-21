@@ -63,18 +63,16 @@ class TestDeployIg(unittest.TestCase):
                         project
                     ),
                     "definition": {
-                        "extension" : [{
-                            "extension" : [{
-                                "url" : "code",
-                                "valueString" : "releaselabel"
-                            },
+                        "extension": [
                             {
-                                "url" : "value",
-                                "valueString" : releaselabel
-                            }],
-                            "url" : "http://hl7.org/fhir/tools/StructureDefinition/ig-parameter"
-                        }]
-                    }
+                                "extension": [
+                                    {"url": "code", "valueString": "releaselabel"},
+                                    {"url": "value", "valueString": releaselabel},
+                                ],
+                                "url": "http://hl7.org/fhir/tools/StructureDefinition/ig-parameter",
+                            }
+                        ]
+                    },
                 }
             )
 
@@ -141,36 +139,36 @@ class TestDeployIgCiBuild(unittest.TestCase):
                         project
                     ),
                     "definition": {
-                        "extension" : [{
-                            "extension" : [{
-                                "url" : "code",
-                                "valueString" : "releaselabel"
-                            },
+                        "extension": [
                             {
-                                "url" : "value",
-                                "valueString" : releaselabel
-                            }],
-                            "url" : "http://hl7.org/fhir/tools/StructureDefinition/ig-parameter"
-                        }]
-                    }
+                                "extension": [
+                                    {"url": "code", "valueString": "releaselabel"},
+                                    {"url": "value", "valueString": releaselabel},
+                                ],
+                                "url": "http://hl7.org/fhir/tools/StructureDefinition/ig-parameter",
+                            }
+                        ]
+                    },
                 }
             )
 
-        with patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text), \
-             patch("fhir_scripts.deploy.subprocess.check_output", return_value="main"):
+        with (
+            patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text),
+            patch("fhir_scripts.deploy.subprocess.check_output", return_value="main"),
+        ):
             res = deploy.deploy_ig(
                 cfg, "dev", ig_output=Path("output"), dry_run=True, confirm_yes=True
             )
         self.assertEqual(wanted_main, res)
 
-        with patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text), \
-             patch("fhir_scripts.deploy.subprocess.check_output", return_value="BRANCH"):
+        with (
+            patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text),
+            patch("fhir_scripts.deploy.subprocess.check_output", return_value="BRANCH"),
+        ):
             res = deploy.deploy_ig(
                 cfg, "dev", ig_output=Path("output"), dry_run=True, confirm_yes=True
             )
         self.assertEqual(wanted_with_git_branch, res)
-
-
 
 
 class TestDeployIgMeta(unittest.TestCase):
