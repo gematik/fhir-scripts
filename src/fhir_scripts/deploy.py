@@ -176,7 +176,11 @@ def deploy_ig(
         source_path = ig_output
 
         if is_ci_build(ig_output):
-            target_path = get_storage_path(deploy_cfg, target_env) / "build" / get_ci_build_subpath(project, ig_output)
+            target_path = (
+                get_storage_path(deploy_cfg, target_env)
+                / "build"
+                / get_ci_build_subpath(project, ig_output)
+            )
         else:
             target_path = get_storage_path(deploy_cfg, target_env) / project / version
 
@@ -296,7 +300,6 @@ def project_version_from_imp_guide(ig_dir: Path) -> tuple[str, str]:
     return ig["url"].rsplit("/", 3)[1], ig["version"]
 
 
-
 def is_ci_build(ig_dir: Path) -> bool:
     igs = list(ig_dir.glob("ImplementationGuide*.json"))
     if len(igs) != 1:
@@ -318,7 +321,11 @@ def get_ci_build_subpath(project, ig_dir) -> str:
         cwd=ig_dir,
         text=True,
     ).strip()
-    return project if git_branch in ("main", "master") else f"{project}/branches/{git_branch}"
+    return (
+        project
+        if git_branch in ("main", "master")
+        else f"{project}/branches/{git_branch}"
+    )
 
 
 __doc__ = "Deploy IG"
