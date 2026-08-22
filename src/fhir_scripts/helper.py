@@ -165,3 +165,8 @@ def log_version(mod=None):
 
 def clean_string(text: str) -> str:
     return COLOR_REGEX.sub("", text.strip())
+
+
+def strip_color(text: str) -> str:
+    """Remove ANSI colors without changing whitespace or line breaks."""
+    return COLOR_REGEX.sub("", text)

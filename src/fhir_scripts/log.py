@@ -1,7 +1,7 @@
 import sys
 from enum import StrEnum
 
-from .helper import clean_string
+from .helper import clean_string, strip_color
 
 ERR = "❌"
 CHECK = "✅"
@@ -17,12 +17,29 @@ class Colors(StrEnum):
 
     RESET = "\033[0m"
     BOLD = "\033[1m"
+    BLACK = "\033[30m"
     RED = "\033[91m"
     GREEN = "\033[92m"
     YELLOW = "\033[93m"
     BLUE = "\033[94m"
     CYAN = "\033[96m"
-    GRAY = "\033[30m"
+    GRAY = "\033[90m"
+    WHITE = "\033[97m"
+
+
+OUTPUT_COLOR_CHOICES = (
+    "default",
+    "preserve",
+    "black",
+    "red",
+    "green",
+    "yellow",
+    "blue",
+    "cyan",
+    "gray",
+    "white",
+)
+_output_color = "default"
 
 
 def fail(string: str):
@@ -43,6 +60,28 @@ def succ(string: str):
 
 def debug(text: str):
     print(colored(text, Colors.GRAY))
+
+
+def output(text: str):
+    """Write subprocess output with the configured color handling."""
+    if _output_color == "preserve":
+        formatted_text = text
+    else:
+        formatted_text = strip_color(text)
+        if _output_color != "default":
+            color = Colors[_output_color.upper()]
+            formatted_text = f"{color}{formatted_text}{Colors.RESET}"
+
+    sys.stdout.write(formatted_text)
+    sys.stdout.flush()
+
+
+def configure_output_color(color: str):
+    if color not in OUTPUT_COLOR_CHOICES:
+        raise ValueError(f"Unsupported output color: {color}")
+
+    global _output_color
+    _output_color = color
 
 
 def supports_color() -> bool:

@@ -109,11 +109,10 @@ def run(cmd, check: bool = False, log_output: bool = True):
         bufsize=1,
     ) as proc:
         for line in proc.stdout:
-            line = helper.clean_string(line)
-            res.stdout.append(line)
+            res.stdout.append(helper.clean_string(line))
 
             if log_output:
-                log.debug(line)
+                log.output(line)
 
         proc.wait()
 
