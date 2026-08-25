@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.30.1
+
+* Recognize four-part Java versions from `java -version` (thanks to @sussdorff)
+
 ## Release 0.30.0
 
 * Added support for publishing CI builds for Implementation Guides with releaseLabel set to `ci-build`. CI builds from `main` are published to the project's default build path, while builds from other branches are published under a branch-specific path:
