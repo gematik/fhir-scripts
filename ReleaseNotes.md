@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.31.0
+
+* Improved output color handling of subprocesses (see section Config in [README.md](README.md)) (thanks to @sussdorff)
+
 ## Release 0.30.1
 
 * Recognize four-part Java versions from `java -version` (thanks to @sussdorff)
