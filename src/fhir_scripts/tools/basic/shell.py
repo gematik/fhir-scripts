@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 from io import IOBase
@@ -91,6 +92,16 @@ def _linebreaks(list_: list[str]) -> str:
     return "\n".join(list_)
 
 
+def _subprocess_environment(log_output: bool):
+    if not log_output or not log.should_preserve_output_colors():
+        return None
+
+    environment = os.environ.copy()
+    environment.pop("NO_COLOR", None)
+    environment["FORCE_COLOR"] = "1"
+    return environment
+
+
 def run(cmd, check: bool = False, log_output: bool = True):
     """
     Execute a command on the shell
@@ -107,13 +118,13 @@ def run(cmd, check: bool = False, log_output: bool = True):
         stderr=subprocess.STDOUT,
         text=True,
         bufsize=1,
+        env=_subprocess_environment(log_output),
     ) as proc:
         for line in proc.stdout:
-            line = helper.clean_string(line)
-            res.stdout.append(line)
+            res.stdout.append(helper.clean_string(line))
 
             if log_output:
-                log.debug(line)
+                log.output(line)
 
         proc.wait()
 

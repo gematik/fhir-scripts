@@ -6,6 +6,8 @@ from types import ModuleType
 
 import fhir_scripts
 
+from . import log
+
 
 def get_args(
     module_dict: dict[str, ModuleType],
@@ -18,6 +20,15 @@ def get_args(
         type=Path,
         default=None,
         help="Name and path of the config file; default `./fhirscripts.config.yaml`",
+    )
+    parser.add_argument(
+        "--output-color",
+        choices=log.OUTPUT_COLOR_CHOICES,
+        default="default",
+        help=(
+            "Color handling for subprocess output: use the terminal default, "
+            "preserve tool colors, or apply a named color (default: default)"
+        ),
     )
     subparsers = parser.add_subparsers(dest="cmd")
 

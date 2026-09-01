@@ -16,6 +16,7 @@ def main():
     parser_dict: dict[str, ArgumentParser] = {}
 
     args = cli.get_args(module_dict, parser_dict)
+    log.configure_output_color(args.output_color)
 
     try:
         cfg = config.load(args.config)
@@ -43,6 +44,7 @@ def main():
         # Unpack the cli arguments
         cli_args = vars(args)
         del cli_args["config"]
+        del cli_args["output_color"]
 
         # Otherwise handle the command
         handle(config=cfg, **cli_args)

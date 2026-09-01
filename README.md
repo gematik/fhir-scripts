@@ -43,8 +43,13 @@ Optionally, one can provide addtional arguments for `pipx install`:
 The script uses a config file. [An example can be found here](./examples/fhirscripts.config.yaml). The default path for this file `./fhirscripts.config.yaml`. A different path can be defined
 
 ```bash
-fhirscripts --config <config> <command>
+fhirscripts [--config <config>] [--output-color <color>] <command>
 ```
+
+`--output-color` controls subprocess output without changing its layout. The default
+`default` uses the terminal foreground color, `preserve` keeps colors emitted by the
+subprocess, and a named color (`black`, `red`, `green`, `yellow`, `blue`, `cyan`,
+`gray`, or `white`) overrides it.
 
 ### Versions
 
