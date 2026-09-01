@@ -22,7 +22,9 @@ class Colors(StrEnum):
     YELLOW = "\033[93m"
     BLUE = "\033[94m"
     CYAN = "\033[96m"
-    GRAY = "\033[30m"
+    # SGR 2 (faint): the terminal dims its own foreground color instead of
+    # us picking a shade, so this stays readable on light and dark themes
+    DIM = "\033[2m"
 
 
 def fail(string: str):
@@ -42,7 +44,9 @@ def succ(string: str):
 
 
 def debug(text: str):
-    print(colored(text, Colors.GRAY))
+    # Carries the streamed stdout/stderr of spawned build tools, so it must
+    # never be a fixed color -- see Colors.DIM
+    print(colored(text, Colors.DIM))
 
 
 def supports_color() -> bool:
