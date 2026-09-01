@@ -84,6 +84,11 @@ def configure_output_color(color: str):
     _output_color = color
 
 
+def should_preserve_output_colors() -> bool:
+    """Return whether subprocess output should retain its original colors."""
+    return _output_color == "preserve"
+
+
 def supports_color() -> bool:
     """Check if terminal supports ANSI colors"""
     return hasattr(sys.stdout, "isatty") and sys.stdout.isatty()

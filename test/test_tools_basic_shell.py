@@ -1,3 +1,4 @@
+import os
 import unittest
 from io import StringIO
 from unittest.mock import patch
@@ -25,6 +26,22 @@ class TestShellRun(unittest.TestCase):
             shell.run("printf '\\033[32mformatted output\\033[0m\\n'")
 
         self.assertEqual(stdout.getvalue(), subprocess_output)
+
+    def test_requests_colors_from_subprocess_when_preserving(self):
+        log.configure_output_color("preserve")
+        subprocess_output = "\033[32mformatted output\033[0m\n"
+        command = (
+            'test "$FORCE_COLOR" = "1" '
+            '&& test -z "${NO_COLOR:-}" '
+            "&& printf '\\033[32mformatted output\\033[0m\\n'"
+        )
+
+        with patch.dict(os.environ, {"NO_COLOR": "1"}, clear=True):
+            with patch("sys.stdout", new_callable=StringIO) as stdout:
+                result = shell.run(command)
+
+        self.assertEqual(stdout.getvalue(), subprocess_output)
+        self.assertEqual(result.stdout, ["formatted output"])
 
     def test_can_override_subprocess_color(self):
         for color_name in log.OUTPUT_COLOR_CHOICES[2:]:
