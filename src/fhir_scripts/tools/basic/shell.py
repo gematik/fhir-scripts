@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import subprocess
@@ -121,7 +122,7 @@ def run(cmd, check: bool = False, log_output: bool = True):
         env=_subprocess_environment(log_output),
     ) as proc:
         if log_output:
-            print("\n\n")
+            logging.debug("")
 
         for line in proc.stdout:
             res.stdout.append(helper.clean_string(line))
@@ -132,7 +133,7 @@ def run(cmd, check: bool = False, log_output: bool = True):
         proc.wait()
 
         if log_output:
-            print("\n\n")
+            log.debug("")
 
         res.stderr = proc.stderr
         res.args = proc.args

@@ -1,3 +1,4 @@
+import logging
 import sys
 from enum import StrEnum
 
@@ -27,6 +28,11 @@ class Colors(StrEnum):
     WHITE = "\033[97m"
 
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format=f"{Colors.GRAY}%(asctime)s - %(levelname)s\t-{Colors.RESET} %(message)s",
+)
+
 OUTPUT_COLOR_CHOICES = (
     "default",
     "preserve",
@@ -43,23 +49,23 @@ _output_color = "default"
 
 
 def fail(string: str):
-    print(f"{ERR} {string}")
+    logging.error(f"{ERR} {string}")
 
 
 def warn(string: str):
-    print(f"{WARN} {string}")
+    logging.warning(f"{WARN} {string}")
 
 
 def info(string: str):
-    print(f"{ARR} {string}")
+    logging.info(f"{ARR} {string}")
 
 
 def succ(string: str):
-    print(f"{CHECK} {string}")
+    logging.info(f"{CHECK} {string}")
 
 
 def debug(text: str):
-    print(colored(text, Colors.GRAY))
+    logging.debug(colored(text, Colors.GRAY))
 
 
 def output(text: str):
@@ -72,8 +78,7 @@ def output(text: str):
             color = Colors[_output_color.upper()]
             formatted_text = f"{color}{formatted_text}{Colors.RESET}"
 
-    sys.stdout.write(formatted_text)
-    sys.stdout.flush()
+    logging.debug(formatted_text.rstrip("\n"))
 
 
 def configure_output_color(color: str):
