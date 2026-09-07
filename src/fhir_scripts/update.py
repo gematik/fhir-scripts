@@ -1,4 +1,5 @@
 import importlib
+import logging
 import pkgutil
 from argparse import ArgumentParser
 
@@ -38,8 +39,21 @@ def update(config: Config, *args, **kwargs):
         mod for mod in modules if mod.__name__.rsplit(".", 1)[1] not in fixed_mods
     ]
 
+    versions = []
     for module in modules:
-        _update(module, *args, **kwargs)
+        version = _update(module, *args, **kwargs)
+
+        if version:
+            versions.append(version)
+
+    if len(versions) == 0:
+        log.info("Nothing was updated")
+
+    else:
+        log.succ("The following packages where updated:")
+
+        for name, prev, new in versions:
+            logging.info(f"{name}: {prev} -> {new}")
 
 
 def _update(module, dry_run: bool = False, *args, **kwargs):
@@ -63,9 +77,14 @@ def _update(module, dry_run: bool = False, *args, **kwargs):
                 else:
                     log.info("Would update {}: from {}".format(name, prev_version))
 
+                return None
+
             else:
                 module.update(Version())
-                log.succ(f"Updated {name}: {str(prev_version)} → {module.version()}")
+                new_version = module.version()
+                log.succ(f"Updated {name}: {str(prev_version)} → {new_version}")
+
+                return name, prev_version, new_version
 
 
 __doc__ = "Update tools"
