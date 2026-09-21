@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-fhirscripts = "fhir_scripts.main:main"
+fhirscripts = "fhir_scripts.cli:cli"
 
 [dependency-groups]
 dev = ["black (>=25.9.0,<26.0.0)"]
