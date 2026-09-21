@@ -1,5 +1,8 @@
+import os
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fhir_scripts import config
 from fhir_scripts.models.config import Config
@@ -26,3 +29,34 @@ class TestConfigLoad(unittest.TestCase):
         self.assertIsInstance(cfg, config.Config)
 
         self.assertEqual(cfg, Config())
+
+    def test_load_dot_env_reads_log_long_from_current_directory(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            current_dir = Path(temp_dir)
+            (current_dir / ".env").write_text(
+                "FHIRSCRIPTS_LOG_LONG=true\n",
+                encoding="utf-8",
+            )
+
+            with patch("fhir_scripts.config.Path.cwd", return_value=current_dir):
+                with patch.dict(os.environ, {}, clear=True):
+                    values = config.load_dot_env()
+
+        self.assertEqual("true", values["FHIRSCRIPTS_LOG_LONG"])
+
+    def test_load_dot_env_reads_log_long_from_home_directory(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            home_dir = Path(temp_dir)
+            (home_dir / ".env").write_text(
+                "FHIRSCRIPTS_LOG_LONG=true\n",
+                encoding="utf-8",
+            )
+            current_dir = home_dir / "current"
+            current_dir.mkdir()
+
+            with patch("fhir_scripts.config.Path.home", return_value=home_dir):
+                with patch("fhir_scripts.config.Path.cwd", return_value=current_dir):
+                    with patch.dict(os.environ, {}, clear=True):
+                        values = config.load_dot_env()
+
+        self.assertEqual("true", values["FHIRSCRIPTS_LOG_LONG"])

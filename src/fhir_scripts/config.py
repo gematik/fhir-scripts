@@ -1,6 +1,8 @@
+import os
 from pathlib import Path
 
 import yaml
+from dotenv import dotenv_values
 
 from .models.config import Config
 
@@ -21,3 +23,12 @@ def load(config_path: Path | None = None):
     )
 
     return Config.model_validate(config_file_contents)
+
+
+def load_dot_env():
+    config = {
+        **dotenv_values(Path.home() / ".env"),
+        **dotenv_values(Path.cwd() / ".env"),
+        **os.environ,
+    }
+    return config
