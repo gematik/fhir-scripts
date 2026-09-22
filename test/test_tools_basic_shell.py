@@ -1,6 +1,5 @@
 import os
 import unittest
-from io import StringIO
 from unittest.mock import patch
 
 from fhir_scripts import log
@@ -13,23 +12,23 @@ class TestShellRun(unittest.TestCase):
         log.configure_output_color("default")
 
     def test_uses_terminal_default_color_and_preserves_layout(self):
-        with patch("sys.stdout", new_callable=StringIO) as stdout:
+        with patch("fhir_scripts.log.logging.debug") as debug:
             shell.run("printf '\\033[32m  formatted output\\033[0m\\n\\n'")
 
-        self.assertEqual(stdout.getvalue(), "  formatted output\n\n")
+        self.assertEqual(debug.call_args_list[1].args[0], "  formatted output")
 
     def test_can_preserve_subprocess_colors(self):
         log.configure_output_color("preserve")
-        subprocess_output = "\033[32mformatted output\033[0m\n"
+        subprocess_output = "\033[32mformatted output\033[0m"
 
-        with patch("sys.stdout", new_callable=StringIO) as stdout:
+        with patch("fhir_scripts.log.logging.debug") as debug:
             shell.run("printf '\\033[32mformatted output\\033[0m\\n'")
 
-        self.assertEqual(stdout.getvalue(), subprocess_output)
+        self.assertEqual(debug.call_args_list[1].args[0], subprocess_output)
 
     def test_requests_colors_from_subprocess_when_preserving(self):
         log.configure_output_color("preserve")
-        subprocess_output = "\033[32mformatted output\033[0m\n"
+        subprocess_output = "\033[32mformatted output\033[0m"
         command = (
             'test "$FORCE_COLOR" = "1" '
             '&& test -z "${NO_COLOR:-}" '
@@ -37,10 +36,10 @@ class TestShellRun(unittest.TestCase):
         )
 
         with patch.dict(os.environ, {"NO_COLOR": "1"}, clear=True):
-            with patch("sys.stdout", new_callable=StringIO) as stdout:
+            with patch("fhir_scripts.log.logging.debug") as debug:
                 result = shell.run(command)
 
-        self.assertEqual(stdout.getvalue(), subprocess_output)
+        self.assertEqual(debug.call_args_list[1].args[0], subprocess_output)
         self.assertEqual(result.stdout, ["formatted output"])
 
     def test_can_override_subprocess_color(self):
@@ -48,18 +47,18 @@ class TestShellRun(unittest.TestCase):
             with self.subTest(color=color_name):
                 log.configure_output_color(color_name)
 
-                with patch("sys.stdout", new_callable=StringIO) as stdout:
+                with patch("fhir_scripts.log.logging.debug") as debug:
                     shell.run("printf '\\033[32mformatted output\\033[0m\\n'")
 
                 color = log.Colors[color_name.upper()]
                 self.assertEqual(
-                    stdout.getvalue(),
+                    debug.call_args_list[1].args[0],
                     f"{color}formatted output\n{log.Colors.RESET}",
                 )
 
     def test_does_not_log_subprocess_output_when_disabled(self):
-        with patch("sys.stdout", new_callable=StringIO) as stdout:
+        with patch("fhir_scripts.log.logging.debug") as debug:
             result = shell.run("printf 'output\\n'", log_output=False)
 
-        self.assertEqual(stdout.getvalue(), "")
+        self.assertFalse(debug.called)
         self.assertEqual(result.stdout, ["output"])

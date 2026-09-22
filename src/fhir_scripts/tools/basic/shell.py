@@ -122,7 +122,7 @@ def run(cmd, check: bool = False, log_output: bool = True):
         env=_subprocess_environment(log_output),
     ) as proc:
         if log_output:
-            logging.debug("")
+            log.debug("")
 
         for line in proc.stdout:
             res.stdout.append(helper.clean_string(line))
