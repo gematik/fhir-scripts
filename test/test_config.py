@@ -32,9 +32,14 @@ class TestConfigLoad(unittest.TestCase):
 
     def test_load_dot_env_reads_log_long_from_current_directory(self):
         with tempfile.TemporaryDirectory() as temp_dir:
-            current_dir = Path(temp_dir)
+            temp_dir_ = Path(temp_dir)
+            home_dir = temp_dir_ / "home"
+            home_dir.mkdir()
+
+            current_dir = temp_dir_ / "current"
+            current_dir.mkdir()
             (current_dir / ".env").write_text(
-                "FHIRSCRIPTS_LOG_LONG=true\n",
+                "FHIRSCRIPTS_LONG_LOG=true\n",
                 encoding="utf-8",
             )
 
@@ -42,16 +47,19 @@ class TestConfigLoad(unittest.TestCase):
                 with patch.dict(os.environ, {}, clear=True):
                     values = config.load_dot_env()
 
-        self.assertEqual("true", values["FHIRSCRIPTS_LOG_LONG"])
+        self.assertIn("LONG_LOG", values)
+        self.assertEqual("true", values["LONG_LOG"])
 
     def test_load_dot_env_reads_log_long_from_home_directory(self):
         with tempfile.TemporaryDirectory() as temp_dir:
-            home_dir = Path(temp_dir)
+            temp_dir_ = Path(temp_dir)
+            home_dir = temp_dir_ / "home"
+            home_dir.mkdir()
             (home_dir / ".env").write_text(
-                "FHIRSCRIPTS_LOG_LONG=true\n",
+                "FHIRSCRIPTS_LONG_LOG=true\n",
                 encoding="utf-8",
             )
-            current_dir = home_dir / "current"
+            current_dir = temp_dir_ / "current"
             current_dir.mkdir()
 
             with patch("fhir_scripts.config.Path.home", return_value=home_dir):
@@ -59,4 +67,5 @@ class TestConfigLoad(unittest.TestCase):
                     with patch.dict(os.environ, {}, clear=True):
                         values = config.load_dot_env()
 
-        self.assertEqual("true", values["FHIRSCRIPTS_LOG_LONG"])
+        self.assertIn("LONG_LOG", values)
+        self.assertEqual("true", values["LONG_LOG"])
