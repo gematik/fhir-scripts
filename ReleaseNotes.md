@@ -2,7 +2,7 @@
 
 # Release Notes FHIR Scripts
 
-## Release TBD
+## Release 0.32.0
 
 * Option to provide CLI arguments as environment variables or using an `.env` file
 * Introduce argument for structured log (using `--long-log` or `FHIRSCRIPTS_LONG_LOG`) the print the log level and timestamp
