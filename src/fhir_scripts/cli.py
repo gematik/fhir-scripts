@@ -5,6 +5,7 @@ import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 import fhir_scripts
 
@@ -15,10 +16,10 @@ from .tools import fhirscripts
 from .tools.basic.shell import CalledProcessError
 
 
-def get_args(
-    module_dict: dict[str, ModuleType],
-    parser_dict: dict[str, ArgumentParser],
-) -> Namespace:
+def get_parser(
+    module_dict: dict[str, ModuleType] | None = None,
+    parser_dict: dict[str, ArgumentParser] | None = None,
+) -> ArgumentParser:
 
     parser = ArgumentParser(description="Scripts to support FHIR development")
     parser.add_argument(
@@ -30,51 +31,61 @@ def get_args(
     parser.add_argument(
         "--output-color",
         choices=log.OUTPUT_COLOR_CHOICES,
-        default="default",
+        default=None,
         help=(
             "Color handling for subprocess output: use the terminal default, "
             "preserve tool colors, or apply a named color (default: default)"
         ),
     )
-    subparsers = parser.add_subparsers(dest="cmd")
 
-    # Get modules dynmaically
-    mod_names = [
-        name
-        for _, name, _ in pkgutil.iter_modules(
-            fhir_scripts.__path__, fhir_scripts.__name__ + "."
-        )
-    ]
-    modules = [
-        mod
-        for mod_name in mod_names
-        if (mod := importlib.import_module(mod_name))
-        and hasattr(mod, "__doc__")
-        and (hasattr(mod, "__handler__") or hasattr(mod, "__handlers__"))
-    ]
+    if module_dict is not None and parser_dict is not None:
 
-    for module in modules:
-        cmd = module.__name__.split(".")[-1]
-        desc = module.__doc__
+        subparsers = parser.add_subparsers(dest="cmd")
 
-        module_dict[cmd] = module
-
-        # Setup parser
-        _parser = subparsers.add_parser(cmd, help=desc)
-        parser_dict[cmd] = _parser
-
-        if setup_parser := getattr(module, "__setup_parser__", None):
-            setup_parser(parser=_parser)
-
-        elif setup_subparser := getattr(module, "__setup_subparser__", None):
-            sub_parser = _parser.add_subparsers(dest=cmd)
-            setup_subparser(parser=_parser, subparser=sub_parser)
-
-        else:
-            raise Exception(
-                f"No setup function for parser or subparser defined for '{module.__name__}'"
+        # Get modules dynmaically
+        mod_names = [
+            name
+            for _, name, _ in pkgutil.iter_modules(
+                fhir_scripts.__path__, fhir_scripts.__name__ + "."
             )
+        ]
+        modules = [
+            mod
+            for mod_name in mod_names
+            if (mod := importlib.import_module(mod_name))
+            and hasattr(mod, "__doc__")
+            and (hasattr(mod, "__handler__") or hasattr(mod, "__handlers__"))
+        ]
 
+        for module in modules:
+            cmd = module.__name__.split(".")[-1]
+            desc = module.__doc__
+
+            module_dict[cmd] = module
+
+            # Setup parser
+            _parser = subparsers.add_parser(cmd, help=desc)
+            parser_dict[cmd] = _parser
+
+            if setup_parser := getattr(module, "__setup_parser__", None):
+                setup_parser(parser=_parser)
+
+            elif setup_subparser := getattr(module, "__setup_subparser__", None):
+                sub_parser = _parser.add_subparsers(dest=cmd)
+                setup_subparser(parser=_parser, subparser=sub_parser)
+
+            else:
+                raise Exception(
+                    f"No setup function for parser or subparser defined for '{module.__name__}'"
+                )
+
+    return parser
+
+
+def get_args(
+    module_dict: dict[str, ModuleType], parser_dict: dict[str, ArgumentParser]
+) -> Namespace:
+    parser = get_parser(module_dict, parser_dict)
     args = parser.parse_args()
 
     if args.cmd is None:
@@ -84,12 +95,43 @@ def get_args(
     return args
 
 
+def parse_env_as_args(
+    env: dict[str, Any],
+) -> Namespace:
+    parser = get_parser()
+    env_converted: list[str] = []
+    for k, v in env.items():
+        k_kebap = k.lower().replace("_", "-")
+        env_converted += ["--" + k_kebap, v]
+
+    return parser.parse_args(env_converted)
+
+
+def merge_namespaces(first: Namespace, second: Namespace):
+    """
+    Merges the two namespaces while the second overwrites the first, but only if the entry is not `None`.
+    """
+    first_dict = vars(first)
+    second_dict = vars(second)
+
+    for k, v in second_dict.items():
+        # Only overwrite if `v` is not None or if entry does not exist before
+        if v or k not in first_dict:
+            first_dict[k] = v
+
+    return Namespace(**first_dict)
+
+
 @log_version(fhirscripts)
 def cli():
     module_dict: dict[str, ModuleType] = {}
     parser_dict: dict[str, ArgumentParser] = {}
 
     args = get_args(module_dict, parser_dict)
+    env = parse_env_as_args(config.load_dot_env())
+
+    args = merge_namespaces(env, args)
+
     log.configure_output_color(args.output_color)
 
     try:

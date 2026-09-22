@@ -81,7 +81,10 @@ def output(text: str):
     logging.debug(formatted_text.rstrip("\n"))
 
 
-def configure_output_color(color: str):
+def configure_output_color(color: str | None):
+    if color is None:
+        color = "default"
+
     if color not in OUTPUT_COLOR_CHOICES:
         raise ValueError(f"Unsupported output color: {color}")
 

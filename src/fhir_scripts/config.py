@@ -6,6 +6,8 @@ from dotenv import dotenv_values
 
 from .models.config import Config
 
+ENV_PREFIX = "FHIRSCRIPTS_"
+
 
 def load(config_path: Path | None = None):
     """
@@ -27,9 +29,22 @@ def load(config_path: Path | None = None):
 
 
 def load_dot_env():
+    """
+    Loads variables from `.env` files and environment variables. They read in the order and later read override
+    provious values:
+
+    * `.env` file in user home
+    * `.env` file in current directory
+    * environment variable
+    """
     config = {
         **dotenv_values(Path.home() / ".env"),
         **dotenv_values(Path.cwd() / ".env"),
         **os.environ,
     }
+
+    config = {
+        k[len(ENV_PREFIX) :]: v for k, v in config.items() if k.startswith(ENV_PREFIX)
+    }
+
     return config
