@@ -51,6 +51,14 @@ fhirscripts [--config <config>] [--output-color <color>] <command>
 subprocess, and a named color (`black`, `red`, `green`, `yellow`, `blue`, `cyan`,
 `gray`, or `white`) overrides it.
 
+#### DotEnv and Environment Variables
+
+For root CLI arguments (those between `fhirscripts` and the `<command>`) it is possible to specify the values in an `.env` file or as environment variable. The `.env` file can be placed in the current directory or in the home directory.
+
+The priority here is `.env` in home < `.env` in cwd < environment variables < arguments passed directly (meaning the latter ones overwrite the previous ones).
+
+The format is that the argument `--foo-bar` can also be specified with the environment variable `FHIRSCRIPT_FOO_BAR`. The format for the entries in `.env` files is the same. Arguments that are passed without a value are defined with an empty string as value for environment variables or in `.env` files.
+
 ### Versions
 
 Get the version of installed tooling

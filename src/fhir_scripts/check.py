@@ -248,6 +248,9 @@ def _check_def_versions(defs_dir: Path, **kwargs):
         version = content.get("version")
         date = content.get("date")
 
+        if isinstance(version, list):
+            continue
+
         if version is None:
             continue
 

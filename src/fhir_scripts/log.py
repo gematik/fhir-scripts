@@ -1,3 +1,4 @@
+import logging
 import sys
 from enum import StrEnum
 
@@ -43,23 +44,23 @@ _output_color = "default"
 
 
 def fail(string: str):
-    print(f"{ERR} {string}")
+    logging.error(f"{ERR} {string}")
 
 
 def warn(string: str):
-    print(f"{WARN} {string}")
+    logging.warning(f"{WARN} {string}")
 
 
 def info(string: str):
-    print(f"{ARR} {string}")
+    logging.info(f"{ARR} {string}")
 
 
 def succ(string: str):
-    print(f"{CHECK} {string}")
+    logging.info(f"{CHECK} {string}")
 
 
 def debug(text: str):
-    print(colored(text, Colors.GRAY))
+    logging.debug(colored(text, Colors.GRAY))
 
 
 def output(text: str):
@@ -72,16 +73,30 @@ def output(text: str):
             color = Colors[_output_color.upper()]
             formatted_text = f"{color}{formatted_text}{Colors.RESET}"
 
-    sys.stdout.write(formatted_text)
-    sys.stdout.flush()
+    logging.debug(formatted_text.rstrip("\n"))
 
 
-def configure_output_color(color: str):
+def configure_output_color(color: str | None):
+    if color is None:
+        color = "default"
+
     if color not in OUTPUT_COLOR_CHOICES:
         raise ValueError(f"Unsupported output color: {color}")
 
     global _output_color
     _output_color = color
+
+
+def configure_log_format(long: bool | None = None):
+    if long is True:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format=f"{Colors.GRAY}%(asctime)s - %(levelname)s\t-{Colors.RESET} %(message)s",
+            force=True,
+        )
+
+    else:
+        logging.basicConfig(level=logging.DEBUG, format="%(message)s", force=True)
 
 
 def should_preserve_output_colors() -> bool:

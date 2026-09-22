@@ -2,6 +2,11 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.32.0
+
+* Option to provide CLI arguments as environment variables or using an `.env` file
+* Introduce argument for structured log (using `--long-log` or `FHIRSCRIPTS_LONG_LOG`) the print the log level and timestamp
+
 ## Release 0.31.0
 
 * Improved output color handling of subprocesses (see section Config in [README.md](README.md)) (thanks to @sussdorff)
