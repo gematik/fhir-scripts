@@ -28,11 +28,6 @@ class Colors(StrEnum):
     WHITE = "\033[97m"
 
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format=f"{Colors.GRAY}%(asctime)s - %(levelname)s\t-{Colors.RESET} %(message)s",
-)
-
 OUTPUT_COLOR_CHOICES = (
     "default",
     "preserve",
@@ -90,6 +85,18 @@ def configure_output_color(color: str | None):
 
     global _output_color
     _output_color = color
+
+
+def configure_log_format(long: bool | None = None):
+    if long is True:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format=f"{Colors.GRAY}%(asctime)s - %(levelname)s\t-{Colors.RESET} %(message)s",
+            force=True,
+        )
+
+    else:
+        logging.basicConfig(level=logging.DEBUG, format="%(message)s", force=True)
 
 
 def should_preserve_output_colors() -> bool:

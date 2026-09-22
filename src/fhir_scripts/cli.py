@@ -2,7 +2,7 @@ import importlib
 import os
 import pkgutil
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, BooleanOptionalAction, Namespace
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -36,6 +36,9 @@ def get_parser(
             "Color handling for subprocess output: use the terminal default, "
             "preserve tool colors, or apply a named color (default: default)"
         ),
+    )
+    parser.add_argument(
+        "--long-log", action=BooleanOptionalAction, help="Use the long log format"
     )
 
     if module_dict is not None and parser_dict is not None:
@@ -102,7 +105,10 @@ def parse_env_as_args(
     env_converted: list[str] = []
     for k, v in env.items():
         k_kebap = k.lower().replace("_", "-")
-        env_converted += ["--" + k_kebap, v]
+        env_converted.append("--" + k_kebap)
+
+        if v != "":
+            env_converted.append(v)
 
     return parser.parse_args(env_converted)
 
@@ -132,6 +138,7 @@ def cli():
 
     args = merge_namespaces(env, args)
 
+    log.configure_log_format(args.long_log)
     log.configure_output_color(args.output_color)
 
     try:
