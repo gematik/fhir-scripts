@@ -3,21 +3,11 @@
 [![Unit Tests](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml/badge.svg)](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/gematik/fhir-scripts)
 
-## Python Script
+Simplifies and automates steps needed to be executed build and handle FHIR definitions and FHIR IGs.
 
-The Python tooling can be used with
+## Setup
 
-```bash
-fhirscripts [command] ...
-```
-
-Get more information about the usage with
-
-```bash
-fhirscripts --help
-```
-
-### uv (preferred)
+### uv
 
 Install using uv as a tool
 
@@ -25,7 +15,7 @@ Install using uv as a tool
 uv tool install git+https://github.com/gematik/fhir-scripts.git
 ```
 
-### pipx
+### pipx (deprecated)
 
 Install using pipx
 
@@ -38,7 +28,23 @@ Optionally, one can provide addtional arguments for `pipx install`:
 * `-f`, `--force`: overwrite an existing installation
 * `--global`: install for all users (may need to be called using `sudo`)
 
-### Config
+**Warning:** If using *pipx* the scripts needs to be able to install required tools as global.
+
+## Usage
+
+The Tool allows to call different commands for various build steps
+
+```bash
+fhirscripts [command] ...
+```
+
+Get more information about the usage with
+
+```bash
+fhirscripts --help
+```
+
+## Configuration
 
 The script uses a config file. [An example can be found here](./examples/fhirscripts.config.yaml). The default path for this file `./fhirscripts.config.yaml`. A different path can be defined
 
@@ -51,7 +57,7 @@ fhirscripts [--config <config>] [--output-color <color>] <command>
 subprocess, and a named color (`black`, `red`, `green`, `yellow`, `blue`, `cyan`,
 `gray`, or `white`) overrides it.
 
-#### DotEnv and Environment Variables
+### DotEnv and Environment Variables
 
 For root CLI arguments (those between `fhirscripts` and the `<command>`) it is possible to specify the values in an `.env` file or as environment variable. The `.env` file can be placed in the current directory or in the home directory.
 
@@ -59,37 +65,27 @@ The priority here is `.env` in home < `.env` in cwd < environment variables < ar
 
 The format is that the argument `--foo-bar` can also be specified with the environment variable `FHIRSCRIPT_FOO_BAR`. The format for the entries in `.env` files is the same. Arguments that are passed without a value are defined with an empty string as value for environment variables or in `.env` files.
 
+## Commands
+
 ### Versions
 
-Get the version of installed tooling
+Command `version`
 
-```bash
-fhirscripts versions
-```
+List the versions of installed tools.
 
 ### Install
 
-Install one or multiple tools
+Command `install [arguments]`
 
-```bash
-fhirscripts install --<tool> [--<tool> [...]]
-```
+Install one or multiple tools.
 
-Get a list of available tools to install
+| Argument        | Required | Description                                                                        |
+| :-------------- | :------- | :--------------------------------------------------------------------------------- |
+| `--<tool>`      | False    | Install `<tool>`. Can be defined multiple times to install multiple tools at once. |
+| `--config-file` | False    | Install the tools defined in the config file                                       |
+| `--help`        | False    | List additional information about the command including the available tools.       |
 
-```bash
-fhirscripts install --help
-```
-
-#### From Config File
-
-Tools to be installed can also be defined in the config giving the name of the tool
-
-```bash
-fhirscripts install --config-file
-```
-
-and the respective entry in the config file:
+In the config file the tools can be defined with the short version:
 
 ```yaml
 install:
@@ -97,7 +93,7 @@ install:
   - <tool2>
 ```
 
-It is also possible to define a specific version to be install with the long form
+The long version allows to explicilty define the version to install, otherwise the latest will be used:
 
 ```yaml
 install:
@@ -107,91 +103,64 @@ install:
 
 ### Update
 
-Update each installed tool
+Command `update`
 
-```bash
-fhirscripts update
-```
+Update each installed tool
 
 ### Cache
 
-Rebuild the local FHIR package cache
+Command `cache <scope>`
 
-```bash
-fhirscripts cache package [--package-dir <packagedir>] [--no-clear]
-```
+Clear and rebuild caches that are used during different process steps.
 
-_(WIP)_ A local directory can be used as package cache. If `--package-dir <packagedir>` is provided, packages from `<packagedir>` will be installed instead and if not found, cached to this directory before installing them from there.
+*Requirements*:
 
-`--no-clear` allows to restore the FHIR package cache without clearing the directory in beforehand.
+* Firely Terminal or
+* FHIR Pkg Tool
+
+| Scope     | Optional Arguments           | Description                                                                                                            |
+| :-------- | :--------------------------- | :--------------------------------------------------------------------------------------------------------------------- |
+| `package` |                              | Rebuild the local FHIR package cache                                                                                   |
+|           | `--package-dir <packagedir>` | WIP: Use `<packagedir>` as local cache directory, that will be searched for packages first                             |
+|           | `--no-clear`                 | Do not clear the FHIR package cache before installing required ones                                                    |
+|           | `--new`                      | Switch to an alternative to Firely Terminal that is not the default currently. If not installed, fall back to default. |
+| `build`   |                              | Clear the build cache. Can help with caching issues during build.                                                      |
 
 ### Build
 
-_Requirements:_
+Command `build`
+
+Build the FHIR definitions and FHIR IG.
+
+*Requirements*:
 
 * IG Publisher
 * FSH Sushi
-* (optional reqtools (igtools), either as component or using pipx)
-* (optional epatools, either as component or using pipx)
+* *optional*:
+  * reqtools
+  * epatools
 
 Building happens in two stages: FHIR definitions and FHIR IG.
 
-One can also update the tooling before building with `--update`.
+| Sub-Command       | Optional Arguments | Description                                                           |
+| :---------------- | :----------------- | :-------------------------------------------------------------------- |
+| *all sub-commands |                    |                                                                       |
+|                   | `--update`         | Update tools before building                                          |
+| `defs`            |                    | Only build definitions                                                |
+|                   | `--req`            | Also process the requirements defined in the IG (requires *reqtools*) |
+|                   | `--only-req`       | Only process the requirements defined in the IG (requires *reqtools*) |
+|                   | `--cap`            | Also process the capability statements (requires *epatools*)          |
+|                   | `--only-cap`       | Only process the capability statements (requires *epatools*)          |
+| `ig`              |                    | Only builds IG                                                        |
+|                   | `--oapi`           | Also produce OpenAPI definitions (requires *epatools*)                |
+|                   | `--only-oapi`      | Only produce OpenAPI definitions (requires *epatools*)                |
+| `all`             |                    | Builds definitions and IG                                             |
+|                   | `--req`            | See above                                                             |
+|                   | `--cap`            | See above                                                             |
+|                   | `--oapi`           | See above                                                             |
+| `pipeline`        |                    | Build the pipeline defined in the config file                         |
 
-Optional steps for the following steps can be defined using the `builtin` section in the config.
-
-```yaml
-build:
-  builtin:
-    igtools: true
-    epatools:
-      cap_statements: true
-      openapi: true
-    # 'epatools' can also be defined to enable or disable all steps
-    # epatools: true
-```
-
-#### Definitions
-
-Build the FHIR definitions
-
-```bash
-fhirscripts build defs [--req] [--only-req] [--cap] [--only-cap]
-```
-
-using FSH Sushi.
-
-`--req` additionally processed requirements using _igtools_ before executing Sushi, while `--only-req` only performs this step. `--cap` also combines the CapabilityStatements using _epatools_, while `--only-cap` only performs this step.
-
-#### IG
-
-Build the FHIR IG using IG Publisher
-
-```bash
-fhirscripts build ig [--oapi] [--only-oapi]
-```
-
-using `--oapi` to also generate OpenAPI definitions using _epatools_, while `--only-oapi` only performs this step.
-
-#### Everything together
-
-Build the FHIR definitions and FHIR IG
-
-```bash
-fhirscripts build all [--req] [--cap] [--oapi]
-```
-
-with `--req`, `--cap` and `--oapi` additionally enabling the steps mentioned before.
-
-#### Pipeline
-
-Build from a pipeline defined in the configuration
-
-```bash
-fhirscripts build pipeline
-```
-
-The pipeline is defined like
+The config entry in the config file has the following format:
 
 ```yaml
 build:
@@ -200,7 +169,7 @@ build:
     - <step>:<args>
 ```
 
-Available steps are:
+For the steps the following builtin options are available:
 
 | Step Name        | Arguments     | Description                                                                 |
 | ---------------- | ------------- | --------------------------------------------------------------------------- |
@@ -214,49 +183,50 @@ Available steps are:
 
 ### Publish
 
-_Requirements:_
-
-* publishtools, either as component or using pipx
+Command `publish`
 
 Publish and therefore preparing information from either a FHIR project or a FHIR IG registry, e.g. [gematik FHIR IG Registry](https://github.com/gematik/fhir-ig-registry).
 
-#### FHIR Project
+*Requirements*:
 
-Publish a FHIR project
+* publishtools
 
-```bash
-fhirscripts publish [--project-dir <projectdir>] --ig-registry <igregistry>
-```
-
-from the current directory or `<projectdir>` if provided. This will generate JSON file containing the IG history and an HTML file representing the rendered history.
+Publish a FHIR project from the current directory or `<projectdir>` if provided. This will generate JSON file containing the IG history and an HTML file representing the rendered history.
 
 It will also update the FHIR IG registry in the `<igregistry>` directory. This will update a JSON file containing all versions of all IGs published by your organization, an HTML rendered version of it and update the `package-feed.xml` that can be used to publish your FHIR packages to the [official FHIR registry](https://registry.fhir.org).
 
+| Arguments                    | Required | Description                                                                                       |
+| :--------------------------- | :------- | :------------------------------------------------------------------------------------------------ |
+| `--project-dir <projectdir>` | False    | Publish the project defined in `<projectdir>`; If not definied the current directory will be used |
+| `--ig-registry <igregistry>` | True     | Local path to the IG registry to fill in the information about the artifact                       |
+
 ### Deploy
 
-_Requirements:_
+Command `deploy <env>`
+
+Deploy a generated FHIR IG onto a Google Bucket named `<env>`.
+
+*Requirements*:
 
 * gcloud CLI
 
-Deploy a generated FHIR IG onto a Google Bucket
+The config file needs to have a corresponding entry that defines the environment.
 
-```bash
-fhirscripts deploy <env> [-y|--yes] [--all|--only-ig|--only-history|--ig-registry]
+```yaml
+deploy:
+  env:
+    <env>: <bucket name>
 ```
 
-in the environment named `<env>`. This nneds to match an environment defined in the config in the `deploy` section.
+| Argument         | Description                                                                                                 |
+| :--------------- | :---------------------------------------------------------------------------------------------------------- |
+| *without*        | Deploy built FHIR IG, history page and package list of current project                                      |
+| `--only-ig`      | Only deploy FHIR IG                                                                                         |
+| `--only-history` | Only deploy history (and package list)                                                                      |
+| `--ig-registry`  | Current directory the ig registry; deploy the corresponding files                                           |
+| `-y`, `--yes`    | Confirm all checks with *yes* (check for correct target path and potentially overwriting of existing files) |
 
-`-y`/`--yes` confirms all prompts with _yes_. Otherwise, the path to upload to and overwriting need to be confirmed.
-
-By default the FHIR IG and other files like history and package list are deployed. With `--only-ig` only the IG is deployed.
-
-If not an IG but a FHIR registry should be deployed use `--ig-registry`.
-
-## Bash script (outdated)
-
-The documentation has been moved to [/scripts](/scripts).
-
-## Re-usable github Workflows
+## github Workflows (WIP)
 
 These are the available workflows from this repository:
 
