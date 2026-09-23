@@ -1,0 +1,9 @@
+{
+    "package-id": "example.org.example.ig",
+    "version": "1.1.0",
+    "path": "https://example.org/example-ig/1.1.0",
+    "mode": "milestone",
+    "status": "release",
+    "sequence": "Releases",
+    "first": false
+}
