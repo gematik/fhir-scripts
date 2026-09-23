@@ -1,0 +1,5 @@
+env_list = ["3.14", "3.13", "3.12"]
+
+[env_run_base]
+commands = [["python3", "-m", "unittest", "discover", "-s", "./test"]]
+deps = "discover"

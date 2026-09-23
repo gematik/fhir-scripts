@@ -20,4 +20,7 @@ dependencies = [
 fhirscripts = "fhir_scripts.cli:cli"
 
 [dependency-groups]
-dev = ["black (>=25.9.0,<26.0.0)"]
+dev = [
+    "black (>=25.9.0,<26.0.0)",
+    "tox>=4.63.0",
+]
