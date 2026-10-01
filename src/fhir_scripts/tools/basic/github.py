@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from datetime import datetime
 
@@ -7,6 +8,9 @@ import requests
 from ...version import Version
 
 REPO_REGEX = re.compile(r"https://github\.com/([^/]+/[^/]+)")
+
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
 def latest_version_number(repo_url: str) -> Version | None:
