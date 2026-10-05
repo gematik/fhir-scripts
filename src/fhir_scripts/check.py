@@ -8,6 +8,7 @@ import yaml
 from pydantic import AnyUrl
 
 from . import log
+from .error import ProjectCheckError, ProjectSetupError
 from .models.fhir.package_json import PackageJson
 from .models.fhir.publication_request import (
     PublicationRequest,
@@ -62,7 +63,7 @@ def check(workdir: Path, release: bool, *args, **kwargs):
 
     # Check all files exist
     if pub_request is None or sushi_config is None or package_json is None:
-        raise Exception(
+        raise ProjectSetupError(
             "Project malformed: publication request, sushi config or package JSON missing"
         )
 
@@ -110,7 +111,7 @@ def check(workdir: Path, release: bool, *args, **kwargs):
 
     if errors > 0 or warnings > 0:
         log.fail(f"Checks failed: {log.ERR}{errors}, {log.WARN}{warnings}")
-        raise Exception("Checks failed")
+        raise ProjectCheckError("Checks failed")
 
     else:
         log.succ("Checks successful")
@@ -137,7 +138,8 @@ def _check_versions(
         errors += 1
 
         log.fail(
-            f"IG versions not match: Publication Request {pub_request_version}, Sushi Config {sushi_config_version}, Package JSON {package_json_version}"
+            f"IG versions not match: Publication Request {pub_request_version}, Sushi Config {sushi_config_version}, "
+            f"Package JSON {package_json_version}"
         )
 
     # Version in path of Sushi Config
@@ -145,7 +147,8 @@ def _check_versions(
         errors += 1
 
         log.fail(
-            f"Version in PublicationRequest 'path' does not match 'version' in sushi config: {path_version} != {sushi_config_version}"
+            "Version in PublicationRequest 'path' does not match 'version' in sushi config: "
+            f"{path_version} != {sushi_config_version}"
         )
 
     # Version in description in Sushi Config
