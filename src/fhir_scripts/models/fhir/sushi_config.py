@@ -41,6 +41,6 @@ class SushiConfig(BaseModel):
         validation_alias=AliasChoices("releaseLabel", "release_label"),
     )
     publisher: SushiConfigPublisher | None = None
-    dependencies: dict[str, str] | None = (
-        None  # last can be version, "dev", "current", "current$branchname", "latest"
+    dependencies: dict[str, str] = (
+        {}  # last can be version, "dev", "current", "current$branchname", "latest"
     )

@@ -35,9 +35,10 @@ class TestShellRun(unittest.TestCase):
             "&& printf '\\033[32mformatted output\\033[0m\\n'"
         )
 
-        with patch.dict(os.environ, {"NO_COLOR": "1"}, clear=True):
-            with patch("fhir_scripts.log.logging.debug") as debug:
-                result = shell.run(command)
+        with patch.dict(os.environ, {"NO_COLOR": "1"}, clear=True), patch(
+            "fhir_scripts.log.logging.debug"
+        ) as debug:
+            result = shell.run(command)
 
         self.assertEqual(debug.call_args_list[1].args[0], subprocess_output)
         self.assertEqual(result.stdout, ["formatted output"])

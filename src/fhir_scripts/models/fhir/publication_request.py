@@ -36,7 +36,7 @@ class PublicationRequest(BaseModel):
     desc: str | None = None  # optional
     descmd: str | None = None  # optional
     changes: str | None = None
-    first: bool
+    first: bool = False
     title: str | None = None  # only for first release
     ci_build: str | None = Field(
         serialization_alias="ci-build",

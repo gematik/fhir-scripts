@@ -7,6 +7,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+from pydantic import ValidationError
+
 import fhir_scripts
 
 from . import config, log
@@ -183,11 +185,15 @@ def cli():
         for line in e.stderr.splitlines():
             log.debug(line)
 
-        log.fail(f"Error: {str(e)}")
+        log.fail(f"Error: {e!s}")
+        sys.exit(os.EX_DATAERR)
+
+    except ValidationError as e:
+        log.fail(f"Error: {e!s}")
         sys.exit(os.EX_DATAERR)
 
     except Exception as e:
-        log.fail(f"Error: {str(e)}")
+        log.fail(f"Error: {e!s}")
         sys.exit(os.EX_DATAERR)
 
     sys.exit(os.EX_OK)
