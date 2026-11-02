@@ -1,6 +1,6 @@
 # FHIR
 
-[![Unit Tests](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml/badge.svg)](https://github.com/gematik/fhir-scripts/actions/workflows/unittest.yml)
+[![Python Package](https://github.com/gematik/fhir-scripts/actions/workflows/python-package.yml/badge.svg)](https://github.com/gematik/fhir-scripts/actions/workflows/python-package.yml)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/gematik/fhir-scripts)
 
 Simplifies and automates steps needed to be executed build and handle FHIR definitions and FHIR IGs.
