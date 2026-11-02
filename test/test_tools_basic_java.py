@@ -26,7 +26,7 @@ class TestJavaVersion(unittest.TestCase):
             ('openjdk version "26.0.2.1+7"', "26.0.2"),
             ('openjdk "21.0.8" 2025-07-15', "21.0.8"),
             ('OPENJDK VERSION "17.0.15"', "17.0.15"),
-            ('openjdk version "21.0.13.0.3_p1-r0"', "21.0.13.0.3"),
+            ('openjdk version "21.0.13.0.3_p1-r0"', "21.0.13"),
         ]
 
         for output, expected in cases:
