@@ -14,6 +14,31 @@ def _java_version_result(output: str) -> ShellResult:
 
 
 class TestJavaVersion(unittest.TestCase):
+    def test_java_version_formats(self):
+        cases = [
+            ('java version "1.8.0_471"', "1.8.0"),
+            ('java version "17.0.15" 2025-04-15 LTS', "17.0.15"),
+            ('openjdk version "21" 2023-09-19', "21"),
+            ('openjdk version "21.0"', "21.0"),
+            ('openjdk version "21.0.8+9-LTS"', "21.0.8"),
+            ('openjdk version "26-ea"', "26"),
+            ('openjdk version "26.0.1-ea+5"', "26.0.1"),
+            ('openjdk version "26.0.2.1+7"', "26.0.2"),
+            ('openjdk "21.0.8" 2025-07-15', "21.0.8"),
+            ('OPENJDK VERSION "17.0.15"', "17.0.15"),
+            ('openjdk version "21.0.13.0.3_p1-r0"', "21.0.13"),
+        ]
+
+        for output, expected in cases:
+            with (
+                self.subTest(output=output),
+                patch(
+                    "fhir_scripts.tools.basic.java.shell.run",
+                    return_value=_java_version_result(output),
+                ),
+            ):
+                self.assertEqual(Version(expected), java.version())
+
     def test_three_part_openjdk_version(self):
         output = (
             'openjdk version "17.0.15" 2025-04-15\n'
@@ -27,9 +52,6 @@ class TestJavaVersion(unittest.TestCase):
             self.assertEqual(Version("17.0.15"), java.version())
 
     def test_four_part_openjdk_version(self):
-        # Homebrew and recent Temurin builds report JEP 223's optional PATCH
-        # component, e.g. 26.0.2.1. The previous regex accepted at most three
-        # numeric parts and treated those JDKs as not installed.
         output = (
             'openjdk version "26.0.2.1" 2026-08-18\n'
             "OpenJDK Runtime Environment Homebrew (build 26.0.2.1)\n"
@@ -40,7 +62,7 @@ class TestJavaVersion(unittest.TestCase):
             "fhir_scripts.tools.basic.java.shell.run",
             return_value=_java_version_result(output),
         ):
-            self.assertEqual(Version("26.0.2.1"), java.version())
+            self.assertEqual(Version("26.0.2"), java.version())
 
     def test_five_part_openjdk_version(self):
         output = (
