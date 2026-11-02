@@ -2,6 +2,10 @@
 
 # Release Notes FHIR Scripts
 
+## Release TBD
+
+* Fix picking up version numbers with more than four parts (allow variable parts)
+
 ## Release 0.32.0
 
 * Option to provide CLI arguments as environment variables or using an `.env` file

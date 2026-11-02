@@ -42,6 +42,33 @@ class TestJavaVersion(unittest.TestCase):
         ):
             self.assertEqual(Version("26.0.2.1"), java.version())
 
+    def test_five_part_openjdk_version(self):
+        output = (
+            'openjdk version "21.0.13.0.3" 2026-10-24\n'
+            "OpenJDK Runtime Environment Homebrew (build 21.0.13.0.3)\n"
+            "OpenJDK 64-Bit Server VM Homebrew (build 21.0.13.0.3, mixed mode, sharing)\n"
+        )
+
+        with patch(
+            "fhir_scripts.tools.basic.java.shell.run",
+            return_value=_java_version_result(output),
+        ):
+            self.assertEqual(Version("21.0.13.0.3"), java.version())
+
+    def test_five_part_openjdk_version_with_argument(self):
+        output = (
+            "Picked up JAVA_TOOL_OPTIONS: -Xms12g -Xmx16g\n"
+            'openjdk version "21.0.13.0.3" 2026-10-24\n'
+            "OpenJDK Runtime Environment Homebrew (build 21.0.13.0.3)\n"
+            "OpenJDK 64-Bit Server VM Homebrew (build 21.0.13.0.3, mixed mode, sharing)\n"
+        )
+
+        with patch(
+            "fhir_scripts.tools.basic.java.shell.run",
+            return_value=_java_version_result(output),
+        ):
+            self.assertEqual(Version("21.0.13.0.3"), java.version())
+
     def test_four_part_version_satisfies_java_17_minimum(self):
         output = 'openjdk version "26.0.2.1" 2026-08-18\n'
 
