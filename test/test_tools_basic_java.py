@@ -29,9 +29,12 @@ class TestJavaVersion(unittest.TestCase):
         ]
 
         for output, expected in cases:
-            with self.subTest(output=output), patch(
-                "fhir_scripts.tools.basic.java.shell.run",
-                return_value=_java_version_result(output),
+            with (
+                self.subTest(output=output),
+                patch(
+                    "fhir_scripts.tools.basic.java.shell.run",
+                    return_value=_java_version_result(output),
+                ),
             ):
                 self.assertEqual(Version(expected), java.version())
 
