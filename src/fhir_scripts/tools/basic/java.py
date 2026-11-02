@@ -8,12 +8,9 @@ from ...helper import require_installed
 from ...version import Version
 from . import shell
 
-# java -version quotes JEP 223's VNUM: FEATURE[.INTERIM][.UPDATE][.PATCH].
-# The PATCH component is optional, so current Homebrew/Temurin builds such as
-# 26.0.2.1 have four numeric parts. {,2} only accepted three and treated those
-# JDKs as missing.
 VERSION_REGEX = re.compile(
-    r"\w*jdk\w*\s+version\s+\"(\d+(?:\.\d+){,3})\"", re.IGNORECASE
+    r'\b(?:java|\w*jdk\w*)\s+(?:version\s+)?"(\d+(?:\.\d+){0,2})(?=[._+\-\"])',
+    re.IGNORECASE,
 )
 
 

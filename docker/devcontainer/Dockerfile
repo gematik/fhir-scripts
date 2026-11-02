@@ -23,7 +23,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
 
 RUN apk add --no-cache \
     # .NET SDK for Firely Terminal
-    dotnet8-sdk \
+    dotnet10-sdk \
     # icu-libs \
     # Node.js and NPM for FSH Sushi
     nodejs npm \
@@ -52,9 +52,8 @@ ENV PATH="/google-cloud-sdk/bin:${PATH}"
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/vscode/.local/bin:${PATH}"
 
-RUN uv tool install git+https://github.com/gematik/fhir-scripts.git
-
-RUN fhirscripts install \
+RUN uv tool install git+https://github.com/gematik/fhir-scripts.git && \
+    fhirscripts install \
     --sushi \
     --firely-terminal
 
