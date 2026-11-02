@@ -183,11 +183,11 @@ def cli():
         for line in e.stderr.splitlines():
             log.debug(line)
 
-        log.fail(f"Error: {str(e)}")
+        log.fail(f"Error: {e!s}")
         sys.exit(os.EX_DATAERR)
 
     except Exception as e:
-        log.fail(f"Error: {str(e)}")
+        log.fail(f"Error: {e!s}")
         sys.exit(os.EX_DATAERR)
 
     sys.exit(os.EX_OK)

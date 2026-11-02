@@ -17,7 +17,7 @@ VERSION_REGEX = re.compile(
 @require_installed("java", __tool_name__)
 def run_jar(jar: Path, *args, check: bool = False, log_output: bool = True):
 
-    cmd = f"java -jar {str(jar)} {' '.join(args)}"
+    cmd = f"java -jar {jar!s} {' '.join(args)}"
 
     res = shell.run(cmd, check=check, log_output=log_output)
     return res
@@ -26,9 +26,7 @@ def run_jar(jar: Path, *args, check: bool = False, log_output: bool = True):
 def require_min_version(min: Version):
     if not has_min_version(min):
         raise PrerequisiteFailed(
-            "{} version {} required, but only {} installed".format(
-                __tool_name__, min, version()
-            )
+            f"{__tool_name__} version {min} required, but only {version()} installed"
         )
 
 

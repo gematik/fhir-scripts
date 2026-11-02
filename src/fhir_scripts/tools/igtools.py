@@ -53,7 +53,7 @@ def release_notes(output_dir: Path | str):
     Update release notes
     """
     log.info("Updating release-notes")
-    shell.run(f"reqtools ig-release-notes {str(output_dir)}")
+    shell.run(f"reqtools ig-release-notes {output_dir!s}")
     log.succ("Release-notes updated")
 
 
@@ -66,7 +66,7 @@ def export(output_dir: Path | str):
     Exports requirements
     """
     log.info("Export requirements")
-    shell.run(f"reqtools export {str(output_dir)}")
+    shell.run(f"reqtools export {output_dir!s}")
     log.succ("Requirements exported successfully")
 
 

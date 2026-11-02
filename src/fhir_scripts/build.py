@@ -76,7 +76,7 @@ def build_defs(
     enable_cap_statements = (
         (isinstance(epatools_config, bool) and epatools_config)
         or (not isinstance(epatools_config, bool) and epatools_config.cap_statements)
-        or ((cap or only_cap))
+        or (cap or only_cap)
         and not only_req
     )
 
@@ -106,7 +106,7 @@ def build_req(*args, **kwargs):
         igtools.export(output_dir)
 
     except (NoConfigException, NotInstalledException) as e:
-        log.warn(f"epa not configured or installed, skipping: {str(e)}")
+        log.warn(f"epa not configured or installed, skipping: {e!s}")
 
     log.succ("Requirements processed successfully")
 
@@ -119,7 +119,7 @@ def build_cap(*args, **kwargs):
         epatools.merge_capabilities()
 
     except (NoConfigException, NotInstalledException) as e:
-        log.warn(f"epatools not configured or installed, skipping: {str(e)}")
+        log.warn(f"epatools not configured or installed, skipping: {e!s}")
 
 
 def build_ig(

@@ -62,9 +62,7 @@ def cache_rebuild_fhir_cache(
     if not fhir_pkg_tool.is_installed() and not legacy:
         legacy = True
         log.warn(
-            "{} not installed, fall back to {}".format(
-                fhir_pkg_tool.__tool_name__, firely_terminal.__tool_name__
-            )
+            f"{fhir_pkg_tool.__tool_name__} not installed, fall back to {firely_terminal.__tool_name__}"
         )
 
     if legacy:
@@ -197,7 +195,7 @@ def clear_build_caches(*args, **kwargs):
     for p in ["./input-cache/schemas", "./input-cache/txcache", "./temp", "./template"]:
         if (path := Path(p)).exists():
             shutil.rmtree(path)
-            log.succ("Removed {}".format(str(path)))
+            log.succ(f"Removed {path!s}")
     log.succ("Cleared build caches successfully")
 
 

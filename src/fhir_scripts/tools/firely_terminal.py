@@ -22,7 +22,7 @@ def install(
         cmd = f"fhir install {pkg} {version}"
 
     elif file:
-        cmd = f"fhir install {str(file)} --file"
+        cmd = f"fhir install {file!s} --file"
 
     else:
         raise Exception("For install provide a package name AND a version or a file.")

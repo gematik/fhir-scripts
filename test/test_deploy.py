@@ -52,16 +52,14 @@ class TestDeployIg(unittest.TestCase):
         releaselabel = "release"
         wanted = (
             Path("output"),
-            Url("gs://dev_bucket/ig/fhir/{}/{}".format(project, version)),
+            Url(f"gs://dev_bucket/ig/fhir/{project}/{version}"),
         )
 
         def read_text(*args, **kwargs):
             return json.dumps(
                 {
                     "version": version,
-                    "url": "http://example.com/{}/ImplementationGuide/com.example".format(
-                        project
-                    ),
+                    "url": f"http://example.com/{project}/ImplementationGuide/com.example",
                     "definition": {
                         "extension": [
                             {
@@ -89,14 +87,12 @@ class TestDeployIg(unittest.TestCase):
         project = "test_project"
         version = "1.2.3"
         wanted = (
-            Url("gs://dev_bucket/ig/fhir/{}/{}".format(project, version)),
-            Url("gs://prod_bucket/ig/fhir/{}/{}".format(project, version)),
+            Url(f"gs://dev_bucket/ig/fhir/{project}/{version}"),
+            Url(f"gs://prod_bucket/ig/fhir/{project}/{version}"),
         )
 
         def read_text(*args, **kwargs):
-            return json.dumps(
-                {"path": "http://example.com/{}/{}".format(project, version)}
-            )
+            return json.dumps({"path": f"http://example.com/{project}/{version}"})
 
         with patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text):
             res = deploy.deploy_ig(
@@ -124,20 +120,18 @@ class TestDeployIgCiBuild(unittest.TestCase):
         releaselabel = "ci-build"
         wanted_main = (
             Path("output"),
-            Url("gs://dev_bucket/ig/fhir/build/{}".format(project)),
+            Url(f"gs://dev_bucket/ig/fhir/build/{project}"),
         )
         wanted_with_git_branch = (
             Path("output"),
-            Url("gs://dev_bucket/ig/fhir/build/{}/branches/BRANCH".format(project)),
+            Url(f"gs://dev_bucket/ig/fhir/build/{project}/branches/BRANCH"),
         )
 
         def read_text(*args, **kwargs):
             return json.dumps(
                 {
                     "version": version,
-                    "url": "http://example.com/{}/ImplementationGuide/com.example".format(
-                        project
-                    ),
+                    "url": f"http://example.com/{project}/ImplementationGuide/com.example",
                     "definition": {
                         "extension": [
                             {
@@ -185,11 +179,11 @@ class TestDeployIgMeta(unittest.TestCase):
         wanted = [
             (
                 Path("publish/index.html"),
-                Url("gs://dev_bucket/ig/fhir/{}/index.html".format(project)),
+                Url(f"gs://dev_bucket/ig/fhir/{project}/index.html"),
             ),
             (
                 Path("publish/package-list.json"),
-                Url("gs://dev_bucket/ig/fhir/{}/package-list.json".format(project)),
+                Url(f"gs://dev_bucket/ig/fhir/{project}/package-list.json"),
             ),
         ]
 
@@ -197,9 +191,7 @@ class TestDeployIgMeta(unittest.TestCase):
             return json.dumps(
                 {
                     "version": version,
-                    "url": "http://example.com/{}/ImplementationGuide/com.example".format(
-                        project
-                    ),
+                    "url": f"http://example.com/{project}/ImplementationGuide/com.example",
                 }
             )
 
@@ -217,19 +209,17 @@ class TestDeployIgMeta(unittest.TestCase):
         version = "1.2.3"
         wanted = [
             (
-                Url("gs://dev_bucket/ig/fhir/{}/index.html".format(project)),
-                Url("gs://prod_bucket/ig/fhir/{}/index.html".format(project)),
+                Url(f"gs://dev_bucket/ig/fhir/{project}/index.html"),
+                Url(f"gs://prod_bucket/ig/fhir/{project}/index.html"),
             ),
             (
-                Url("gs://dev_bucket/ig/fhir/{}/package-list.json".format(project)),
-                Url("gs://prod_bucket/ig/fhir/{}/package-list.json".format(project)),
+                Url(f"gs://dev_bucket/ig/fhir/{project}/package-list.json"),
+                Url(f"gs://prod_bucket/ig/fhir/{project}/package-list.json"),
             ),
         ]
 
         def read_text(*args, **kwargs):
-            return json.dumps(
-                {"path": "http://example.com/{}/{}".format(project, version)}
-            )
+            return json.dumps({"path": f"http://example.com/{project}/{version}"})
 
         with patch("fhir_scripts.deploy.Path.read_text", side_effect=read_text):
             res = deploy.deploy_ig_meta(

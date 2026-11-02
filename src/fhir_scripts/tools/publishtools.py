@@ -21,7 +21,7 @@ def publish(project_dir: Path, ig_registry: Path):
     """
     log.info("Publish project")
     shell.run(
-        f"publishtools publish --project-dir {str(project_dir)} --ig-registry {str(ig_registry)}",
+        f"publishtools publish --project-dir {project_dir!s} --ig-registry {ig_registry!s}",
     )
     log.succ("Project published successfully")
 
@@ -32,7 +32,7 @@ def render_list(ig_registry: Path):
     Render the IG overview list
     """
     log.info("Render IG overview list")
-    shell.run(f"publishtools render-list --ig-registry {str(ig_registry)}")
+    shell.run(f"publishtools render-list --ig-registry {ig_registry!s}")
     log.succ("IG overview rendered successfully")
 
 

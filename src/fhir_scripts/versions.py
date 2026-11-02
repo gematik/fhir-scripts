@@ -26,20 +26,18 @@ def versions(outdated: bool = False, *args, **kwargs) -> bool:
                         latest = latest_func() if latest_func else None
 
                         if latest is not None and latest != version:
-                            log.info("{}: {} < {}".format(tool_name, version, latest))
+                            log.info(f"{tool_name}: {version} < {latest}")
                             up_to_date = False
 
                     else:
-                        log.warn(
-                            "{} is missing latest version information".format(tool_name)
-                        )
+                        log.warn(f"{tool_name} is missing latest version information")
 
                 elif version is not None:
-                    log.info("{}: {}".format(tool_name, version.long))
+                    log.info(f"{tool_name}: {version.long}")
 
             except Exception as e:
                 raise Exception(
-                    "Error occured during processing version of {}".format(tool_name), e
+                    f"Error occured during processing version of {tool_name}", e
                 )
 
     if outdated and up_to_date:

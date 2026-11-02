@@ -123,11 +123,11 @@ def deploy_ig_registry(
 
     if promote_from_env:
         source_path = get_storage_path(deploy_cfg, promote_from_env)
-        log.info("Promote IG registry files {} -> {}".format(source_path, target_path))
+        log.info(f"Promote IG registry files {source_path} -> {target_path}")
 
     else:
         source_path = Path("./")
-        log.info("Deploy IG registry files -> {}".format(target_path))
+        log.info(f"Deploy IG registry files -> {target_path}")
 
     confirm("Continue?", "Aborted by user", confirm_yes=confirm_yes, default=True)
 
@@ -140,7 +140,7 @@ def deploy_ig_registry(
         files.append((source_file, target_file))
 
         if dry_run:
-            log.info("Would have copied {} -> {}".format(source_file, target_file))
+            log.info(f"Would have copied {source_file} -> {target_file}")
 
         else:
             gcloud.copy(source=source_file, target=target_file, force=True)
@@ -167,7 +167,7 @@ def deploy_ig(
         source_path = get_storage_path(deploy_cfg, promote_from_env) / project / version
         target_path = get_storage_path(deploy_cfg, target_env) / project / version
 
-        log.info("Promote built IG {} -> {}".format(source_path, target_path))
+        log.info(f"Promote built IG {source_path} -> {target_path}")
 
     else:
         # Get 'project' and 'version' from built implementation guide
@@ -184,7 +184,7 @@ def deploy_ig(
         else:
             target_path = get_storage_path(deploy_cfg, target_env) / project / version
 
-        log.info("Deploy built IG -> {}".format(target_path))
+        log.info(f"Deploy built IG -> {target_path}")
 
     # Copy IG - with path modification option for non-promote deployments
     if not promote_from_env:
@@ -200,7 +200,7 @@ def deploy_ig(
         )
 
     if dry_run:
-        log.info("Would have copied {} -> {}".format(source_path, target_path))
+        log.info(f"Would have copied {source_path} -> {target_path}")
 
     else:
         gcloud.copy(source=source_path, target=target_path, force=confirm_yes)
@@ -227,7 +227,7 @@ def deploy_ig_meta(
         source_path = get_storage_path(deploy_cfg, promote_from_env) / project
         target_path = get_storage_path(deploy_cfg, target_env) / project
 
-        log.info("Promote IG meta data {} -> {}".format(source_path, target_path))
+        log.info(f"Promote IG meta data {source_path} -> {target_path}")
 
     else:
         # Get 'project' and 'version' from built implementation guide
@@ -247,7 +247,7 @@ def deploy_ig_meta(
 
         target_path = get_storage_path(deploy_cfg, target_env) / project
 
-        log.info("Deploy IG meta data -> {}".format(target_path))
+        log.info(f"Deploy IG meta data -> {target_path}")
 
     # Copy meta files
     deploy_files = ["index.html", "package-list.json"]
@@ -259,7 +259,7 @@ def deploy_ig_meta(
         files.append((source_file, target_file))
 
         if dry_run:
-            log.info("Would have copied {} -> {}".format(source_file, target_file))
+            log.info(f"Would have copied {source_file} -> {target_file}")
 
         else:
             gcloud.copy(source=source_file, target=target_file, force=True)
@@ -294,7 +294,7 @@ def project_version_from_pub_req() -> tuple[str, str]:
 def project_version_from_imp_guide(ig_dir: Path) -> tuple[str, str]:
     igs = list(ig_dir.glob("ImplementationGuide*.json"))
     if len(igs) != 1:
-        raise Exception("Built IG not found in {}".format(ig_dir.absolute()))
+        raise Exception(f"Built IG not found in {ig_dir.absolute()}")
 
     ig = json.loads(igs[0].read_text(encoding="utf-8"))
     return ig["url"].rsplit("/", 3)[1], ig["version"]
@@ -303,7 +303,7 @@ def project_version_from_imp_guide(ig_dir: Path) -> tuple[str, str]:
 def is_ci_build(ig_dir: Path) -> bool:
     igs = list(ig_dir.glob("ImplementationGuide*.json"))
     if len(igs) != 1:
-        raise Exception("Built IG not found in {}".format(ig_dir.absolute()))
+        raise Exception(f"Built IG not found in {ig_dir.absolute()}")
     ig = json.loads(igs[0].read_text(encoding="utf-8"))
     for ext in ig.get("definition", {}).get("extension", []):
         values = {

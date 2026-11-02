@@ -68,21 +68,17 @@ def _update(module, dry_run: bool = False, *args, **kwargs):
         if not latest or latest != prev_version:
             if dry_run:
                 if latest_func := getattr(module, "latest_version", None):
-                    log.info(
-                        "Would update {}: {} -> {}".format(
-                            name, prev_version, latest_func()
-                        )
-                    )
+                    log.info(f"Would update {name}: {prev_version} -> {latest_func()}")
 
                 else:
-                    log.info("Would update {}: from {}".format(name, prev_version))
+                    log.info(f"Would update {name}: from {prev_version}")
 
                 return None
 
             else:
                 module.update(Version())
                 new_version = module.version()
-                log.succ(f"Updated {name}: {str(prev_version)} → {new_version}")
+                log.succ(f"Updated {name}: {prev_version!s} → {new_version}")
 
                 return name, prev_version, new_version
 

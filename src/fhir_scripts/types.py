@@ -6,7 +6,7 @@ class Url:
         return self.url
 
     def __repr__(self) -> str:
-        return "<url={}>".format(self.url)
+        return f"<url={self.url}>"
 
     def __truediv__(self, other: str) -> "Url":
         return Url(self.url + "/" + other.strip("/"))

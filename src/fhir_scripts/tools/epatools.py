@@ -124,4 +124,4 @@ def update_archive(archive_files: list[Path], output_dir: Path | None = None):
                 if file_path.is_file():
                     zip_ref.write(file_path, file_path.relative_to(tmp_path))
 
-    log.succ(f"IG archive updated successfully: {str(archive)}")
+    log.succ(f"IG archive updated successfully: {archive!s}")

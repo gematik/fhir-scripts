@@ -22,11 +22,7 @@ class Version:
 
     @property
     def long(self):
-        return (
-            "{} [{}]".format(self, self.add_version.long)
-            if self.add_version
-            else str(self)
-        )
+        return f"{self} [{self.add_version.long}]" if self.add_version else str(self)
 
     @property
     def unknown(self):

@@ -129,9 +129,7 @@ def _check_versions(
         errors += 1
 
         log.fail(
-            "Version in path does not match version in sushi config: {} != {}".format(
-                path_version, sushi_config_version
-            )
+            f"Version in path does not match version in sushi config: {path_version} != {sushi_config_version}"
         )
 
     # Version in description in Sushi Config
@@ -142,9 +140,7 @@ def _check_versions(
         errors += 1
 
         log.fail(
-            "Version in description does not match version in sushi config: {} != {}".format(
-                desc_version, sushi_config_version
-            )
+            f"Version in description does not match version in sushi config: {desc_version} != {sushi_config_version}"
         )
 
     return errors, warnings
@@ -180,15 +176,11 @@ def _check_deps(pub_request: dict, sushi_config: dict, package_json: dict, **kwa
             errors += 1
 
             log.fail(
-                "Dependency {} version does not match: Sushi Config {}, Package JSON {}".format(
-                    entry, sushi_version, pkg_version
-                )
+                f"Dependency {entry} version does not match: Sushi Config {sushi_version}, Package JSON {pkg_version}"
             )
 
         else:
-            log.succ(
-                "Dependency {} version does match: {}".format(entry, sushi_version)
-            )
+            log.succ(f"Dependency {entry} version does match: {sushi_version}")
 
     return errors, warnings
 
@@ -280,9 +272,7 @@ def _check_release(pub_request: dict, sushi_config: dict, **kwargs):
     if (status := sushi_config.get("status")) != "active":
         errors += 1
 
-        log.fail(
-            'Status in Sushi Config is "{}", but should be "active"'.format(status)
-        )
+        log.fail(f'Status in Sushi Config is "{status}", but should be "active"')
     else:
         log.succ('Status in Sushi Config is "active"')
 
@@ -290,9 +280,7 @@ def _check_release(pub_request: dict, sushi_config: dict, **kwargs):
         errors += 1
 
         log.fail(
-            'Release label in Sushi Config is "{}", but should be "release"'.format(
-                status
-            )
+            f'Release label in Sushi Config is "{status}", but should be "release"'
         )
     else:
         log.succ('Release label in Sushi Config is "release"')
@@ -301,9 +289,7 @@ def _check_release(pub_request: dict, sushi_config: dict, **kwargs):
         errors += 1
 
         log.fail(
-            'Status in Publication Request is "{}", but should be "release"'.format(
-                status
-            )
+            f'Status in Publication Request is "{status}", but should be "release"'
         )
     else:
         log.succ('Status in Publication Request is "release"')

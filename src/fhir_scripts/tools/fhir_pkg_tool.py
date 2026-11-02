@@ -23,19 +23,19 @@ def install_deps():
     ensure_installed()
     java.require_min_version(Version(MIN_JAVA_VER))
 
-    log.info("Run {}".format(__tool_name__))
+    log.info(f"Run {__tool_name__}")
 
     sushi_config = Path("./sushi-config.yaml")
     if not sushi_config.exists():
-        raise Exception("{} missing".format(sushi_config))
+        raise Exception(f"{sushi_config} missing")
 
     try:
-        args = ["--sushi-deps-file {}".format(sushi_config)]
+        args = [f"--sushi-deps-file {sushi_config}"]
         java.run_jar(JAR, check=True, *args)
-        log.succ("{} run successful".format(__tool_name__))
+        log.succ(f"{__tool_name__} run successful")
 
     except shell.CalledProcessError:
-        raise Exception("{} run failed".format(__tool_name__))
+        raise Exception(f"{__tool_name__} run failed")
 
 
 def is_installed():

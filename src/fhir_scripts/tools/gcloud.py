@@ -40,7 +40,7 @@ def logged_in(func):
                     log.succ("Login successful")
 
                 except Exception as e:
-                    raise Exception(f"Login failed {str(e)}")
+                    raise Exception(f"Login failed {e!s}")
 
             _logged_in = True
         return func(*args, **kwargs)
@@ -87,7 +87,7 @@ def copy(source: Path | Url, target: Url, force=False):
 @logged_in
 def _rsync(source: Path | Url, target: Url):
 
-    log.info(f"Copy {str(source)} to {target}")
+    log.info(f"Copy {source!s} to {target}")
 
     source = source.absolute() if isinstance(source, Path) else source
 
