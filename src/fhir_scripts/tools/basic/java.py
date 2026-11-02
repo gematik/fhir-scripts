@@ -9,7 +9,7 @@ from ...version import Version
 from . import shell
 
 VERSION_REGEX = re.compile(
-    r'\b(?:java|\w*jdk\w*)\s+(?:version\s+)?"(\d+(?:\.\d+){0,2})(?=[._+\-\"])',
+    r'\b(?:java|\w*jdk\w*)\s+(?:version\s+)?"(\d+(?:\.\d+)*)(?=[._+\-\"])',
     re.IGNORECASE,
 )
 

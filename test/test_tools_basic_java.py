@@ -23,10 +23,10 @@ class TestJavaVersion(unittest.TestCase):
             ('openjdk version "21.0.8+9-LTS"', "21.0.8"),
             ('openjdk version "26-ea"', "26"),
             ('openjdk version "26.0.1-ea+5"', "26.0.1"),
-            ('openjdk version "26.0.2.1+7"', "26.0.2"),
+            ('openjdk version "26.0.2.1+7"', "26.0.2.1"),
             ('openjdk "21.0.8" 2025-07-15', "21.0.8"),
             ('OPENJDK VERSION "17.0.15"', "17.0.15"),
-            ('openjdk version "21.0.13.0.3_p1-r0"', "21.0.13"),
+            ('openjdk version "21.0.13.0.3_p1-r0"', "21.0.13.0.3"),
         ]
 
         for output, expected in cases:
@@ -62,7 +62,7 @@ class TestJavaVersion(unittest.TestCase):
             "fhir_scripts.tools.basic.java.shell.run",
             return_value=_java_version_result(output),
         ):
-            self.assertEqual(Version("26.0.2"), java.version())
+            self.assertEqual(Version("26.0.2.1"), java.version())
 
     def test_five_part_openjdk_version(self):
         output = (
