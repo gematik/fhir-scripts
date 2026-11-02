@@ -52,10 +52,12 @@ ENV PATH="/google-cloud-sdk/bin:${PATH}"
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/vscode/.local/bin:${PATH}"
 
+WORKDIR /home/vscode
 RUN uv tool install git+https://github.com/gematik/fhir-scripts.git && \
     fhirscripts install \
     --sushi \
     --firely-terminal
+WORKDIR /
 
 # Add Firely Terminal to user path
 ENV PATH="/home/vscode/.dotnet/tools:${PATH}"
