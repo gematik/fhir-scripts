@@ -1,6 +1,6 @@
 [project]
 name = "fhir-scripts"
-version = "0.32.0"
+version = "0.32.1"
 description = ""
 authors = [
     { name = "Alexander Essenwanger", email = "alexander.essenwanger@gematik.de" },
@@ -20,4 +20,7 @@ dependencies = [
 fhirscripts = "fhir_scripts.cli:cli"
 
 [dependency-groups]
-dev = ["black (>=25.9.0,<26.0.0)"]
+dev = [
+    "black (>=25.9.0,<26.0.0)",
+    "tox>=4.63.0",
+]

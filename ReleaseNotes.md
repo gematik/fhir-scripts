@@ -2,6 +2,11 @@
 
 # Release Notes FHIR Scripts
 
+## Release 0.32.1
+
+* Bugfix to extract the Java Version from command line
+* Updated Docker Image files to install .NET 10 SDK with the latest Firely Terminal 4.0.0
+
 ## Release 0.32.0
 
 * Option to provide CLI arguments as environment variables or using an `.env` file

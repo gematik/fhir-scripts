@@ -9,7 +9,7 @@ RUN apk add --no-cache \
     # To install gCloud CLI
     curl \
     # .NET SDK for Firely Terminal
-    dotnet8-sdk \
+    dotnet10-sdk \
     # Node.js and NPM for FSH Sushi
     nodejs npm \
     # Java (OpenJDK) and Jeykll for IG Publisher
@@ -38,10 +38,8 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:${PATH}"
 
 # Install fhirscripts
-RUN uv tool install git+https://github.com/gematik/fhir-scripts.git
-
-# Install base tooling for image
-RUN fhirscripts install \
+RUN uv tool install git+https://github.com/gematik/fhir-scripts.git && \
+    fhirscripts install \
     --sushi \
     --firely-terminal \
     --publishtools
