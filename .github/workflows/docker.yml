@@ -58,7 +58,7 @@ jobs:
       - name: Build and export to Docker
         uses: docker/build-push-action@v7
         with:
-          push: ${{ github.ref == 'refs/heads/main' }}
+          # push: ${{ github.ref == 'refs/heads/main' }}
           platforms: ${{ env.PLATFORMS }}
           context: docker/devcontainer/
           tags: ${{ steps.meta.outputs.tags }}
